@@ -1,0 +1,26 @@
+[
+  {
+    "NAME": "손덕일",
+    "LOGIN_ID": "11021511",
+    "LOGIN_PASSWORD": "sdi12345",
+    "TARGET_DATE": "20251119",
+    "START_TIME": "0900",
+    "END_TIME": "0600"
+  },
+  {
+    "NAME": "박신일",
+    "LOGIN_ID": "11021601",
+    "LOGIN_PASSWORD": "16011601",
+    "TARGET_DATE": "20251119",
+    "START_TIME": "0900",
+    "END_TIME": "0600"
+  },
+  {
+    "NAME": "오수양",
+    "LOGIN_ID": "11010751",
+    "LOGIN_PASSWORD": "mq2803",
+    "TARGET_DATE": "20251119",
+    "START_TIME": "0900",
+    "END_TIME": "0600"
+  }
+]

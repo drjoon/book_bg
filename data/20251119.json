@@ -1,0 +1,211 @@
+[
+  {
+    "bk_cours": "B",
+    "bk_part": "1",
+    "bk_time": "0703",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "1",
+    "bk_time": "0710",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "A",
+    "bk_part": "1",
+    "bk_time": "0717",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "OUT"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "1",
+    "bk_time": "0717",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "1",
+    "bk_time": "0745",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "A",
+    "bk_part": "1",
+    "bk_time": "0752",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "OUT"
+  },
+  {
+    "bk_cours": "A",
+    "bk_part": "1",
+    "bk_time": "0759",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "OUT"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "1",
+    "bk_time": "0813",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "1",
+    "bk_time": "0820",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "2",
+    "bk_time": "1043",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "A",
+    "bk_part": "2",
+    "bk_time": "1050",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "OUT"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "2",
+    "bk_time": "1057",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "2",
+    "bk_time": "1111",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "2",
+    "bk_time": "1132",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "A",
+    "bk_part": "2",
+    "bk_time": "1139",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "OUT"
+  },
+  {
+    "bk_cours": "A",
+    "bk_part": "2",
+    "bk_time": "1153",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "OUT"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "2",
+    "bk_time": "1153",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "2",
+    "bk_time": "1214",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "2",
+    "bk_time": "1235",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "210,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "-",
+    "bk_cours_name": "IN"
+  }
+]

@@ -186,59 +186,56 @@ async function runBookingGroup(group) {
     console.error(`${logPrefix} 🔴 Failed to save time slots to file:`, error.message);
   }
 
-  // 4. 시간 정렬 방향 결정 (그룹 내 하나라도 역방향이면 전체 역방향 통일)
-  const sortDescending = configs.some(c => parseInt(c.START_TIME, 10) > parseInt(c.END_TIME, 10));
-  if (sortDescending) {
-      console.log(`${logPrefix} Sorting slots in descending order (group policy).`);
-      allAvailableTimes.sort((a, b) => b.bk_time.localeCompare(a.bk_time));
-  }
+  // 4. 계정별 희망 시간에 맞춰 슬롯 필터링 및 정렬
+  activeAccounts.forEach(account => {
+    const { START_TIME, END_TIME } = account.config;
+    const isDescending = parseInt(START_TIME, 10) > parseInt(END_TIME, 10);
+    const minTime = isDescending ? END_TIME : START_TIME;
+    const maxTime = isDescending ? START_TIME : END_TIME;
 
-  let remainingSlots = [...allAvailableTimes];
-  console.log(`${logPrefix} ✅ Found ${remainingSlots.length} available slots in the specified range.`);
+    const filtered = allAvailableTimes.filter(slot => slot.bk_time >= minTime && slot.bk_time <= maxTime);
+
+    if (isDescending) {
+      filtered.sort((a, b) => b.bk_time.localeCompare(a.bk_time));
+    } else {
+      filtered.sort((a, b) => a.bk_time.localeCompare(b.bk_time));
+    }
+    account.slots = filtered; // 계정 객체에 필터링 및 정렬된 슬롯 저장
+    console.log(`[${account.config.NAME || account.config.LOGIN_ID}] Found ${filtered.length} slots in range [${minTime}-${maxTime}]`);
+  });
 
   // 5. 예약 시도 및 재시도 루프
-  while (activeAccounts.length > 0 && remainingSlots.length > 0) {
+  let round = 0;
+  while (activeAccounts.length > 0) {
     console.log(`${logPrefix} --- New booking round ---`);
-    console.log(`${logPrefix} Active accounts: ${activeAccounts.length}, Remaining slots: ${remainingSlots.length}`);
+
+    // 이번 라운드에서 시도할 슬롯이 있는 계정만 필터링
+    const accountsForThisRound = activeAccounts.filter(acc => acc.slots.length > round);
+    if (accountsForThisRound.length === 0) {
+        console.log(`${logPrefix} 🔴 No more slots to try for any active accounts.`);
+        break;
+    }
+
+    console.log(`${logPrefix} Active accounts: ${accountsForThisRound.length}`);
 
     // 각 활성 계정에 슬롯을 할당하여 병렬로 예약 시도
-    const bookingPromises = activeAccounts.map((account, index) => {
-      const targetSlot = remainingSlots[index];
-      if (!targetSlot) return null;
-
-      // ** 각 계정의 개별 시간 범위 확인 **
-      const { START_TIME, END_TIME } = account.config;
-      const isDescending = parseInt(START_TIME, 10) > parseInt(END_TIME, 10);
-      const minTime = isDescending ? END_TIME : START_TIME;
-      const maxTime = isDescending ? START_TIME : END_TIME;
-
-      if (targetSlot.bk_time >= minTime && targetSlot.bk_time <= maxTime) {
-        return attemptBooking(account, targetSlot);
-      } else {
-        // 이 슬롯은 해당 계정의 희망 범위에 맞지 않음
-        console.log(`[${account.config.NAME || account.config.LOGIN_ID}] ⏭️ Skipping slot ${targetSlot.bk_time} as it's outside the desired range (${minTime}-${maxTime}).`);
-        // 실패와 동일하게 처리하여 다음 라운드에서 다른 슬롯을 시도하도록 함
-        return Promise.resolve({ success: false, slot: targetSlot, skipped: true });
-      }
-    }).filter(promise => promise !== null);
+    const bookingPromises = accountsForThisRound.map(account => {
+      const targetSlot = account.slots[round];
+      return attemptBooking(account, targetSlot);
+    });
 
     const results = await Promise.all(bookingPromises);
-
-    // 사용된 슬롯 제거 (실제로 시도된 슬롯만)
-    const usedSlots = results.filter(r => !r.skipped).map(r => r.slot);
-    remainingSlots = remainingSlots.filter(slot => !usedSlots.some(used => used.bk_time === slot.bk_time && used.bk_cours === slot.bk_cours));
 
     // 성공한 계정 비활성화
     results.forEach((result, index) => {
       if (result.success) {
-        activeAccounts[index].active = false;
+        const successfulAccount = accountsForThisRound[index];
+        successfulAccount.active = false;
       }
     });
     activeAccounts = activeAccounts.filter(acc => acc.active);
 
-    if (activeAccounts.length > 0 && remainingSlots.length === 0) {
-      console.log(`${logPrefix} 🔴 No more slots to try for the remaining ${activeAccounts.length} accounts.`);
-    }
+    round++;
   }
 
   console.log(`${logPrefix} --- Booking process finished ---`);

@@ -1,0 +1,24 @@
+[
+  {
+    "bk_cours": "A",
+    "bk_part": "1",
+    "bk_time": "0657",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "190,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "9%",
+    "bk_cours_name": "OUT"
+  },
+  {
+    "bk_cours": "B",
+    "bk_part": "1",
+    "bk_time": "0657",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "190,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "9%",
+    "bk_cours_name": "IN"
+  }
+]

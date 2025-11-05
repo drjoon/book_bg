@@ -1,0 +1,17 @@
+{
+  "status": "성공",
+  "startTime": "0900",
+  "endTime": "0600",
+  "successTime": "2025-11-05T12:35:03+09:00",
+  "bookedSlot": {
+    "bk_cours": "B",
+    "bk_part": "1",
+    "bk_time": "0746",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "200,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "4%",
+    "bk_cours_name": "IN"
+  }
+}

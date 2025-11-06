@@ -1,0 +1,8 @@
+{
+  "status": "실패",
+  "startTime": "0600",
+  "endTime": "0900",
+  "successTime": null,
+  "bookedSlot": null,
+  "reason": "로그인 중 오류 발생"
+}

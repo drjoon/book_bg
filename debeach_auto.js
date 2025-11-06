@@ -69,19 +69,33 @@ async function fetchBookingTimes(client, xsrfToken, dateStr) {
   return res.data;
 }
 
-// NTP 시간 동기화 함수
-const getNtpTime = () => {
-  return new Promise((resolve, reject) => {
-    ntpClient.getNetworkTime("time.apple.com", 123, (err, date) => {
-      if (err) {
-        console.warn(`NTP Error: ${err.message}. Falling back to system time.`);
-        resolve(new Date()); // NTP 실패 시 시스템 시간 사용
-      } else {
-        console.log("NTP time synchronized:", date);
-        resolve(date);
+// NTP 시간 동기화 함수 (재시도 및 대체 서버 기능 추가)
+const NTP_SERVERS = ["time.apple.com", "time.google.com", "pool.ntp.org"];
+const MAX_NTP_RETRIES = 3;
+
+const getNtpTime = async () => {
+  for (let i = 0; i < MAX_NTP_RETRIES; i++) {
+    for (const server of NTP_SERVERS) {
+      try {
+        const time = await new Promise((resolve, reject) => {
+          ntpClient.getNetworkTime(server, 123, (err, date) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(date);
+            }
+          });
+        });
+        console.log(`NTP time synchronized with ${server}:`, time);
+        return time;
+      } catch (err) {
+        console.warn(`NTP Error with ${server} (Attempt ${i + 1}/${MAX_NTP_RETRIES}):`, err);
       }
-    });
-  });
+    }
+  }
+
+  console.error("All NTP servers failed. Falling back to system time.");
+  return new Date(); // 모든 시도 실패 시 시스템 시간 사용
 };
 
 // 단일 예약 시도를 처리하는 함수
@@ -137,42 +151,41 @@ async function runBookingGroup(group) {
     });
   }
 
-  // 1. 예약 오픈 시간까지 대기
-  console.log(`${logPrefix} Waiting for booking to open...`);
-  await waitForBookingOpen(date);
+  // 1. 예약 오픈 1분 전까지 대기
+  const bookingOpenTime = getBookingOpenTime(date);
+  await waitForBookingReady(bookingOpenTime, date);
 
-  // 2. 예약 시도 직전, 해당 그룹의 계정들만 로그인
-  console.log(`${logPrefix} Logging in accounts for this group...`);
+  // 2. 모든 계정 로그인
+  console.log(`${logPrefix} It's 1 minute to booking. Logging in all accounts...`);
   const accounts = [];
   for (const config of configs) {
-    // 로그인 직전에 상태를 다시 확인
     const statusFilePath = `${BOOKLIST_DIR}/${config.NAME}/${date}.json`;
     if (fs.existsSync(statusFilePath)) {
-        const statusData = JSON.parse(fs.readFileSync(statusFilePath, 'utf-8'));
-        if (statusData.status === '성공' || statusData.status === '실패') {
-            console.log(`[${config.NAME}][${date}] ⏭️ Skipping login as status is '${statusData.status}'.`);
-            continue; // 이미 처리된 계정은 로그인 건너뛰기
-        }
+      const statusData = JSON.parse(fs.readFileSync(statusFilePath, 'utf-8'));
+      if (statusData.status === '성공' || statusData.status === '실패') {
+        console.log(`[${config.NAME}][${date}] ⏭️ Skipping login as status is '${statusData.status}'.`);
+        continue;
+      }
     }
 
     const jar = new CookieJar();
     const client = axiosCookieJarSupport(axios.create({ jar, withCredentials: true, headers: { 'User-Agent': 'Mozilla/5.0' } }));
     const logName = config.NAME || config.LOGIN_ID;
-    
+
     client.interceptors.request.use(request => {
-        console.log(`[${logName}][${moment().tz("Asia/Seoul").format()}] ==> ${request.method.toUpperCase()} ${request.url}`);
-        return request;
+      console.log(`[${logName}][${moment().tz("Asia/Seoul").format()}] ==> ${request.method.toUpperCase()} ${request.url}`);
+      return request;
     });
     client.interceptors.response.use(response => {
-        console.log(`[${logName}][${moment().tz("Asia/Seoul").format()}] <== ${response.status} ${response.config.url}`);
-        return response;
+      console.log(`[${logName}][${moment().tz("Asia/Seoul").format()}] <== ${response.status} ${response.config.url}`);
+      return response;
     }, error => {
-        if (error.response) {
-            console.error(`[${logName}][${moment().tz("Asia/Seoul").format()}] <== ${error.response.status} ${error.response.config.url}`);
-        } else {
-            console.error(`[${logName}][${moment().tz("Asia/Seoul").format()}] <== ERROR ${error.config ? error.config.url : 'N/A'} (${error.message})`);
-        }
-        return Promise.reject(error);
+      if (error.response) {
+        console.error(`[${logName}][${moment().tz("Asia/Seoul").format()}] <== ${error.response.status} ${error.response.config.url}`);
+      } else {
+        console.error(`[${logName}][${moment().tz("Asia/Seoul").format()}] <== ERROR ${error.config ? error.config.url : 'N/A'} (${error.message})`);
+      }
+      return Promise.reject(error);
     });
 
     try {
@@ -180,170 +193,141 @@ async function runBookingGroup(group) {
       const isLoggedIn = await doLogin(client, token, config.LOGIN_ID, config.LOGIN_PASSWORD);
       if (isLoggedIn) {
         console.log(`[${logName}] ✅ Login successful.`);
-        accounts.push({ client, token, config, active: true });
+        accounts.push({ client, token, config });
       } else {
-        console.error(`[${logName}] 🔴 Login failed.`);
+        console.error(`[${logName}] 🚨 Login failed.`);
+        await updateBookingStatus(config.NAME, date, '실패', { reason: '로그인 실패' });
       }
     } catch (error) {
-        console.error(`[${logName}] 🔴 Login process failed:`, error.message);
+      console.error(`[${logName}] 🚨 An error occurred during login:`, error.message);
+      await updateBookingStatus(config.NAME, date, '실패', { reason: '로그인 중 오류 발생' });
     }
-    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
-  let activeAccounts = accounts.filter(a => a.active);
-  if (activeAccounts.length === 0) {
-    console.error(`${logPrefix} 🔴 All logins failed for this group. Aborting.`);
-    // 모든 계정 로그인 실패 시, 상태를 '실패'로 업데이트
-    for (const config of configs) {
-      await updateBookingStatus(config.NAME, date, '실패');
-    }
+  if (accounts.length === 0) {
+    console.log(`${logPrefix} No accounts were successfully logged in. Aborting booking for this group.`);
     return;
   }
 
-  // 3. 예약 가능한 시간 목록 가져오기
-  const representativeAccount = activeAccounts[0];
-  let allAvailableTimes = await fetchBookingTimes(representativeAccount.client, representativeAccount.token, date);
+  // 3. 예약 시간까지 정밀 대기
+  await waitForBookingOpen(bookingOpenTime, date);
 
-  if (!allAvailableTimes || allAvailableTimes.length === 0) {
-    console.log(`${logPrefix} 🔴 No available time slots found.`);
-    // 예약 가능한 시간이 없으면 모든 계정 상태를 '실패'로 변경
-    for (const config of configs) {
-      await updateBookingStatus(config.NAME, date, '실패');
-    }
-    return;
-  }
+  // 3. 각 계정에 대해 병렬로 예약 시도
+  const bookingPromises = accounts.map(account => {
+    return (async () => {
+      const { config } = account;
+      const logName = config.NAME || config.LOGIN_ID;
 
-  // 조회된 시간 목록을 파일로 저장 (파일이 존재하지 않을 경우에만)
-  try {
-    const dataDir = './data';
-    const filePath = `${dataDir}/${date}.json`;
-    if (!fs.existsSync(filePath)) {
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
+      // 각 계정별로 예약 가능한 시간을 독립적으로 조회
+      let allAvailableTimes;
+      try {
+        allAvailableTimes = await fetchBookingTimes(account.client, account.token, date);
+      } catch (e) {
+        console.error(`[${logName}] ❌ Failed to fetch booking times:`, e.message);
+        await updateBookingStatus(config.NAME, date, '실패', { reason: '시간 조회 실패' });
+        return;
       }
-      fs.writeFileSync(filePath, JSON.stringify(allAvailableTimes, null, 2));
-      console.log(`${logPrefix} ✅ Saved ${allAvailableTimes.length} available slots to ${filePath}`);
-    } else {
-      console.log(`${logPrefix} ℹ️ File ${filePath} already exists. Skipping save.`);
-    }
-  } catch (error) {
-    console.error(`${logPrefix} 🔴 Failed to save time slots to file:`, error.message);
-  }
 
-  // 각 활성 계정의 상태를 '재시도'로 업데이트
-  for (const account of activeAccounts) {
-    await updateBookingStatus(account.config.NAME, date, '재시도');
-  }
+      if (!allAvailableTimes || allAvailableTimes.length === 0) {
+        console.log(`[${logName}] 🔴 No available time slots found.`);
+        await updateBookingStatus(config.NAME, date, '실패', { reason: '예약 가능 시간 없음' });
+        return;
+      }
 
-  // 4. 계정별 희망 시간에 맞춰 슬롯 필터링 및 정렬
-  activeAccounts.forEach(account => {
-    const { START_TIME, END_TIME } = account.config;
-    const isDescending = parseInt(START_TIME, 10) > parseInt(END_TIME, 10);
-    const minTime = isDescending ? END_TIME : START_TIME;
-    const maxTime = isDescending ? START_TIME : END_TIME;
+      // 해당 계정의 설정(START_TIME, END_TIME)에 맞는 슬롯 필터링
+      const targetTimes = allAvailableTimes.filter(slot => {
+        const slotTime = parseInt(slot.bk_time, 10);
+        const startTime = parseInt(config.START_TIME, 10);
+        const endTime = parseInt(config.END_TIME, 10);
+        return slotTime >= startTime && slotTime <= endTime;
+      });
 
-    const filtered = allAvailableTimes.filter(slot => slot.bk_time >= minTime && slot.bk_time <= maxTime);
+      if (targetTimes.length === 0) {
+        console.log(`[${logName}] 🟡 No available slots in the desired time range (${config.START_TIME}-${config.END_TIME}).`);
+        await updateBookingStatus(config.NAME, date, '실패', { reason: '원하는 시간대 없음' });
+        return;
+      }
 
-    if (isDescending) {
-      filtered.sort((a, b) => b.bk_time.localeCompare(a.bk_time));
-    } else {
-      filtered.sort((a, b) => a.bk_time.localeCompare(b.bk_time));
-    }
-    account.slots = filtered; // 계정 객체에 필터링 및 정렬된 슬롯 저장
-    console.log(`[${account.config.NAME || account.config.LOGIN_ID}] Found ${filtered.length} slots in range [${minTime}-${maxTime}]`);
+      console.log(`[${logName}] 🎯 Found ${targetTimes.length} target slots. Trying to book...`);
+
+      // 첫 번째 슬롯부터 순차적으로 시도
+      for (const targetSlot of targetTimes) {
+        const result = await attemptBooking(account, targetSlot);
+        if (result.success) {
+          return; // 성공 시 이 계정의 예약 시도 중단
+        }
+      }
+
+      // 모든 슬롯 시도 실패
+      console.log(`[${logName}] ❌ All attempts failed for the available slots.`);
+      await updateBookingStatus(config.NAME, date, '실패', { reason: '모든 슬롯 예약 실패' });
+    })();
   });
 
-  // 5. 예약 시도 및 재시도 루프
-  let round = 0;
-  while (activeAccounts.length > 0) {
-    console.log(`${logPrefix} --- New booking round ---`);
-
-    // 이번 라운드에서 시도할 슬롯이 있는 계정만 필터링
-    const accountsForThisRound = activeAccounts.filter(acc => acc.slots.length > round);
-    if (accountsForThisRound.length === 0) {
-        console.log(`${logPrefix} 🔴 No more slots to try for any active accounts.`);
-        break;
-    }
-
-    console.log(`${logPrefix} Active accounts: ${accountsForThisRound.length}`);
-
-    // 각 활성 계정에 슬롯을 할당하여 병렬로 예약 시도
-    const bookingPromises = accountsForThisRound.map(account => {
-      const targetSlot = account.slots[round];
-      return attemptBooking(account, targetSlot);
-    });
-
-    const results = await Promise.all(bookingPromises);
-
-    // 성공한 계정 비활성화
-    results.forEach((result, index) => {
-      if (result.success) {
-        const successfulAccount = accountsForThisRound[index];
-        successfulAccount.active = false;
-      }
-    });
-    activeAccounts = activeAccounts.filter(acc => acc.active);
-
-    round++;
-  }
+  await Promise.all(bookingPromises);
 
   console.log(`${logPrefix} --- Booking process finished ---`);
-
-  // 최종적으로 성공하지 못한 계정들의 상태를 '실패'로 업데이트
-  const finalStatus = await Promise.all(accounts.map(async acc => {
-      const statusFilePath = `${BOOKLIST_DIR}/${acc.config.NAME}/${date}.json`;
-      if (fs.existsSync(statusFilePath)) {
-          const statusData = JSON.parse(fs.readFileSync(statusFilePath, 'utf-8'));
-          return statusData.status;
-      }
-      return null;
-  }));
-
-  for (let i = 0; i < accounts.length; i++) {
-      if (finalStatus[i] !== '성공') {
-          await updateBookingStatus(accounts[i].config.NAME, date, '실패');
-      }
-  }
 }
 
-// 예약 오픈 시간까지 대기하는 함수
-async function waitForBookingOpen(targetDateStr) {
+function getBookingOpenTime(targetDateStr) {
   const targetDate = moment.tz(targetDateStr, "YYYYMMDD", "Asia/Seoul");
   const dayOfWeek = targetDate.day();
   let openTime = targetDate.clone().set({ hour: 0, minute: 0, second: 0 });
 
-  if (dayOfWeek === 0) { openTime.add(10, 'hours').subtract(11, 'days'); }
-  else if (dayOfWeek === 6) { openTime.add(10, 'hours').subtract(10, 'days'); }
-  else { openTime.add(9, 'hours').subtract(14, 'days'); }
+  if (dayOfWeek === 0) { openTime.add(10, 'hours').subtract(11, 'days'); } // 일요일
+  else if (dayOfWeek === 6) { openTime.add(10, 'hours').subtract(10, 'days'); } // 토요일
+  else { openTime.add(9, 'hours').subtract(14, 'days'); } // 평일
 
-  console.log(`[WAIT ${targetDateStr}] Calculated booking open time: ${openTime.format()}`);
+  return openTime;
+}
 
-  // ... (이전에 구현한 정밀 대기 로직) ...
+// 1분 전까지 대기하는 함수
+async function waitForBookingReady(openTime, dateStr) {
+  const oneMinuteBefore = openTime.clone().subtract(1, 'minute');
+  let now = moment();
+
+  // 이미 1분 이내로 남았으면 바로 진행
+  if (now.isAfter(oneMinuteBefore)) {
+    console.log(`[WAIT ${dateStr}] Less than 1 minute to booking, proceeding to login.`);
+    return true;
+  }
+
+  while (moment().isBefore(oneMinuteBefore)) {
+    const waitTimeMs = oneMinuteBefore.diff(moment());
+    const sleepTime = Math.min(waitTimeMs, 30000); // 최대 30초마다 체크
+    console.log(`[WAIT ${dateStr}] Booking opens in ${Math.round(openTime.diff(moment())/1000)}s. Waiting for ${sleepTime/1000}s...`);
+    await new Promise(resolve => setTimeout(resolve, sleepTime));
+  }
+  return true;
+}
+
+// 예약 시간까지 정밀 대기하는 함수
+async function waitForBookingOpen(openTime, dateStr) {
+  console.log(`[WAIT ${dateStr}] Starting precision wait. Booking open time: ${openTime.format()}`);
+
   let ntpTime = await getNtpTime();
   let offset = moment(ntpTime).diff(moment());
   let correctedTime = () => moment().add(offset, 'ms');
   let waitTime = openTime.diff(correctedTime());
 
-  // 예약 시간이 이미 지났으면 대기하지 않음
   if (waitTime <= 5) {
-    console.log(`[WAIT ${targetDateStr}] Booking time has already passed. Proceeding immediately.`);
+    console.log(`[WAIT ${dateStr}] Booking time has already passed. Proceeding immediately.`);
   } else {
-    const PRECISION_THRESHOLD = 60000; // 1분
     while (waitTime > 5) {
-    let sleepTime = (waitTime > PRECISION_THRESHOLD) ? 30000 : 5000;
-    const finalSleepTime = Math.min(waitTime - 5, sleepTime);
-    if (finalSleepTime <= 0) break;
+      const sleepTime = Math.min(waitTime - 5, 5000); // 5초 또는 남은 시간
+      if (sleepTime <= 0) break;
 
-    console.log(`[WAIT ${targetDateStr}] Booking opens in ${Math.round(waitTime / 1000)}s. Waiting for ${finalSleepTime / 1000}s...`);
-    await new Promise(resolve => setTimeout(resolve, finalSleepTime));
+      console.log(`[WAIT ${dateStr}] Booking opens in ${Math.round(waitTime / 1000)}s. Waiting for ${sleepTime / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, sleepTime));
 
-    ntpTime = await getNtpTime();
-    offset = moment(ntpTime).diff(moment());
+      // 루프마다 시간 재동기화
+      ntpTime = await getNtpTime();
+      offset = moment(ntpTime).diff(moment());
       waitTime = openTime.diff(correctedTime());
     }
   }
 
-  console.log(`[WAIT ${targetDateStr}] Booking time! Applying 300ms delay...`);
+  console.log(`[WAIT ${dateStr}] Booking time! Applying 300ms delay...`);
   await new Promise(resolve => setTimeout(resolve, 300));
 }
 
@@ -460,7 +444,21 @@ async function updateBookingStatus(accountName, date, status, accountData = {}) 
 async function main() {
   const allConfigs = JSON.parse(fs.readFileSync('./booking_configs.json', 'utf-8'));
 
-  const configs = allConfigs.filter(config => {
+  // 오늘 예약해야 할 설정만 필터링
+  const today = moment().tz('Asia/Seoul');
+  const configsToBookToday = allConfigs.filter(config => {
+    const openTime = getBookingOpenTime(config.TARGET_DATE);
+    return openTime.isSame(today, 'day');
+  });
+
+  if (configsToBookToday.length === 0) {
+    console.log(`No bookings to be made today (${today.format('YYYY-MM-DD')}).`);
+    return;
+  }
+
+  console.log(`Found ${configsToBookToday.length} booking(s) to be made today.`);
+
+  const configs = configsToBookToday.filter(config => {
     const { NAME, TARGET_DATE } = config;
     const statusFilePath = `${BOOKLIST_DIR}/${NAME}/${TARGET_DATE}.json`;
 

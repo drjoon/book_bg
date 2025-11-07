@@ -4,7 +4,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "pm2-runtime ecosystem.config.cjs",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "node --experimental-specifier-resolution=node migrate.js",
+    "migrate-accounts": "node web/backend/migrate_accounts.js"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +18,9 @@
     "axios-cookiejar-support": "^6.0.4",
     "cheerio": "^1.1.2",
     "dotenv": "^17.2.3",
-    "tough-cookie": "^6.0.0",
+    "moment-timezone": "^0.5.45",
+    "mongoose": "^8.19.3",
     "ntp-client": "^0.5.3",
-    "moment-timezone": "^0.5.45"
+    "tough-cookie": "^6.0.0"
   }
 }

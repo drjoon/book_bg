@@ -44,6 +44,7 @@ interface Booking {
 type BookingsByDate = Record<string, Booking[]>;
 
 function App() {
+  const [showStatusLegend, setShowStatusLegend] = useState<boolean>(false);
   const [bookings, setBookings] = useState<BookingsByDate>({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -157,28 +158,46 @@ function App() {
     return (
       <div className="flex flex-col items-stretch text-xs mt-1 space-y-1 p-1 h-full">
         {dayBookings.map((booking, index) => (
-          <button
+          <div
             key={index}
             onClick={(e) => {
               e.stopPropagation();
               handleBookingClick(booking, date);
             }}
-            className={`w-full text-white rounded-md text-center text-[10px] leading-tight py-1 ${getStatusColor(
+            className={`w-full text-white rounded-md text-center text-[10px] leading-tight py-1 cursor-pointer ${getStatusColor(
               booking.status
             )}`}
           >
             {booking.account}
-          </button>
+          </div>
         ))}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-200 via-gray-100 to-blue-200 text-gray-900 font-sans">
       <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
         <header className="relative flex justify-between items-center mb-10">
-          <div className="flex justify-center flex-wrap gap-x-4 gap-y-2">
+          <div />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowStatusLegend((v) => !v)}
+              className="p-2 rounded-full bg-white/80 hover:bg-blue-100 border border-blue-100 shadow-sm"
+              aria-label="상태 설명 보기"
+            >
+              <span className="text-xs font-semibold text-blue-600">상태</span>
+            </button>
+            <button
+              onClick={() => setIsAccountModalOpen(true)}
+              className="p-2 rounded-full bg-white/80 hover:bg-blue-100 border border-blue-100 shadow-sm"
+            >
+              <User className="h-6 w-6 text-gray-600" />
+            </button>
+          </div>
+        </header>
+        {showStatusLegend && (
+          <div className="flex justify-center flex-wrap gap-x-4 gap-y-2 mb-6 animate-fade-in">
             {Object.entries(statusLegend).map(([status, color]) => (
               <div
                 key={status}
@@ -188,18 +207,11 @@ function App() {
               </div>
             ))}
           </div>
-
-          <button
-            onClick={() => setIsAccountModalOpen(true)}
-            className="p-2 rounded-full bg-white/50 dark:bg-gray-700/50 hover:bg-white dark:hover:bg-gray-600"
-          >
-            <User className="h-6 w-6 text-gray-600 dark:text-gray-300" />
-          </button>
-        </header>
+        )}
 
         <main>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-lg">
+            <div className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-xl border border-blue-100">
               <Calendar
                 onClickDay={handleDayClick}
                 value={activeMonth}
@@ -210,7 +222,7 @@ function App() {
                 locale="en-US"
               />
             </div>
-            <div className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-lg">
+            <div className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-xl border border-blue-100">
               <Calendar
                 onClickDay={handleDayClick}
                 tileContent={getTileContent}

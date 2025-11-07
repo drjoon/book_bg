@@ -2,6 +2,21 @@ import express from 'express';
 import cors from 'cors';
 import fs from 'fs/promises';
 import path from 'path';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import { Booking, Account } from './models.js'; // Import models
+import { runAutoBooking, getBookingOpenTime } from '../../auto/debeach_auto.js';
+import moment from 'moment-timezone';
+
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Successfully connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 const app = express();
 const PORT = 3001;
@@ -9,115 +24,120 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-const BOOKLIST_DIR = path.resolve(process.cwd(), '../../booklist');
-const CONFIG_PATH = path.resolve(process.cwd(), '../../booking_configs.json');
+const CONFIG_PATH = path.resolve(__dirname, '../../auto/booking_configs.json');
+const QUEUE_PATH = path.resolve(__dirname, '../../auto/queue.json');
 
-// dev/book/booklist 디렉토리에서 모든 예약 정보를 읽어오는 API
+async function loadQueue() {
+  try {
+    return JSON.parse(await fs.readFile(QUEUE_PATH, 'utf-8'));
+  } catch (e) {
+    return [];
+  }
+}
+
+async function saveQueue(queue) {
+  await fs.writeFile(QUEUE_PATH, JSON.stringify(queue, null, 2));
+}
+
+async function enqueueOrUpdate(job) {
+  const normalized = {
+    account: job.account ?? job.NAME,
+    date: job.date ?? job.TARGET_DATE,
+    startTime: job.startTime ?? job.START_TIME,
+    endTime: job.endTime ?? job.END_TIME,
+  };
+  if (!normalized.account || !normalized.date) return;
+  const queue = await loadQueue();
+  const idx = queue.findIndex(
+    (q) => q.account === normalized.account && q.date === normalized.date
+  );
+  if (idx >= 0) {
+    queue[idx] = { ...queue[idx], ...normalized };
+  } else {
+    queue.push(normalized);
+  }
+  await saveQueue(queue);
+}
+
+// 모든 예약 정보를 MongoDB에서 읽어오는 API
 app.get('/api/bookings', async (req, res) => {
   try {
+    const bookings = await Booking.find({});
     const bookingsByDate = {};
-    const accountDirs = await fs.readdir(BOOKLIST_DIR, { withFileTypes: true });
 
-    for (const accountDir of accountDirs) {
-      if (accountDir.isDirectory()) {
-        const accountName = accountDir.name;
-        const dateFiles = await fs.readdir(path.join(BOOKLIST_DIR, accountName));
-
-        for (const dateFile of dateFiles) {
-          const date = path.basename(dateFile, '.json');
-          const filePath = path.join(BOOKLIST_DIR, accountName, dateFile);
-          const content = await fs.readFile(filePath, 'utf-8');
-          const bookingData = JSON.parse(content);
-
-          if (!bookingsByDate[date]) {
-            bookingsByDate[date] = [];
-          }
-
-          bookingsByDate[date].push({ 
-            account: accountName, 
-            ...bookingData 
-          });
-        }
+    for (const booking of bookings) {
+      const date = booking.date;
+      if (!bookingsByDate[date]) {
+        bookingsByDate[date] = [];
       }
+      bookingsByDate[date].push(booking);
     }
 
     // 각 날짜별로 bk_time을 기준으로 정렬
     for (const date in bookingsByDate) {
-        bookingsByDate[date].sort((a, b) => {
-            const timeA = a.bookedSlot?.bk_time || '9999';
-            const timeB = b.bookedSlot?.bk_time || '9999';
-            return timeA.localeCompare(timeB);
-        });
+      bookingsByDate[date].sort((a, b) => {
+        const timeA = a.bookedSlot?.bk_time || '9999';
+        const timeB = b.bookedSlot?.bk_time || '9999';
+        return timeA.localeCompare(timeB);
+      });
     }
 
     res.json(bookingsByDate);
   } catch (error) {
-    if (error.code === 'ENOENT') {
-        // booklist 폴더가 아직 없는 경우, 빈 객체 반환
-        console.log('booklist directory not found, returning empty data.');
-        return res.json({});
-    }
     console.error('Error fetching bookings:', error);
     res.status(500).json({ message: 'Failed to fetch bookings' });
   }
 });
 
-// 계정 목록을 가져오는 API
+// 계정 목록을 MongoDB에서 가져오는 API
 app.get('/api/accounts', async (req, res) => {
   try {
-    const configs = JSON.parse(await fs.readFile(CONFIG_PATH, 'utf-8'));
-    const accounts = configs.map(c => ({
-      name: c.NAME,
-      loginId: c.LOGIN_ID,
-      loginPassword: c.LOGIN_PASSWORD
-    }));
-    // 중복 제거
-    const uniqueAccounts = Array.from(new Map(accounts.map(a => [a.name, a])).values());
-    res.json(uniqueAccounts);
+    const accounts = await Account.find({}, 'name loginId loginPassword');
+    res.json(accounts);
   } catch (error) {
     console.error('Error fetching accounts:', error);
     res.status(500).json({ message: 'Failed to fetch accounts' });
   }
 });
 
-// 신규 예약 생성 (파일 생성)
+// 신규 예약 생성 (MongoDB)
 app.post('/api/bookings', async (req, res) => {
   const { NAME, TARGET_DATE, START_TIME, END_TIME } = req.body;
   if (!NAME || !TARGET_DATE || !START_TIME || !END_TIME) {
     return res.status(400).json({ message: '필수 정보가 누락되었습니다.' });
   }
 
-    try {
-    const accountDir = path.join(BOOKLIST_DIR, NAME);
-    const filePath = path.join(accountDir, `${TARGET_DATE}.json`);
-
-    // 파일 존재 여부로 중복 체크
-    try {
-      await fs.access(filePath);
-      return res.status(409).json({ message: '해당 날짜에 이미 예약이 존재합니다.' });
-    } catch (e) {
-      // 파일이 없으면 계속 진행
+  try {
+    // 오픈 1분 이내 차단
+    const now = moment().tz('Asia/Seoul');
+    const openTime = getBookingOpenTime(TARGET_DATE);
+    if (now.isSameOrAfter(openTime.clone().subtract(1, 'minute')) && now.isBefore(openTime)) {
+      return res.status(409).json({ message: '오픈 1분 이내에는 예약을 추가/수정할 수 없습니다.' });
     }
 
-    await fs.mkdir(accountDir, { recursive: true });
-
-    const newBookingData = {
+    const newBooking = new Booking({
+      account: NAME,
+      date: TARGET_DATE,
       status: '접수',
       startTime: START_TIME,
       endTime: END_TIME,
       successTime: null,
       bookedSlot: null,
-    };
+    });
 
-    await fs.writeFile(filePath, JSON.stringify(newBookingData, null, 2));
-    res.status(201).json({ message: '예약이 추가되었습니다.', ...newBookingData });
+    const savedBooking = await newBooking.save();
+    await enqueueOrUpdate(savedBooking.toObject());
+    res.status(201).json({ message: '예약이 추가되었습니다.', ...savedBooking.toObject() });
   } catch (error) {
+    if (error.code === 11000) { // Duplicate key error
+      return res.status(409).json({ message: '해당 날짜에 이미 예약이 존재합니다.' });
+    }
     console.error('예약 추가 중 오류 발생:', error);
     res.status(500).json({ message: '예약 추가에 실패했습니다.' });
   }
 });
 
-// 예약 변경 (파일 수정)
+// 예약 변경 (MongoDB)
 app.put('/api/bookings/:date/:account', async (req, res) => {
   const { date, account } = req.params;
   const { startTime, endTime } = req.body;
@@ -127,35 +147,83 @@ app.put('/api/bookings/:date/:account', async (req, res) => {
   }
 
   try {
-    const filePath = path.join(BOOKLIST_DIR, account, `${date}.json`);
-    const content = await fs.readFile(filePath, 'utf-8');
-    const bookingData = JSON.parse(content);
+    // 오픈 1분 이내 차단
+    const now = moment().tz('Asia/Seoul');
+    const openTime = getBookingOpenTime(date);
+    if (now.isSameOrAfter(openTime.clone().subtract(1, 'minute')) && now.isBefore(openTime)) {
+      return res.status(409).json({ message: '오픈 1분 이내에는 예약을 추가/수정할 수 없습니다.' });
+    }
 
-    bookingData.startTime = startTime;
-    bookingData.endTime = endTime;
+    const updatedBooking = await Booking.findOneAndUpdate(
+      { date, account },
+      { startTime, endTime },
+      { new: true } // Return the updated document
+    );
 
-    await fs.writeFile(filePath, JSON.stringify(bookingData, null, 2));
-    res.json({ message: '예약이 변경되었습니다.', ...bookingData });
+    if (!updatedBooking) {
+      return res.status(404).json({ message: '변경할 예약을 찾을 수 없습니다.' });
+    }
+
+    await enqueueOrUpdate(updatedBooking.toObject());
+    res.json({ message: '예약이 변경되었습니다.', ...updatedBooking.toObject() });
   } catch (error) {
     console.error('예약 변경 중 오류 발생:', error);
     res.status(500).json({ message: '예약 변경에 실패했습니다.' });
   }
 });
 
-// 예약 삭제 (파일 삭제)
+// 예약 삭제 (MongoDB)
 app.delete('/api/bookings/:date/:account', async (req, res) => {
   const { date, account } = req.params;
 
   try {
-    const filePath = path.join(BOOKLIST_DIR, account, `${date}.json`);
-    await fs.unlink(filePath);
-    res.json({ message: '예약이 삭제되었습니다.' });
-  } catch (error) {
-    if (error.code === 'ENOENT') {
+    const deletedBooking = await Booking.findOneAndDelete({ date, account });
+
+    if (!deletedBooking) {
       return res.status(404).json({ message: '삭제할 예약을 찾을 수 없습니다.' });
     }
+
+    res.json({ message: '예약이 삭제되었습니다.' });
+  } catch (error) {
     console.error('예약 삭제 중 오류 발생:', error);
     res.status(500).json({ message: '예약 삭제에 실패했습니다.' });
+  }
+});
+
+// 통합 예약 요청 API
+app.post('/api/submit-booking', async (req, res) => {
+  try {
+    const body = req.body;
+    const job = {
+      account: body.account ?? body.NAME,
+      date: body.date ?? body.TARGET_DATE,
+      startTime: body.startTime ?? body.START_TIME,
+      endTime: body.endTime ?? body.END_TIME,
+    };
+    const openTime = getBookingOpenTime(job.date);
+    const now = moment().tz('Asia/Seoul');
+
+    // 오픈 1분 이내 등록 차단 로직 (큐 등록 시에만)
+    if (now.isBefore(openTime)) {
+      if (now.isSameOrAfter(openTime.clone().subtract(1, 'minute'))) {
+        return res.status(409).json({ message: '오픈 1분 이내에는 자동 예약 등록을 할 수 없습니다.' });
+      }
+    }
+
+    if (now.isAfter(openTime)) {
+      // 즉시 실행
+      console.log(`[API] Booking time has passed. Running immediately for ${job.account} on ${job.date}`);
+      await runAutoBooking([job], { immediate: true });
+      res.json({ message: '즉시 예약을 시작합니다!' });
+    } else {
+      // 큐에 추가
+      console.log(`[API] Queuing booking for ${job.account} on ${job.date}`);
+      await enqueueOrUpdate(job);
+      res.json({ message: '예약이 큐에 추가되었습니다.' });
+    }
+  } catch (error) {
+    console.error('통합 예약 처리 오류:', error);
+    res.status(500).json({ message: '예약 처리에 실패했습니다.' });
   }
 });
 

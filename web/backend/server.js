@@ -2,21 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import fs from 'fs/promises';
 import path from 'path';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import { Booking, Account } from './models.js'; // Import models
 import { runAutoBooking, getBookingOpenTime } from '../../auto/debeach_auto.js';
 import moment from 'moment-timezone';
+import connectDB from './db.js';
 
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Successfully connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+connectDB();
 
 const app = express();
 const PORT = 3001;
@@ -45,6 +40,7 @@ async function enqueueOrUpdate(job) {
     date: job.date ?? job.TARGET_DATE,
     startTime: job.startTime ?? job.START_TIME,
     endTime: job.endTime ?? job.END_TIME,
+    force: job.force === true,
   };
   if (!normalized.account || !normalized.date) return;
   const queue = await loadQueue();
@@ -199,7 +195,17 @@ app.post('/api/submit-booking', async (req, res) => {
       date: body.date ?? body.TARGET_DATE,
       startTime: body.startTime ?? body.START_TIME,
       endTime: body.endTime ?? body.END_TIME,
+      force: body.force === true,
     };
+    // 이미 성공한 예약이면 재실행하지 않음
+    try {
+      const existing = await Booking.findOne({ account: job.account, date: job.date });
+      if (!job.force && existing && existing.status === '성공') {
+        return res.json({ message: '이미 성공 상태입니다. 실행을 생략합니다.' });
+      }
+    } catch (e) {
+      console.warn('[API] Pre-check existing booking failed:', e.message);
+    }
     const openTime = getBookingOpenTime(job.date);
     const now = moment().tz('Asia/Seoul');
 
@@ -213,7 +219,7 @@ app.post('/api/submit-booking', async (req, res) => {
     if (now.isAfter(openTime)) {
       // 즉시 실행
       console.log(`[API] Booking time has passed. Running immediately for ${job.account} on ${job.date}`);
-      await runAutoBooking([job], { immediate: true });
+      await runAutoBooking([job], { immediate: true, force: job.force });
       res.json({ message: '즉시 예약을 시작합니다!' });
     } else {
       // 큐에 추가

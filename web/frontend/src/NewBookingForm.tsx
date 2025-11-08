@@ -60,10 +60,11 @@ const TimeInput: React.FC<TimeInputProps> = ({
     return val.padStart(4, "0");
   };
   return (
-    <div className="relative">
+    <div>
       <label className="block text-sm font-semibold text-gray-700 mb-2">
         {label}
       </label>
+      <div className="relative">
       <input
         type="text"
         value={value}
@@ -73,8 +74,8 @@ const TimeInput: React.FC<TimeInputProps> = ({
         className="w-full pl-4 pr-20 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all font-mono text-lg tracking-widest"
         required
       />
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-row gap-1 h-full justify-center">
-        <div className="flex flex-col gap-0.5 h-full justify-center">
+      <div className="absolute inset-y-0 right-2 flex flex-row items-center gap-1">
+        <div className="flex flex-col gap-0.5">
           <button
             type="button"
             onClick={() => onAdjust(60)}
@@ -92,7 +93,7 @@ const TimeInput: React.FC<TimeInputProps> = ({
             <ChevronsDown className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex flex-col gap-0.5 h-full justify-center">
+        <div className="flex flex-col gap-0.5">
           <button
             type="button"
             onClick={() => onAdjust(10)}
@@ -110,6 +111,7 @@ const TimeInput: React.FC<TimeInputProps> = ({
             <ChevronDown className="h-5 w-5" />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -130,8 +132,68 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
   const [endTime, setEndTime] = useState("0900");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const isEditMode = !!editingBooking;
+
+  // 예약 성공 상태를 감지하기 위한 간단한 폴링 함수
+  const pollUntilSuccess = async (
+    account: string,
+    dateStr: string,
+    timeoutMs = 60000,
+    intervalMs = 1500
+  ) => {
+    const start = Date.now();
+    return new Promise<void>((resolve, reject) => {
+      const timer = setInterval(async () => {
+        try {
+          const res = await fetch("http://localhost:3001/api/bookings");
+          const data = await res.json();
+          const day = data[dateStr] || [];
+          const match = day.find((b: any) => b.account === account);
+          if (match && match.status === "성공") {
+            clearInterval(timer);
+            resolve();
+          } else if (Date.now() - start > timeoutMs) {
+            clearInterval(timer);
+            reject(new Error("예약 성공 확인 시간 초과"));
+          }
+        } catch (e) {
+          // 네트워크 오류는 무시하고 다음 루프에서 재시도
+          if (Date.now() - start > timeoutMs) {
+            clearInterval(timer);
+            reject(new Error("예약 성공 확인 시간 초과"));
+          }
+        }
+      }, intervalMs);
+    });
+  };
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "info"
+  ) => {
+    const div = document.createElement("div");
+    div.className =
+      `fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-4 py-3 rounded-lg shadow-lg text-sm pointer-events-none ` +
+      (type === "success"
+        ? "bg-green-500 text-white"
+        : type === "error"
+        ? "bg-red-500 text-white"
+        : "bg-gray-800 text-white");
+    div.textContent = message;
+    document.body.appendChild(div);
+    requestAnimationFrame(() => {
+      div.style.opacity = "1";
+      div.style.transition = "opacity 0.3s ease";
+    });
+    setTimeout(() => {
+      div.style.opacity = "0";
+      setTimeout(() => {
+        if (div.parentNode) document.body.removeChild(div);
+      }, 300);
+    }, 1800);
+  };
 
   useEffect(() => {
     const fetchAccounts = async () => {
@@ -156,6 +218,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       fetchAccounts();
       setError(null);
       setSuccess(null);
+      setLoading(false);
     }
   }, [isOpen, editingBooking, isEditMode]);
 
@@ -164,14 +227,27 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     setTime: (time: string) => void,
     amount: number
   ) => {
-    const newTime = moment(time, "HHmm").add(amount, "minutes").format("HHmm");
-    setTime(newTime);
+    const m = moment(time, "HHmm").add(amount, "minutes");
+    const min = moment("0600", "HHmm");
+    const max = moment("1500", "HHmm");
+    if (m.isBefore(min)) {
+      setTime("0600");
+      return;
+    }
+    if (m.isAfter(max)) {
+      setTime("1500");
+      return;
+    }
+    setTime(m.format("HHmm"));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    if (loading) return;
+    setLoading(true);
+    showToast("예약 신청 중...", "info");
 
     const account = accounts.find((a) => a.name === selectedAccount);
     if (!account) {
@@ -203,7 +279,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       const response = await fetch("http://localhost:3001/api/submit-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData),
+        body: JSON.stringify({ ...bookingData, force: true }),
       });
       const result = await response.json();
 
@@ -212,18 +288,34 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       }
 
       setSuccess(result.message);
-      setTimeout(() => {
+      showToast(result.message || "예약이 등록되었습니다.", "success");
+      // 캘린더에 '접수' 상태가 보이도록 즉시 갱신
+      onBookingAdded();
+      // 성공 상태 반영을 위해 짧은 폴링 시작
+      try {
+        await pollUntilSuccess(bookingData.account, bookingData.TARGET_DATE);
+        showToast("예약이 성공 처리되었습니다.", "success");
         onBookingAdded();
+      } catch (_) {
+        // 타임아웃 시에도 조용히 무시 (사용자가 목록을 다시 볼 수 있음)
+      }
+      setTimeout(() => {
         onClose();
-      }, 1500);
+      }, 2000);
     } catch (err: any) {
       setError(err.message);
+      showToast(err.message, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdate = async () => {
     setError(null);
     setSuccess(null);
+    if (loading) return;
+    setLoading(true);
+    showToast("예약 변경 신청 중...", "info");
     try {
       // 1. Update booking times in the database
       await onBookingUpdated({ startTime, endTime });
@@ -240,7 +332,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       const response = await fetch("http://localhost:3001/api/submit-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData),
+        body: JSON.stringify({ ...bookingData, force: true }),
       });
       const result = await response.json();
 
@@ -249,11 +341,26 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       }
 
       setSuccess(result.message);
+      showToast(result.message || "예약이 변경되었습니다.", "success");
+      // 캘린더에 '접수' 상태가 보이도록 즉시 갱신
+      onBookingAdded();
+      // 성공 상태 반영을 위해 짧은 폴링 시작
+      try {
+        await pollUntilSuccess(
+          (editingBooking as any).account,
+          moment(selectedDate).format("YYYYMMDD")
+        );
+        showToast("예약이 성공 처리되었습니다.", "success");
+        onBookingAdded();
+      } catch (_) {}
       setTimeout(() => {
         onClose();
-      }, 1500);
+      }, 2000);
     } catch (err: any) {
       setError(err.message || "예약 변경 및 실행에 실패했습니다.");
+      showToast(err.message || "예약 변경 및 실행에 실패했습니다.", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -335,38 +442,45 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
               </button>
               <button
                 type="button"
-                onClick={onBookingDeleted}
-                className="px-4 py-2 rounded-lg bg-red-400 text-white hover:bg-red-500 transition-colors"
+                onClick={!loading ? onBookingDeleted : undefined}
+                disabled={loading}
+                className={`px-4 py-2 rounded-lg text-white transition-colors ${
+                  loading
+                    ? "bg-red-300 cursor-not-allowed opacity-60"
+                    : "bg-red-400 hover:bg-red-500"
+                }`}
               >
                 삭제
               </button>
               <button
                 type="button"
                 onClick={handleUpdate}
-                className="px-4 py-2 rounded-lg bg-blue-400 text-white hover:bg-blue-500 transition-colors"
+                disabled={loading}
+                className={`px-4 py-2 rounded-lg text-white transition-colors ${
+                  loading
+                    ? "bg-blue-300 cursor-not-allowed opacity-60"
+                    : "bg-blue-400 hover:bg-blue-500"
+                }`}
               >
-                변경
+                {loading ? "처리 중..." : "변경"}
               </button>
             </div>
           ) : (
             <button
               type="submit"
-              className="w-full bg-blue-400 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200"
+              disabled={loading}
+              className={`w-full text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 ${
+                loading
+                  ? "bg-blue-300 cursor-not-allowed opacity-60"
+                  : "bg-blue-400 hover:bg-blue-500"
+              }`}
             >
-              예약 추가
+              {loading ? "처리 중..." : "예약 추가"}
             </button>
           )}
 
-          {error && (
-            <div className="bg-red-100 border border-red-300 text-red-600 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-lg text-sm">
-              {success}
-            </div>
-          )}
+          {false && error}
+          {false && success}
         </form>
       </div>
     </div>

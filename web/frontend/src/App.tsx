@@ -44,13 +44,44 @@ interface Booking {
 type BookingsByDate = Record<string, Booking[]>;
 
 function App() {
-  const [showStatusLegend, setShowStatusLegend] = useState<boolean>(false);
+  // 상태 토글/전설 UI 제거
   const [bookings, setBookings] = useState<BookingsByDate>({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [activeMonth, setActiveMonth] = useState(new Date());
   const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [tooltip, setTooltip] = useState<{
+    content: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "info"
+  ) => {
+    const div = document.createElement("div");
+    div.className =
+      `fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-4 py-3 rounded-lg shadow-lg text-sm pointer-events-none ` +
+      (type === "success"
+        ? "bg-green-500 text-white"
+        : type === "error"
+        ? "bg-red-500 text-white"
+        : "bg-gray-800 text-white");
+    div.textContent = message;
+    document.body.appendChild(div);
+    requestAnimationFrame(() => {
+      div.style.opacity = "1";
+      div.style.transition = "opacity 0.3s ease";
+    });
+    setTimeout(() => {
+      div.style.opacity = "0";
+      setTimeout(() => {
+        if (div.parentNode) document.body.removeChild(div);
+      }, 300);
+    }, 1800);
+  };
 
   const statusLegend: Record<Booking["status"], string> = {
     성공: "bg-green-500",
@@ -115,10 +146,12 @@ function App() {
       }
 
       fetchBookings();
+      showToast("예약이 변경되었습니다.", "success");
       setIsNewBookingModalOpen(false);
       setSelectedBooking(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating booking:", error);
+      showToast(error.message || "예약 변경에 실패했습니다.", "error");
     }
   };
 
@@ -142,11 +175,12 @@ function App() {
 
       // Refresh bookings and close modal
       fetchBookings();
+      showToast("예약이 삭제되었습니다.", "success");
       setIsNewBookingModalOpen(false);
       setSelectedBooking(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting booking:", error);
-      // You might want to show an error message to the user here
+      showToast(error.message || "예약 삭제에 실패했습니다.", "error");
     }
   };
 
@@ -154,6 +188,9 @@ function App() {
     if (view !== "month") return null;
     const dateStr = moment(date).format("YYYYMMDD");
     const dayBookings = bookings[dateStr] || [];
+
+    const tooltipText = (b: Booking) =>
+      `${b.account} ${b.status === "접수" ? "접수중" : b.status}`;
 
     return (
       <div className="flex flex-col items-stretch text-xs mt-1 space-y-1 p-1 h-full">
@@ -163,6 +200,19 @@ function App() {
             onClick={(e) => {
               e.stopPropagation();
               handleBookingClick(booking, date);
+            }}
+            onMouseEnter={(e) => {
+              setTooltip({
+                content: tooltipText(booking),
+                x: e.clientX,
+                y: e.clientY,
+              });
+            }}
+            onMouseLeave={() => setTooltip(null)}
+            onMouseMove={(e) => {
+              if (tooltip) {
+                setTooltip((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : prev));
+              }
             }}
             className={`w-full text-white rounded-md text-center text-[10px] leading-tight py-1 cursor-pointer ${getStatusColor(
               booking.status
@@ -178,16 +228,8 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-200 via-gray-100 to-blue-200 text-gray-900 font-sans">
       <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
-        <header className="relative flex justify-between items-center mb-10">
-          <div />
+        <header className="relative flex justify-end items-center mb-10">
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowStatusLegend((v) => !v)}
-              className="p-2 rounded-full bg-white/80 hover:bg-blue-100 border border-blue-100 shadow-sm"
-              aria-label="상태 설명 보기"
-            >
-              <span className="text-xs font-semibold text-blue-600">상태</span>
-            </button>
             <button
               onClick={() => setIsAccountModalOpen(true)}
               className="p-2 rounded-full bg-white/80 hover:bg-blue-100 border border-blue-100 shadow-sm"
@@ -196,18 +238,6 @@ function App() {
             </button>
           </div>
         </header>
-        {showStatusLegend && (
-          <div className="flex justify-center flex-wrap gap-x-4 gap-y-2 mb-6 animate-fade-in">
-            {Object.entries(statusLegend).map(([status, color]) => (
-              <div
-                key={status}
-                className={`px-3 py-1 text-sm rounded-full text-white ${color}`}
-              >
-                {status}
-              </div>
-            ))}
-          </div>
-        )}
 
         <main>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -260,6 +290,15 @@ function App() {
         }}
         editingBooking={selectedBooking}
       />
+
+      {tooltip && (
+        <div
+          className="fixed z-[9999] px-3 py-1.5 bg-gray-800 text-white text-xs rounded-md shadow-lg pointer-events-none whitespace-nowrap"
+          style={{ top: tooltip.y + 15, left: tooltip.x + 15 }}
+        >
+          {tooltip.content}
+        </div>
+      )}
 
       <AccountManager
         isOpen={isAccountModalOpen}

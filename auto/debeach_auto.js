@@ -5,9 +5,10 @@ import ntpClient from "ntp-client";
 import moment from "moment-timezone";
 import * as cheerio from "cheerio";
 import { Account, Booking, AvailableSlot } from "../web/backend/models.js";
-import dotenv from "dotenv";
+import mongoose from "mongoose";
+import connectDB from "../web/backend/db.js";
 
-dotenv.config({ path: "./web/backend/.env" });
+connectDB();
 
 async function getLoginToken(client) {
   const res = await client.get("https://www.debeach.co.kr/auth/login");
@@ -201,13 +202,32 @@ async function attemptBooking(account, targetSlot) {
 async function runBookingGroup(group, options) {
   const { date, configs } = group;
   const logPrefix = `[GROUP ${date}]`;
+  const force = options && options.force === true;
 
   console.log(
     `${logPrefix} Starting booking process for ${configs.length} accounts.`
   );
 
-  // 각 계정별로 상태 파일 생성 및 '접수' 상태로 초기화
+  // 각 계정별 상태 초기화
   for (const config of configs) {
+    if (!force) {
+      try {
+        const existing = await Booking.findOne({ account: config.NAME, date });
+        if (
+          existing &&
+          (existing.status === "성공" || existing.status === "실패")
+        ) {
+          console.log(
+            `[${config.NAME}][${date}] Skip initializing status as it's already '${existing.status}'.`
+          );
+          continue;
+        }
+      } catch (e) {
+        console.warn(
+          `[${config.NAME}][${date}] Failed to read existing status: ${e.message}`
+        );
+      }
+    }
     await updateBookingStatus(config.NAME, date, "접수", {
       startTime: config.START_TIME,
       endTime: config.END_TIME,
@@ -234,14 +254,16 @@ async function runBookingGroup(group, options) {
       account: config.NAME,
       date: date,
     });
-    if (
-      bookingStatus &&
-      (bookingStatus.status === "성공" || bookingStatus.status === "실패")
-    ) {
-      console.log(
-        `[${config.NAME}][${date}] ⏭️ Skipping login as status is '${bookingStatus.status}'.`
-      );
-      continue;
+    if (!force) {
+      if (
+        bookingStatus &&
+        (bookingStatus.status === "성공" || bookingStatus.status === "실패")
+      ) {
+        console.log(
+          `[${config.NAME}][${date}] ⏭️ Skipping login as status is '${bookingStatus.status}'.`
+        );
+        continue;
+      }
     }
 
     const jar = new CookieJar();
@@ -628,17 +650,34 @@ async function selectAndConfirmBooking(
 
 // 예약 상태를 파일에 저장/업데이트하는 함수
 async function updateBookingStatus(name, date, status, bookingData = {}) {
-  try {
-    await Booking.updateOne(
-      { account: name, date: date },
-      { $set: { status, ...bookingData } },
-      { upsert: true } // Create if it doesn't exist
-    );
-  } catch (error) {
-    console.error(
-      `Failed to update booking status for ${name} on ${date} in DB:`,
-      error
-    );
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // 연결 상태 확인 (0: disconnected, 1: connected, 2: connecting, 3: disconnecting)
+      if (mongoose.connection.readyState !== 1) {
+        console.warn(
+          `[DB] MongoDB not fully connected (state: ${mongoose.connection.readyState}). Retrying...`
+        );
+      }
+      await Booking.updateOne(
+        { account: name, date: date },
+        { $set: { status, ...bookingData } },
+        { upsert: true }
+      );
+      return;
+    } catch (error) {
+      const wait = 300 * attempt;
+      console.warn(
+        `Retry ${attempt}/${maxRetries} updating booking status for ${name} ${date}: ${error.message}. Waiting ${wait}ms...`
+      );
+      await new Promise((r) => setTimeout(r, wait));
+      if (attempt === maxRetries) {
+        console.error(
+          `Failed to update booking status for ${name} on ${date} in DB after retries:`,
+          error
+        );
+      }
+    }
   }
 }
 

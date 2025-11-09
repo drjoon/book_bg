@@ -1,0 +1,45 @@
+{
+  "Certificate": {
+    "CertificateArn": "arn:aws:acm:us-east-1:106055905364:certificate/1d56708e-e803-4b78-87e1-b0546b2380fc",
+    "DomainName": "abuts.fit",
+    "SubjectAlternativeNames": ["abuts.fit", "www.abuts.fit"],
+    "DomainValidationOptions": [
+      {
+        "DomainName": "abuts.fit",
+        "ValidationDomain": "abuts.fit",
+        "ValidationStatus": "PENDING_VALIDATION",
+        "ResourceRecord": {
+          "Name": "_d9d34d3d870f010b3eefdf7c9ab5c13d.abuts.fit.",
+          "Type": "CNAME",
+          "Value": "_0e9f3447f88a163f467eef0388eee718.xlfgrmvvlj.acm-validations.aws."
+        },
+        "ValidationMethod": "DNS"
+      },
+      {
+        "DomainName": "www.abuts.fit",
+        "ValidationDomain": "www.abuts.fit",
+        "ValidationStatus": "PENDING_VALIDATION",
+        "ResourceRecord": {
+          "Name": "_688263cf6786c9ed90c098908ca92e78.www.abuts.fit.",
+          "Type": "CNAME",
+          "Value": "_a449c9e722808bc93fda336e8b3d1442.xlfgrmvvlj.acm-validations.aws."
+        },
+        "ValidationMethod": "DNS"
+      }
+    ],
+    "Subject": "CN=abuts.fit",
+    "Issuer": "Amazon",
+    "CreatedAt": "2025-04-29T20:11:48.249000+09:00",
+    "Status": "PENDING_VALIDATION",
+    "KeyAlgorithm": "RSA-2048",
+    "SignatureAlgorithm": "SHA256WITHRSA",
+    "InUseBy": [],
+    "Type": "AMAZON_ISSUED",
+    "KeyUsages": [],
+    "ExtendedKeyUsages": [],
+    "RenewalEligibility": "INELIGIBLE",
+    "Options": {
+      "CertificateTransparencyLoggingPreference": "ENABLED"
+    }
+  }
+}

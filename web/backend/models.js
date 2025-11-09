@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 const availableSlotSchema = new mongoose.Schema({
   date: { type: String, required: true },
@@ -26,12 +27,26 @@ const bookingSchema = new mongoose.Schema({
 // Create a compound index to ensure unique bookings per account and date
 bookingSchema.index({ account: 1, date: 1 }, { unique: true });
 
-const accountSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  loginId: { type: String, required: true },
-  loginPassword: { type: String, required: true },
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  golfPassword: { type: String },
+  granted: { type: Boolean, default: false },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
 });
 
-export const Account = mongoose.model('Account', accountSchema);
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+userSchema.methods.comparePassword = function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+export const User = mongoose.model('User', userSchema);
 export const AvailableSlot = mongoose.model('AvailableSlot', availableSlotSchema);
 export const Booking = mongoose.model('Booking', bookingSchema);

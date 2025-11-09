@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "account": "손덕일",
+    "date": "20251124",
+    "startTime": "0800",
+    "endTime": "0900",
+    "force": true
+  },
+  {
+    "account": "박신일",
+    "date": "20251124",
+    "startTime": "0700",
+    "endTime": "0900",
+    "force": true
+  }
+]

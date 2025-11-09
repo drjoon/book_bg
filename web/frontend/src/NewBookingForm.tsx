@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import moment from "moment";
 import "moment-timezone";
+import axios from "axios";
 import {
   ChevronUp,
   ChevronDown,
@@ -8,6 +9,8 @@ import {
   ChevronsDown,
   X,
 } from "lucide-react";
+import { API_BASE_URL } from "./config";
+import useAuthStore from "@/store/authStore";
 
 // Interfaces (assuming they are defined as before)
 interface Account {
@@ -133,6 +136,8 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const isEditMode = !!editingBooking;
 
@@ -147,8 +152,8 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     return new Promise<void>((resolve, reject) => {
       const timer = setInterval(async () => {
         try {
-          const res = await fetch("http://localhost:3001/api/bookings");
-          const data = await res.json();
+          const res = await axios.get<Record<string, Booking[]>>(`${API_BASE_URL}/api/bookings`);
+          const data = res.data;
           const day = data[dateStr] || [];
           const match = day.find((b: any) => b.account === account);
           if (match && match.status === "성공") {
@@ -159,7 +164,12 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
             reject(new Error("예약 성공 확인 시간 초과"));
           }
         } catch (e) {
-          // 네트워크 오류는 무시하고 다음 루프에서 재시도
+          if (axios.isAxiosError(e) && e.response?.status === 401) {
+            clearInterval(timer);
+            logout();
+            reject(new Error("세션이 만료되었습니다."));
+            return;
+          }
           if (Date.now() - start > timeoutMs) {
             clearInterval(timer);
             reject(new Error("예약 성공 확인 시간 초과"));
@@ -198,20 +208,26 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await fetch("http://localhost:3001/api/accounts");
-        const data = await response.json();
+        const response = await axios.get<Account[]>(`${API_BASE_URL}/api/accounts`);
+        const data = Array.isArray(response.data) ? response.data : [];
         setAccounts(data);
+        const defaultAccount = isEditMode
+          ? editingBooking.account
+          : data[0]?.name ?? user?.name ?? "";
+        setSelectedAccount(defaultAccount);
         if (isEditMode) {
-          setSelectedAccount(editingBooking.account);
           setStartTime(editingBooking.startTime);
           setEndTime(editingBooking.endTime);
         } else {
-          setSelectedAccount("");
           setStartTime("0600");
           setEndTime("0900");
         }
       } catch (error) {
         console.error("계정 정보를 가져오는 데 실패했습니다:", error);
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          showToast("세션이 만료되었습니다. 다시 로그인해주세요.", "error");
+          logout();
+        }
       }
     };
     if (isOpen) {
@@ -252,6 +268,15 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     const account = accounts.find((a) => a.name === selectedAccount);
     if (!account) {
       setError("계정을 선택해주세요.");
+      setLoading(false);
+      return;
+    }
+
+    if (!account.loginPassword) {
+      const message = "골프장 비밀번호가 비어 있습니다. 계정 관리에서 먼저 저장해주세요.";
+      setError(message);
+      setLoading(false);
+      showToast(message, "error");
       return;
     }
 
@@ -264,47 +289,62 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     };
 
     try {
-      // 1. Save booking to DB
-      await fetch("http://localhost:3001/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          NAME: bookingData.account,
-          TARGET_DATE: bookingData.TARGET_DATE,
-          START_TIME: bookingData.START_TIME,
-          END_TIME: bookingData.END_TIME,
-        }),
+      const bookingResponse = await axios.post(`${API_BASE_URL}/api/bookings`, {
+        NAME: bookingData.account,
+        TARGET_DATE: bookingData.TARGET_DATE,
+        START_TIME: bookingData.START_TIME,
+        END_TIME: bookingData.END_TIME,
       });
 
-      const response = await fetch("http://localhost:3001/api/submit-booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...bookingData, force: true }),
-      });
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "예약 제출에 실패했습니다.");
-      }
-
-      setSuccess(result.message);
-      showToast(result.message || "예약이 등록되었습니다.", "success");
-      // 캘린더에 '접수' 상태가 보이도록 즉시 갱신
-      onBookingAdded();
-      // 성공 상태 반영을 위해 짧은 폴링 시작
-      try {
-        await pollUntilSuccess(bookingData.account, bookingData.TARGET_DATE);
-        showToast("예약이 성공 처리되었습니다.", "success");
+      if (bookingResponse.status === 200) {
+        const message =
+          (bookingResponse.data as { message?: string })?.message ||
+          "이미 예약된 일정입니다. 캘린더에서 확인해주세요.";
+        setSuccess(message);
+        showToast(message, "info");
         onBookingAdded();
-      } catch (_) {
-        // 타임아웃 시에도 조용히 무시 (사용자가 목록을 다시 볼 수 있음)
+        setLoading(false);
+        setTimeout(() => onClose(), 1500);
+        return;
       }
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+
+      const response = await axios.post(`${API_BASE_URL}/api/submit-booking`, {
+        ...bookingData,
+        force: true,
+      });
+
+      const submitMessage = response.data.message || "예약이 등록되었습니다.";
+      setSuccess(submitMessage);
+      showToast(submitMessage, "success");
+
+      const shouldPoll = !submitMessage.includes("큐");
+      if (shouldPoll) {
+        try {
+          await pollUntilSuccess(bookingData.account, bookingData.TARGET_DATE);
+          showToast("예약이 성공 처리되었습니다.", "success");
+        } catch (_) {
+          // 타임아웃 시에도 조용히 무시
+        }
+      }
+
+      onBookingAdded();
+      setTimeout(() => onClose(), 2000);
     } catch (err: any) {
-      setError(err.message);
-      showToast(err.message, "error");
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        const message =
+          err.response.data?.message ||
+          "이미 예약이 존재하여 변경/추가할 수 없습니다.";
+        setError(message);
+        showToast(message, "error");
+        onBookingAdded();
+      } else {
+        const message = err?.message || "예약 신청에 실패했습니다.";
+        setError(message);
+        showToast(message, "error");
+        if (axios.isAxiosError(err) && err.response?.status === 401) {
+          logout();
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -317,7 +357,6 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     setLoading(true);
     showToast("예약 변경 신청 중...", "info");
     try {
-      // 1. Update booking times in the database
       await onBookingUpdated({ startTime, endTime });
 
       const bookingData = {
@@ -325,40 +364,47 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
         TARGET_DATE: moment(selectedDate).format("YYYYMMDD"),
         startTime,
         endTime,
-      };
-      // @ts-ignore
-      delete bookingData.date; // 기존의 date 속성 제거
+      } as Booking & { TARGET_DATE: string };
+      // @ts-ignore 제거를 위해 date 삭제 후 타입 재정의
+      delete (bookingData as any).date;
 
-      const response = await fetch("http://localhost:3001/api/submit-booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...bookingData, force: true }),
+      const response = await axios.post(`${API_BASE_URL}/api/submit-booking`, {
+        ...bookingData,
+        force: true,
       });
-      const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || "예약 제출에 실패했습니다.");
-      }
-
-      setSuccess(result.message);
-      showToast(result.message || "예약이 변경되었습니다.", "success");
-      // 캘린더에 '접수' 상태가 보이도록 즉시 갱신
+      const submitMessage = response.data.message || "예약이 변경되었습니다.";
+      setSuccess(submitMessage);
+      showToast(submitMessage, "success");
       onBookingAdded();
-      // 성공 상태 반영을 위해 짧은 폴링 시작
-      try {
-        await pollUntilSuccess(
-          (editingBooking as any).account,
-          moment(selectedDate).format("YYYYMMDD")
-        );
-        showToast("예약이 성공 처리되었습니다.", "success");
-        onBookingAdded();
-      } catch (_) {}
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+
+      const shouldPoll = !submitMessage.includes("큐");
+      if (shouldPoll) {
+        try {
+          await pollUntilSuccess(
+            (editingBooking as Booking).account,
+            moment(selectedDate).format("YYYYMMDD")
+          );
+          showToast("예약이 성공 처리되었습니다.", "success");
+          onBookingAdded();
+        } catch (_) {}
+      }
+      setTimeout(() => onClose(), 2000);
     } catch (err: any) {
-      setError(err.message || "예약 변경 및 실행에 실패했습니다.");
-      showToast(err.message || "예약 변경 및 실행에 실패했습니다.", "error");
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        const message =
+          err.response.data?.message || "이미 예약이 존재하여 변경할 수 없습니다.";
+        setError(message);
+        showToast(message, "error");
+        onBookingAdded();
+      } else {
+        const message = err?.message || "예약 변경 및 실행에 실패했습니다.";
+        setError(message);
+        showToast(message, "error");
+        if (axios.isAxiosError(err) && err.response?.status === 401) {
+          logout();
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -389,32 +435,38 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               계정
             </label>
-            <div className="relative">
-              <select
-                value={selectedAccount}
-                onChange={(e) => setSelectedAccount(e.target.value)}
-                className="w-full appearance-none px-4 py-3 border border-blue-200 rounded-lg bg-blue-50 text-gray-900 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all shadow-sm font-semibold"
-                required
-                disabled={isEditMode}
-                style={{ boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)" }}
-              >
-                <option value="" className="text-gray-400">
-                  계정을 선택하세요
-                </option>
-                {accounts.map((account, index) => (
-                  <option
-                    key={index}
-                    value={account.name}
-                    className="bg-white text-gray-900 hover:bg-blue-100"
-                  >
-                    {account.name}
+            {user?.role === "admin" ? (
+              <div className="relative">
+                <select
+                  value={selectedAccount}
+                  onChange={(e) => setSelectedAccount(e.target.value)}
+                  className="w-full appearance-none px-4 py-3 border border-blue-200 rounded-lg bg-blue-50 text-gray-900 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all shadow-sm font-semibold"
+                  required
+                  disabled={isEditMode}
+                  style={{ boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)" }}
+                >
+                  <option value="" className="text-gray-400">
+                    계정을 선택하세요
                   </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-blue-400">
-                <ChevronDown className="h-4 w-4" />
+                  {accounts.map((account, index) => (
+                    <option
+                      key={index}
+                      value={account.name}
+                      className="bg-white text-gray-900 hover:bg-blue-100"
+                    >
+                      {account.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-blue-400">
+                  <ChevronDown className="h-4 w-4" />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="px-4 py-3 border border-blue-200 rounded-lg bg-blue-50 text-gray-900 font-semibold">
+                {selectedAccount || "연결된 계정이 없습니다"}
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <TimeInput

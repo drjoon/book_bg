@@ -4,7 +4,7 @@ import { wrapper as axiosCookieJarSupport } from "axios-cookiejar-support";
 import ntpClient from "ntp-client";
 import moment from "moment-timezone";
 import * as cheerio from "cheerio";
-import { Account, Booking, AvailableSlot } from "../web/backend/models.js";
+import { Booking, AvailableSlot, User } from "../web/backend/models.js";
 import mongoose from "mongoose";
 import connectDB from "../web/backend/db.js";
 
@@ -700,17 +700,27 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
 
   // Fetch account details for the bookings
   const accountNames = [...new Set(bookingRequests.map((b) => b.account))];
-  const accounts = await Account.find({ name: { $in: accountNames } });
-  const accountMap = new Map(accounts.map((a) => [a.name, a]));
+  const accounts = await User.find({ name: { $in: accountNames } }).select(
+    "name username golfPassword"
+  );
+  const accountMap = new Map(
+    accounts.map((account) => [account.name, account])
+  );
 
   const configs = bookingRequests
     .map((booking) => {
       const account = accountMap.get(booking.account);
       if (!account) return null; // Skip if account not found
+      if (!account.golfPassword) {
+        console.warn(
+          `[${booking.account}] 골프장 비밀번호가 설정되지 않아 예약을 건너뜁니다.`
+        );
+        return null;
+      }
       return {
         NAME: booking.account,
-        LOGIN_ID: account.loginId,
-        LOGIN_PASSWORD: account.loginPassword,
+        LOGIN_ID: account.username,
+        LOGIN_PASSWORD: account.golfPassword,
         TARGET_DATE: booking.date,
         START_TIME: booking.startTime,
         END_TIME: booking.endTime,

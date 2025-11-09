@@ -1,8 +1,9 @@
+.git
 node_modules
-.env
+web/frontend/node_modules
+*.zip
 .DS_Store
-stats.html
-.DS_Store
+node_modules
 *.env
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

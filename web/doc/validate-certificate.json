@@ -1,0 +1,31 @@
+{
+  "Comment": "Add CNAME record to validate ACM certificate",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_d9d34d3d870f010b3eefdf7c9ab5c13d.abuts.fit",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_0e9f3447f88a163f467eef0388eee718.xlfgrmvvlj.acm-validations.aws."
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_688263cf6786c9ed90c098908ca92e78.www.abuts.fit",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_a449c9e722808bc93fda336e8b3d1442.xlfgrmvvlj.acm-validations.aws."
+          }
+        ]
+      }
+    }
+  ]
+}

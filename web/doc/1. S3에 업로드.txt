@@ -1,0 +1,54 @@
+정적 웹사이트 도메인 연결을 원한다면?
+
+1. S3 버킷을 golf-book 이름으로 새로 만들고 정적 웹 호스팅 활성화
+aws s3api create-bucket \
+  --bucket golf-book \
+  --region ap-south-1 \
+  --create-bucket-configuration LocationConstraint=ap-south-1
+
+2. 정적 웹사이트 활성화
+aws s3 website s3://golf-book/ --index-document index.html --error-document index.html
+
+3. 퍼블릭 액세스 차단 해제
+aws s3api put-public-access-block \
+  --bucket golf-book \
+  --public-access-block-configuration 'BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false'
+
+4. 버킷 정책(퍼블릭 읽기) 적용
+aws s3api put-bucket-policy --bucket golf-book --policy '{
+  "Version":"2012-10-17",
+  "Statement":[{
+    "Sid":"PublicReadGetObject",
+    "Effect":"Allow",
+    "Principal": "*",
+    "Action":["s3:GetObject"],
+    "Resource":["arn:aws:s3:::golf-book/*"]
+  }]
+}'
+
+5. 정책 내용을 bucket-policy.json 파일로 저장
+aws s3api put-bucket-policy --bucket golf-book --region ap-south-1 --policy file://bucket-policy.json
+
+6. S3 버킷 CORS 설정
+aws s3api put-bucket-cors --bucket golf-book --cors-configuration file://cors.json
+
+7. S3 버킷 CORS 설정 확인
+aws s3api get-bucket-cors --bucket golf-book
+
+* 배포 ID 확인
+aws cloudfront list-distributions
+
+8. 빌드 후 정적 파일을 golf-book 버킷에 업로드
+npm run build
+aws s3 sync ./dist s3://golf-book --region ap-south-1
+aws cloudfront create-invalidation \
+  --distribution-id E2CEDBBNSXCSGZ \
+  --paths "/*"
+
+# CloudFront 캐시 무효화
+aws cloudfront create-invalidation \
+  --distribution-id E3Q4N37DS75X0Y \
+  --paths "/*"
+
+9. Route 53에서 golf-book 도메인에 S3 웹사이트 엔드포인트(Alias) 연결
+S3 웹사이트 엔드포인트: golf-book.s3-website.ap-south-1.amazonaws.com

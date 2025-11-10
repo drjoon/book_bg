@@ -6,6 +6,28 @@ import { fileURLToPath } from "url";
 import { Booking } from "../web/backend/models.js";
 import connectDB from "../web/backend/db.js";
 
+// --- Console Log Timestamp Monkey-Patch ---
+const originalConsole = {
+  log: console.log,
+  error: console.error,
+  warn: console.warn,
+};
+
+const getTimestamp = () => moment().tz('Asia/Seoul').format('HH:mm:ss.SSS');
+
+console.log = (...args) => {
+  originalConsole.log(`[${getTimestamp()}]`, ...args);
+};
+
+console.error = (...args) => {
+  originalConsole.error(`[${getTimestamp()}]`, ...args);
+};
+
+console.warn = (...args) => {
+  originalConsole.warn(`[${getTimestamp()}]`, ...args);
+};
+// --- End of Monkey-Patch ---
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const queuePath = path.resolve(__dirname, "./queue.json");
@@ -31,7 +53,7 @@ function isBookingTimeNear(job) {
   const openTime = getBookingOpenTime(date);
   return (
     now.isAfter(openTime.clone().subtract(1, "minute")) &&
-    now.isBefore(openTime.clone().add(2, "minute"))
+    now.isBefore(openTime.clone().add(1, "minute"))
   );
 }
 
@@ -47,7 +69,7 @@ async function processQueue() {
     const expired = queue.filter((job) => {
       const date = job.date ?? job.TARGET_DATE;
       const openTime = getBookingOpenTime(date);
-      return now.isSameOrAfter(openTime.clone().add(2, "minute"));
+      return now.isSameOrAfter(openTime.clone().add(1, "minute"));
     });
     if (expired.length > 0) {
       for (const job of expired) {
@@ -88,8 +110,10 @@ async function processQueue() {
         }));
         const hasForce = normalized.some((j) => j.force === true);
         await runAutoBooking(normalized, { force: hasForce });
-        const remainingAfterRun = (await loadQueue()).filter(
-          (j) => !runnable.includes(j)
+        // 실행된 작업은 큐에서 제거
+        const currentQueue = await loadQueue();
+        const remainingAfterRun = currentQueue.filter(
+          (job) => !runnable.some(r => (r.account ?? r.NAME) === (job.account ?? job.NAME) && (r.date ?? r.TARGET_DATE) === (job.date ?? job.TARGET_DATE))
         );
         await saveQueue(remainingAfterRun);
       } catch (err) {

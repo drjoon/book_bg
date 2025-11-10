@@ -246,15 +246,7 @@ app.delete('/api/users/:id', authMiddleware, adminOnly, async (req, res) => {
 // 모든 예약 정보를 MongoDB에서 읽어오는 API
 app.get("/api/bookings", authMiddleware, async (req, res) => {
   try {
-    let query = {};
-
-    if (req.user.role !== 'admin') {
-      const currentUser = await User.findById(req.user.userId).select('name');
-      if (!currentUser) {
-        return res.status(404).json({ message: "사용자 정보를 찾을 수 없습니다." });
-      }
-      query = { account: currentUser.name };
-    }
+    const query = {};
 
     const bookings = await Booking.find(query);
     const bookingsByDate = {};

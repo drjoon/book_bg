@@ -1,16 +1,9 @@
 [
   {
-    "account": "손덕일",
-    "date": "20251124",
-    "startTime": "0800",
-    "endTime": "0900",
-    "force": true
-  },
-  {
-    "account": "박신일",
-    "date": "20251124",
-    "startTime": "0700",
-    "endTime": "0900",
+    "account": "오수양",
+    "date": "20251126",
+    "startTime": "1000",
+    "endTime": "0800",
     "force": true
   }
 ]

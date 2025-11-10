@@ -10,6 +10,28 @@ import connectDB from "../web/backend/db.js";
 
 connectDB();
 
+// --- Console Log Timestamp Monkey-Patch ---
+const originalConsole = {
+  log: console.log,
+  error: console.error,
+  warn: console.warn,
+};
+
+const getTimestamp = () => moment().tz('Asia/Seoul').format('HH:mm:ss.SSS');
+
+console.log = (...args) => {
+  originalConsole.log(`[${getTimestamp()}]`, ...args);
+};
+
+console.error = (...args) => {
+  originalConsole.error(`[${getTimestamp()}]`, ...args);
+};
+
+console.warn = (...args) => {
+  originalConsole.warn(`[${getTimestamp()}]`, ...args);
+};
+// --- End of Monkey-Patch ---
+
 async function getLoginToken(client) {
   const res = await client.get("https://www.debeach.co.kr/auth/login");
   const $ = cheerio.load(res.data);
@@ -373,10 +395,12 @@ async function runBookingGroup(group, options) {
         availableTimes = [];
       }
       console.log(
-        `[${logName}] Using ${availableTimes.length} available slots (source: LIVE), sample: ${availableTimes
+        `[${logName}] Using ${
+          availableTimes.length
+        } available slots (source: LIVE), sample: ${availableTimes
           .slice(0, 6)
           .map((x) => x.bk_time)
-          .join(',')}`
+          .join(",")}`
       );
 
       // 해당 계정의 설정(START_TIME, END_TIME)에 맞는 슬롯 필터링
@@ -387,15 +411,18 @@ async function runBookingGroup(group, options) {
       const descending = startMin > endMin;
 
       console.log(
-        `[${logName}] Range(min): ${s}-${e}, available: ${availableTimes.length}, sample: ${availableTimes
+        `[${logName}] Range(min): ${s}-${e}, available: ${
+          availableTimes.length
+        }, sample: ${availableTimes
           .slice(0, 6)
           .map((x) => x.bk_time)
-          .join(',')}`
+          .join(",")}`
       );
 
       const targetTimes = availableTimes.filter((slot) => {
         const slotMin = toMinutes(slot.bk_time);
-        if (Number.isNaN(slotMin) || Number.isNaN(s) || Number.isNaN(e)) return false;
+        if (Number.isNaN(slotMin) || Number.isNaN(s) || Number.isNaN(e))
+          return false;
         return slotMin >= s && slotMin <= e;
       });
 
@@ -407,7 +434,11 @@ async function runBookingGroup(group, options) {
 
       if (targetTimes.length > 0) {
         console.log(
-          `[${logName}] Direction: ${descending ? 'DESC' : 'ASC'}, first pick: ${targetTimes[0].bk_time}, last: ${targetTimes[targetTimes.length - 1].bk_time}`
+          `[${logName}] Direction: ${
+            descending ? "DESC" : "ASC"
+          }, first pick: ${targetTimes[0].bk_time}, last: ${
+            targetTimes[targetTimes.length - 1].bk_time
+          }`
         );
       }
 

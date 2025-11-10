@@ -283,7 +283,20 @@ export default function MainPage() {
       const response = await axios.get<BookingsByDate>(
         `${API_BASE_URL}/api/bookings`
       );
-      setBookings(response.data);
+      if (user?.role === 'admin') {
+        setBookings(response.data);
+      } else {
+        const filteredBookings: BookingsByDate = {};
+        for (const date in response.data) {
+          const dayBookings = response.data[date].filter(
+            (b) => b.account === user?.name
+          );
+          if (dayBookings.length > 0) {
+            filteredBookings[date] = dayBookings;
+          }
+        }
+        setBookings(filteredBookings);
+      }
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
       if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -377,13 +390,21 @@ export default function MainPage() {
     }
   };
 
+  const user = useAuthStore((state) => state.user);
+
   const getTileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view !== "month") return null;
     const dateStr = moment(date).format("YYYYMMDD");
     const dayBookings = bookings[dateStr] || [];
 
-    const tooltipText = (b: Booking) =>
-      `${b.account} ${b.status === "접수" ? "접수중" : b.status}`;
+    const getTooltipText = (booking: Booking) => {
+      const timeRange = `${booking.startTime} - ${booking.endTime}`;
+      const statusText = booking.status === "접수" ? "접수중" : booking.status;
+      if (user?.role === 'admin') {
+        return `${booking.account} ${timeRange} ${statusText}`;
+      }
+      return `${timeRange} ${statusText}`;
+    };
 
     return (
       <div className="flex flex-col items-stretch text-xs mt-1 space-y-1 p-1 h-full">
@@ -396,7 +417,7 @@ export default function MainPage() {
             }}
             onMouseEnter={(e) => {
               setTooltip({
-                content: tooltipText(booking),
+                content: getTooltipText(booking),
                 x: e.clientX,
                 y: e.clientY,
               });
@@ -413,7 +434,7 @@ export default function MainPage() {
               booking.status
             )}`}
           >
-            {booking.account}
+            {user?.role === 'admin' ? booking.account : booking.startTime}
           </div>
         ))}
       </div>

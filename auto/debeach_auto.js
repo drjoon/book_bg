@@ -17,7 +17,7 @@ const originalConsole = {
   warn: console.warn,
 };
 
-const getTimestamp = () => moment().tz('Asia/Seoul').format('HH:mm:ss.SSS');
+const getTimestamp = () => moment().tz("Asia/Seoul").format("HH:mm:ss.SSS");
 
 console.log = (...args) => {
   originalConsole.log(`[${getTimestamp()}]`, ...args);
@@ -104,6 +104,9 @@ async function fetchBookingTimes(client, xsrfToken, dateStr) {
     );
   }
 
+  console.log(`[WAIT ${dateStr}] Booking time! Applying 200ms delay...`);
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
   return slots;
 }
 
@@ -174,8 +177,8 @@ async function attemptBooking(account, targetSlot) {
   const logPrefix = `[${config.NAME || config.LOGIN_ID}]`;
 
   try {
-    // 0~100ms 사이의 무작위 지연 추가
-    const randomDelay = Math.floor(Math.random() * 101);
+    // 0~30ms 사이의 무작위 지연 추가
+    const randomDelay = Math.floor(Math.random() * 31);
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
     console.log(
@@ -372,6 +375,17 @@ async function runBookingGroup(group, options) {
   if (!options.immediate) {
     const bookingOpenTime = getBookingOpenTime(date);
     await waitForBookingOpen(bookingOpenTime, date);
+
+    // 정확히 오픈 시간 + 200ms까지 추가 대기
+    const targetTime = bookingOpenTime.clone().add(200, "milliseconds");
+    let now = moment().tz("Asia/Seoul");
+    if (now.isBefore(targetTime)) {
+      const delay = targetTime.diff(now);
+      console.log(
+        `${logPrefix} Waiting for extra ${delay}ms to reach precise booking time...`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   }
 
   // 4. 슬롯은 계정별로 개별 LIVE 조회 (동시 실행)
@@ -382,17 +396,35 @@ async function runBookingGroup(group, options) {
       const { config } = account;
       const logName = config.NAME || config.LOGIN_ID;
 
-      // 계정별 LIVE 슬롯 조회
+      // 계정별 LIVE 슬롯 조회 (재시도 로직 추가)
       let availableTimes = [];
-      try {
-        availableTimes = await fetchBookingTimes(
-          account.client,
-          account.token,
-          date
-        );
-      } catch (e) {
-        console.warn(`[${logName}] Live fetch failed: ${e.message}`);
-        availableTimes = [];
+      const MAX_FETCH_RETRIES = 5;
+      const FETCH_RETRY_DELAY = 100; // ms
+
+      for (let i = 0; i < MAX_FETCH_RETRIES; i++) {
+        try {
+          availableTimes = await fetchBookingTimes(
+            account.client,
+            account.token,
+            date
+          );
+          if (availableTimes.length > 0) {
+            console.log(
+              `[${logName}] ✅ Slot fetch success on attempt ${i + 1}`
+            );
+            break; // 슬롯 찾았으면 재시도 중단
+          }
+          console.log(
+            `[${logName}] 🟡 Slot fetch attempt ${
+              i + 1
+            }/${MAX_FETCH_RETRIES} returned 0 slots. Retrying...`
+          );
+        } catch (e) {
+          console.warn(
+            `[${logName}] Live fetch attempt ${i + 1} failed: ${e.message}`
+          );
+        }
+        await new Promise((resolve) => setTimeout(resolve, FETCH_RETRY_DELAY));
       }
       console.log(
         `[${logName}] Using ${
@@ -404,14 +436,14 @@ async function runBookingGroup(group, options) {
       );
 
       // 해당 계정의 설정(START_TIME, END_TIME)에 맞는 슬롯 필터링
-      const startMin = toMinutes(config.START_TIME);
-      const endMin = toMinutes(config.END_TIME);
-      const s = startMin <= endMin ? startMin : endMin;
-      const e = startMin <= endMin ? endMin : startMin;
-      const descending = startMin > endMin;
+      const startStr = config.START_TIME.replace(":", "");
+      const endStr = config.END_TIME.replace(":", "");
+      const s = startStr <= endStr ? startStr : endStr;
+      const e = startStr <= endStr ? endStr : startStr;
+      const descending = startStr > endStr;
 
       console.log(
-        `[${logName}] Range(min): ${s}-${e}, available: ${
+        `[${logName}] Range(str): ${s}-${e}, available: ${
           availableTimes.length
         }, sample: ${availableTimes
           .slice(0, 6)
@@ -420,16 +452,15 @@ async function runBookingGroup(group, options) {
       );
 
       const targetTimes = availableTimes.filter((slot) => {
-        const slotMin = toMinutes(slot.bk_time);
-        if (Number.isNaN(slotMin) || Number.isNaN(s) || Number.isNaN(e))
-          return false;
-        return slotMin >= s && slotMin <= e;
+        return slot.bk_time >= s && slot.bk_time <= e;
       });
 
       targetTimes.sort((a, b) => {
-        const am = toMinutes(a.bk_time);
-        const bm = toMinutes(b.bk_time);
-        return descending ? bm - am : am - bm;
+        if (descending) {
+          return b.bk_time.localeCompare(a.bk_time);
+        } else {
+          return a.bk_time.localeCompare(b.bk_time);
+        }
       });
 
       if (targetTimes.length > 0) {
@@ -584,9 +615,6 @@ async function waitForBookingOpen(openTime, dateStr) {
       waitTime = openTime.diff(correctedTime());
     }
   }
-
-  console.log(`[WAIT ${dateStr}] Booking time! Applying 300ms delay...`);
-  await new Promise((resolve) => setTimeout(resolve, 300));
 }
 
 async function selectAndConfirmBooking(
@@ -713,6 +741,12 @@ async function updateBookingStatus(name, date, status, bookingData = {}) {
 }
 
 async function runAutoBooking(bookingRequests, options = { immediate: false }) {
+  // Ensure DB is connected before proceeding
+  if (mongoose.connection.readyState !== 1) {
+    console.log("MongoDB is not connected. Attempting to connect...");
+    await connectDB();
+  }
+
   // If no specific requests, fetch from DB for today
   if (!bookingRequests || bookingRequests.length === 0) {
     const todayStr = moment().tz("Asia/Seoul").format("YYYYMMDD");
@@ -785,3 +819,5 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
 }
 
 export { runAutoBooking, getBookingOpenTime };
+
+// sudo pmset -a disablesleep 1 | caffeinate -u -i -dt 14400

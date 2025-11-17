@@ -104,9 +104,6 @@ async function fetchBookingTimes(client, xsrfToken, dateStr) {
     );
   }
 
-  console.log(`[WAIT ${dateStr}] Booking time! Applying 200ms delay...`);
-  await new Promise((resolve) => setTimeout(resolve, 200));
-
   return slots;
 }
 
@@ -177,8 +174,8 @@ async function attemptBooking(account, targetSlot) {
   const logPrefix = `[${config.NAME || config.LOGIN_ID}]`;
 
   try {
-    // 0~30ms 사이의 무작위 지연 추가
-    const randomDelay = Math.floor(Math.random() * 31);
+    // 0~20ms 사이의 무작위 지연 추가
+    const randomDelay = Math.floor(Math.random() * 21);
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
     console.log(
@@ -205,13 +202,18 @@ async function attemptBooking(account, targetSlot) {
   } catch (error) {
     if (error.response && error.response.status === 422) {
       console.log(
-        `${logPrefix} ⚠️ Slot ${targetSlot.bk_time} was taken. Retrying with another slot...`
+        `${logPrefix} ⚠️ Slot ${targetSlot.bk_time} was taken. Breaking to refetch slots.`
       );
+      // 실패를 반환하여 상위 루프가 최신 슬롯을 다시 가져오도록 함
+      return { success: false, slot: targetSlot, wasTaken: true };
     } else if (error.response && error.response.status === 429) {
+      const retryAfter = Math.random() * 1500 + 2000; // 2초 ~ 3.5초 사이 랜덤 대기
       console.log(
-        `${logPrefix} ⏳ Received 429 (Too Many Requests). Retrying after 1s...`
+        `${logPrefix} ⏳ Received 429 (Too Many Requests). Retrying after ${Math.round(
+          retryAfter
+        )}ms...`
       );
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, retryAfter));
       return await attemptBooking(account, targetSlot); // 동일 슬롯으로 재시도
     } else {
       console.error(
@@ -376,16 +378,16 @@ async function runBookingGroup(group, options) {
     const bookingOpenTime = getBookingOpenTime(date);
     await waitForBookingOpen(bookingOpenTime, date);
 
-    // 정확히 오픈 시간 + 200ms까지 추가 대기
-    const targetTime = bookingOpenTime.clone().add(200, "milliseconds");
-    let now = moment().tz("Asia/Seoul");
-    if (now.isBefore(targetTime)) {
-      const delay = targetTime.diff(now);
-      console.log(
-        `${logPrefix} Waiting for extra ${delay}ms to reach precise booking time...`
-      );
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
+    // // 정확히 오픈 시간 + 120ms까지 추가 대기
+    // const targetTime = bookingOpenTime.clone().add(120, "milliseconds");
+    // let now = moment().tz("Asia/Seoul");
+    // if (now.isBefore(targetTime)) {
+    //   const delay = targetTime.diff(now);
+    //   console.log(
+    //     `${logPrefix} Waiting for extra ${delay}ms to reach precise booking time...`
+    //   );
+    //   await new Promise((resolve) => setTimeout(resolve, delay));
+    // }
   }
 
   // 4. 슬롯은 계정별로 개별 LIVE 조회 (동시 실행)
@@ -396,121 +398,106 @@ async function runBookingGroup(group, options) {
       const { config } = account;
       const logName = config.NAME || config.LOGIN_ID;
 
-      // 계정별 LIVE 슬롯 조회 (재시도 로직 추가)
-      let availableTimes = [];
-      const MAX_FETCH_RETRIES = 5;
-      const FETCH_RETRY_DELAY = 100; // ms
+      const bookingLoopStart = Date.now();
+      const BOOKING_TIMEOUT = 60 * 1000; // 1분
 
-      for (let i = 0; i < MAX_FETCH_RETRIES; i++) {
-        try {
-          availableTimes = await fetchBookingTimes(
-            account.client,
-            account.token,
-            date
-          );
-          if (availableTimes.length > 0) {
-            console.log(
-              `[${logName}] ✅ Slot fetch success on attempt ${i + 1}`
+      while (Date.now() - bookingLoopStart < BOOKING_TIMEOUT) {
+        // 계정별 LIVE 슬롯 조회 (재시도 로직 추가)
+        let availableTimes = [];
+        const MAX_FETCH_RETRIES = 8;
+        const FETCH_RETRY_DELAY = 50; // ms
+
+        for (let i = 0; i < MAX_FETCH_RETRIES; i++) {
+          try {
+            availableTimes = await fetchBookingTimes(
+              account.client,
+              account.token,
+              date
             );
-            break; // 슬롯 찾았으면 재시도 중단
+            if (availableTimes.length > 0) {
+              console.log(
+                `[${logName}] ✅ Slot fetch success on attempt ${i + 1}`
+              );
+              break; // 슬롯 찾았으면 재시도 중단
+            }
+            console.log(
+              `[${logName}] 🟡 Slot fetch attempt ${
+                i + 1
+              }/${MAX_FETCH_RETRIES} returned 0 slots. Retrying...`
+            );
+          } catch (e) {
+            console.warn(
+              `[${logName}] Live fetch attempt ${i + 1} failed: ${e.message}`
+            );
           }
+          if (i < MAX_FETCH_RETRIES - 1) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, FETCH_RETRY_DELAY)
+            );
+          }
+        }
+
+        if (availableTimes.length === 0) {
           console.log(
-            `[${logName}] 🟡 Slot fetch attempt ${
-              i + 1
-            }/${MAX_FETCH_RETRIES} returned 0 slots. Retrying...`
+            `[${logName}] No available slots found after all retries. Stopping.`
           );
-        } catch (e) {
-          console.warn(
-            `[${logName}] Live fetch attempt ${i + 1} failed: ${e.message}`
+          break; // 재시도 후에도 슬롯이 없으면 루프 종료
+        }
+
+        // 해당 계정의 설정(START_TIME, END_TIME)에 맞는 슬롯 필터링
+        const startStr = config.START_TIME.replace(":", "");
+        const endStr = config.END_TIME.replace(":", "");
+        const s = startStr <= endStr ? startStr : endStr;
+        const e = startStr <= endStr ? endStr : startStr;
+        const descending = startStr > endStr;
+
+        const targetTimes = availableTimes.filter((slot) => {
+          return slot.bk_time >= s && slot.bk_time <= e;
+        });
+
+        targetTimes.sort((a, b) => {
+          if (descending) {
+            return b.bk_time.localeCompare(a.bk_time);
+          } else {
+            return a.bk_time.localeCompare(b.bk_time);
+          }
+        });
+
+        if (targetTimes.length === 0) {
+          console.log(
+            `[${logName}] No slots in desired range. Retrying after delay...`
           );
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          continue; // 원하는 시간대 슬롯 없으면 다시 시도
         }
-        await new Promise((resolve) => setTimeout(resolve, FETCH_RETRY_DELAY));
-      }
-      console.log(
-        `[${logName}] Using ${
-          availableTimes.length
-        } available slots (source: LIVE), sample: ${availableTimes
-          .slice(0, 6)
-          .map((x) => x.bk_time)
-          .join(",")}`
-      );
 
-      // 해당 계정의 설정(START_TIME, END_TIME)에 맞는 슬롯 필터링
-      const startStr = config.START_TIME.replace(":", "");
-      const endStr = config.END_TIME.replace(":", "");
-      const s = startStr <= endStr ? startStr : endStr;
-      const e = startStr <= endStr ? endStr : startStr;
-      const descending = startStr > endStr;
-
-      console.log(
-        `[${logName}] Range(str): ${s}-${e}, available: ${
-          availableTimes.length
-        }, sample: ${availableTimes
-          .slice(0, 6)
-          .map((x) => x.bk_time)
-          .join(",")}`
-      );
-
-      const targetTimes = availableTimes.filter((slot) => {
-        return slot.bk_time >= s && slot.bk_time <= e;
-      });
-
-      targetTimes.sort((a, b) => {
-        if (descending) {
-          return b.bk_time.localeCompare(a.bk_time);
-        } else {
-          return a.bk_time.localeCompare(b.bk_time);
+        // 첫 번째 슬롯부터 순차적으로 시도
+        let bookingSuccess = false;
+        for (const targetSlot of targetTimes) {
+          const result = await attemptBooking(account, targetSlot);
+          if (result.success) {
+            bookingSuccess = true;
+            return; // 성공 시 이 계정의 모든 작업 완전 종료
+          }
+          // 422 오류로 슬롯을 놓쳤다면, 슬롯 목록이 낡았으므로 루프를 중단하고 새로고침
+          if (result.wasTaken) {
+            break;
+          }
         }
-      });
 
-      if (targetTimes.length > 0) {
-        console.log(
-          `[${logName}] Direction: ${
-            descending ? "DESC" : "ASC"
-          }, first pick: ${targetTimes[0].bk_time}, last: ${
-            targetTimes[targetTimes.length - 1].bk_time
-          }`
-        );
-      }
-
-      if (targetTimes.length === 0) {
-        console.log(
-          `${logPrefix} [${logName}] No available slots in the desired time range.`
-        );
-        await updateBookingStatus(config.NAME, date, "실패", {
-          reason: "원하는 시간대 없음",
-        });
-        return;
-      }
-
-      if (targetTimes.length === 0) {
-        console.log(
-          `[${logName}] 🟡 No available slots in the desired time range (${config.START_TIME}-${config.END_TIME}).`
-        );
-        await updateBookingStatus(config.NAME, date, "실패", {
-          reason: "원하는 시간대 없음",
-        });
-        return;
-      }
-
-      console.log(
-        `[${logName}] 🎯 Found ${targetTimes.length} target slots. Trying to book...`
-      );
-
-      // 첫 번째 슬롯부터 순차적으로 시도
-      for (const targetSlot of targetTimes) {
-        const result = await attemptBooking(account, targetSlot);
-        if (result.success) {
-          return; // 성공 시 이 계정의 예약 시도 중단
+        // for-loop가 중단되었거나(wasTaken) 모든 슬롯 시도 후 실패 시
+        if (!bookingSuccess) {
+          console.log(
+            `[${logName}] All attempts in this round failed or slots were stale. Refetching...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
       }
 
-      // 모든 슬롯 시도 실패
-      console.log(
-        `[${logName}] ❌ All attempts failed for the available slots.`
-      );
+      // 1분 타임아웃 또는 슬롯 소진으로 루프 종료
+      console.log(`[${logName}] Booking loop finished.`);
       await updateBookingStatus(config.NAME, date, "실패", {
-        reason: "모든 슬롯 예약 실패",
+        reason: "1분 내 예약 실패",
       });
     })();
   });
@@ -615,6 +602,9 @@ async function waitForBookingOpen(openTime, dateStr) {
       waitTime = openTime.diff(correctedTime());
     }
   }
+
+  // 100um 더 대기
+  await new Promise((resolve) => setTimeout(resolve, 100));
 }
 
 async function selectAndConfirmBooking(
@@ -650,10 +640,6 @@ async function selectAndConfirmBooking(
     return;
   }
   console.log(`✅ Got booking token: ${bookingToken}`);
-
-  // 브라우저의 confirm 창과 유사한 지연을 주기 위해 1초 대기
-  console.log("⏳ Simulating user confirmation delay (1s)...");
-  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // 2. 예약 확정 요청
   if (!peopleCount) {
@@ -747,35 +733,66 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
     await connectDB();
   }
 
-  // If no specific requests, fetch from DB for today
-  if (!bookingRequests || bookingRequests.length === 0) {
+  // 1. DB에서 활성(granted: true) 사용자 목록을 먼저 가져옵니다.
+  const activeUsers = await User.find({ granted: true }).select(
+    "name username golfPassword"
+  );
+  const activeUserNames = activeUsers.map((u) => u.name);
+  const accountMap = new Map(activeUsers.map((u) => [u.name, u]));
+
+  // 2. 인자로 받은 bookingRequests가 있으면, 활성 사용자의 요청만 필터링합니다.
+  if (bookingRequests && bookingRequests.length > 0) {
+    const invalidAccounts = bookingRequests
+      .filter((req) => !activeUserNames.includes(req.account))
+      .map((req) => req.account);
+
+    if (invalidAccounts.length > 0) {
+      console.warn(
+        `[SYSTEM] The following accounts are not active or do not exist, skipping: ${[
+          ...new Set(invalidAccounts),
+        ].join(", ")}`
+      );
+    }
+    bookingRequests = bookingRequests.filter((req) =>
+      activeUserNames.includes(req.account)
+    );
+  } else {
+    // 3. 인자가 없으면, 활성 사용자의 예약 요청만 DB에서 가져옵니다.
     const todayStr = moment().tz("Asia/Seoul").format("YYYYMMDD");
     bookingRequests = await Booking.find({
+      account: { $in: activeUserNames },
       date: todayStr,
       status: { $nin: ["성공", "실패"] },
     });
+
+    // 3-1. (Optional Cleanup) 활성 사용자가 아닌데 '접수' 상태인 예약을 '실패' 처리
+    await Booking.updateMany(
+      {
+        account: { $nin: activeUserNames },
+        date: todayStr,
+        status: { $nin: ["성공", "실패"] },
+      },
+      {
+        $set: {
+          status: "실패",
+          reason: "사용자가 비활성 상태이거나 삭제되었습니다.",
+        },
+      }
+    );
   }
 
   if (bookingRequests.length === 0) {
-    console.log("No bookings to process for today.");
+    console.log("No valid bookings to process for active users.");
     return { result: "no-bookings" };
   }
 
-  console.log(`Found ${bookingRequests.length} booking(s) to process.`);
+  console.log(`Found ${bookingRequests.length} valid booking(s) to process.`);
 
-  // Fetch account details for the bookings
-  const accountNames = [...new Set(bookingRequests.map((b) => b.account))];
-  const accounts = await User.find({ name: { $in: accountNames } }).select(
-    "name username golfPassword"
-  );
-  const accountMap = new Map(
-    accounts.map((account) => [account.name, account])
-  );
-
+  // 4. 예약 설정을 생성합니다.
   const configs = bookingRequests
     .map((booking) => {
       const account = accountMap.get(booking.account);
-      if (!account) return null; // Skip if account not found
+      if (!account) return null; // Should not happen due to earlier checks
       if (!account.golfPassword) {
         console.warn(
           `[${booking.account}] 골프장 비밀번호가 설정되지 않아 예약을 건너뜁니다.`
@@ -791,7 +808,7 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
         END_TIME: booking.endTime,
       };
     })
-    .filter(Boolean); // Filter out nulls
+    .filter(Boolean);
 
   if (configs.length === 0) {
     console.log("No booking configurations found in .env file.");

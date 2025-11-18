@@ -105,7 +105,7 @@ async function runBookingGroup(group, options) {
   // 2. 예약 시간 20초 전까지 대기
   if (!options.immediate) {
     const bookingOpenTime = getBookingOpenTime(date);
-    const twentySecondsBefore = bookingOpenTime.clone().subtract(20, "seconds");
+    const twentySecondsBefore = bookingOpenTime.clone().subtract(10, "seconds");
     let now = moment().tz("Asia/Seoul");
 
     if (now.isBefore(twentySecondsBefore)) {
@@ -113,12 +113,12 @@ async function runBookingGroup(group, options) {
       console.log(
         `${logPrefix} Waiting ${Math.round(
           waitTime / 1000
-        )}s until 20 seconds before booking time...`
+        )}s until 10 seconds before booking time...`
       );
       await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
     console.log(
-      `${logPrefix} It's 20 seconds to booking. Invoking Lambda functions...`
+      `${logPrefix} It's 10 seconds to booking. Invoking Lambda functions...`
     );
   } else {
     console.log(

@@ -1,14 +1,10 @@
-import axios from "axios";
-import { CookieJar } from "tough-cookie";
-import { wrapper as axiosCookieJarSupport } from "axios-cookiejar-support";
 import ntpClient from "ntp-client";
 import moment from "moment-timezone";
-import * as cheerio from "cheerio";
-import { Booking, AvailableSlot, User } from "../web/backend/models.js";
 import mongoose from "mongoose";
-import connectDB from "../web/backend/db.js";
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
-connectDB();
+import { Booking, User } from "../web/backend/models.js";
+import connectDB from "../web/backend/db.js";
 
 // --- Console Log Timestamp Monkey-Patch ---
 const originalConsole = {
@@ -31,81 +27,6 @@ console.warn = (...args) => {
   originalConsole.warn(`[${getTimestamp()}]`, ...args);
 };
 // --- End of Monkey-Patch ---
-
-async function getLoginToken(client) {
-  const res = await client.get("https://www.debeach.co.kr/auth/login");
-  const $ = cheerio.load(res.data);
-  const token = $('meta[name="csrf-token"]').attr("content");
-  console.log("✅ XSRF token:", token);
-  return token;
-}
-
-async function doLogin(client, xsrfToken, loginId, loginPassword) {
-  console.log("2) POST login...");
-
-  const payload = new URLSearchParams({
-    username: loginId, // 'login_id' -> 'username'
-    password: loginPassword, // 'login_password' -> 'password'
-    remember: "1",
-    _token: xsrfToken,
-  });
-
-  const res = await client.post(
-    "https://www.debeach.co.kr/auth/login",
-    payload.toString(),
-    {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "X-XSRF-TOKEN": xsrfToken,
-        Referer: "https://www.debeach.co.kr/auth/login",
-      },
-    }
-  );
-
-  // 로그인 성공 시 '/'로 리다이렉트되고, 실패 시 '/auth/login'에 머무름.
-  // 최종 응답의 request.path로 성공 여부를 판별합니다.
-  const isLoggedIn = res.request.path === "/";
-
-  if (isLoggedIn) {
-    console.log("✅ Login successful! Redirected to homepage.");
-  } else {
-    console.error("🚨 Login failed! Still on the login page.");
-    console.log(`(Final path: ${res.request.path})`);
-  }
-
-  return isLoggedIn;
-}
-
-async function fetchBookingTimes(client, xsrfToken, dateStr) {
-  console.log(`3) Fetch booking times for ${dateStr}...`);
-
-  const res = await client.get(
-    `https://www.debeach.co.kr/booking/time/${dateStr}`,
-    {
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "X-Requested-With": "XMLHttpRequest",
-        "X-XSRF-TOKEN": xsrfToken,
-        Referer: "https://www.debeach.co.kr/booking",
-      },
-    }
-  );
-
-  console.log("📅 booking response:", res.status);
-  const slots = res.data;
-
-  // Save to MongoDB
-  if (slots && slots.length > 0) {
-    const slotsWithDate = slots.map((slot) => ({ ...slot, date: dateStr }));
-    await AvailableSlot.deleteMany({ date: dateStr }); // Clear old slots for the date
-    await AvailableSlot.insertMany(slotsWithDate);
-    console.log(
-      `Saved ${slots.length} available slots for ${dateStr} to MongoDB.`
-    );
-  }
-
-  return slots;
-}
 
 // NTP 시간 동기화 함수 (재시도 및 대체 서버 기능 추가)
 const NTP_SERVERS = ["time.apple.com", "time.google.com", "pool.ntp.org"];
@@ -139,103 +60,21 @@ const getNtpTime = async () => {
   return new Date(); // 모든 시도 실패 시 시스템 시간 사용
 };
 
-function toMinutes(v) {
-  if (v == null) return NaN;
-  const str = String(v).trim();
-  if (!str) return NaN;
-  if (str.includes(":")) {
-    const [h, m] = str.split(":");
-    const hh = parseInt(h, 10);
-    const mm = parseInt(m, 10);
-    if (Number.isNaN(hh) || Number.isNaN(mm)) return NaN;
-    return hh * 60 + mm;
-  }
-  if (/^\d{3,4}$/.test(str)) {
-    const num = parseInt(str, 10);
-    const hh = Math.floor(num / 100);
-    const mm = num % 100;
-    return hh * 60 + mm;
-  }
-  if (/^\d{1,2}$/.test(str)) {
-    const hh = parseInt(str, 10);
-    return hh * 60;
-  }
-  const n = parseInt(str, 10);
-  if (Number.isNaN(n)) return NaN;
-  if (n < 24) return n * 60;
-  const hh = Math.floor(n / 100);
-  const mm = n % 100;
-  return hh * 60 + mm;
-}
+// Lambda 클라이언트 초기화 (리전은 실제 환경에 맞게 설정)
+const lambda = new LambdaClient({ region: "ap-northeast-2" });
+const LAMBDA_FUNCTION_NAME = "book-debeach"; // 생성할 Lambda 함수 이름
 
-// 단일 예약 시도를 처리하는 함수
-async function attemptBooking(account, targetSlot) {
-  const { client, token, config } = account;
-  const logPrefix = `[${config.NAME || config.LOGIN_ID}]`;
-
-  try {
-    // 0~20ms 사이의 무작위 지연 추가
-    const randomDelay = Math.floor(Math.random() * 21);
-    await new Promise((resolve) => setTimeout(resolve, randomDelay));
-
-    console.log(
-      `${logPrefix} ➡️ Trying to book time: ${targetSlot.bk_time} on course ${targetSlot.bk_cours} (delay: ${randomDelay}ms)`
-    );
-    await selectAndConfirmBooking(
-      client,
-      token,
-      targetSlot,
-      config.TARGET_DATE
-    );
-    console.log(
-      `${logPrefix} 🎉 Successfully booked time: ${targetSlot.bk_time} on course ${targetSlot.bk_cours}`
-    );
-
-    // 상태 파일 '성공'으로 업데이트
-    const successTime = moment().tz("Asia/Seoul").format();
-    await updateBookingStatus(config.NAME, config.TARGET_DATE, "성공", {
-      successTime: successTime,
-      bookedSlot: targetSlot,
-    });
-
-    return { success: true, slot: targetSlot };
-  } catch (error) {
-    if (error.response && error.response.status === 422) {
-      console.log(
-        `${logPrefix} ⚠️ Slot ${targetSlot.bk_time} was taken. Breaking to refetch slots.`
-      );
-      // 실패를 반환하여 상위 루프가 최신 슬롯을 다시 가져오도록 함
-      return { success: false, slot: targetSlot, wasTaken: true };
-    } else if (error.response && error.response.status === 429) {
-      const retryAfter = Math.random() * 1500 + 2000; // 2초 ~ 3.5초 사이 랜덤 대기
-      console.log(
-        `${logPrefix} ⏳ Received 429 (Too Many Requests). Retrying after ${Math.round(
-          retryAfter
-        )}ms...`
-      );
-      await new Promise((resolve) => setTimeout(resolve, retryAfter));
-      return await attemptBooking(account, targetSlot); // 동일 슬롯으로 재시도
-    } else {
-      console.error(
-        `${logPrefix} ❌ An unexpected error occurred while booking ${targetSlot.bk_time}:`,
-        error.message
-      );
-    }
-    return { success: false, slot: targetSlot };
-  }
-}
-
-// 특정 날짜 그룹에 대한 전체 예약 과정을 관리하는 함수
+// 특정 날짜 그룹에 대한 전체 예약 과정을 관리하는 함수 (Lambda 호출자로 변경)
 async function runBookingGroup(group, options) {
   const { date, configs } = group;
   const logPrefix = `[GROUP ${date}]`;
   const force = options && options.force === true;
 
   console.log(
-    `${logPrefix} Starting booking process for ${configs.length} accounts.`
+    `${logPrefix} Starting booking process for ${configs.length} accounts via Lambda.`
   );
 
-  // 각 계정별 상태 초기화
+  // 1. 각 계정별 상태를 '접수'로 초기화
   for (const config of configs) {
     if (!force) {
       try {
@@ -263,248 +102,75 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // For queued jobs, wait for the precise time. For immediate jobs, skip waiting.
+  // 2. 예약 시간 20초 전까지 대기
   if (!options.immediate) {
     const bookingOpenTime = getBookingOpenTime(date);
-    await waitForBookingReady(bookingOpenTime, date);
+    const twentySecondsBefore = bookingOpenTime.clone().subtract(20, "seconds");
+    let now = moment().tz("Asia/Seoul");
+
+    if (now.isBefore(twentySecondsBefore)) {
+      const waitTime = twentySecondsBefore.diff(now);
+      console.log(
+        `${logPrefix} Waiting ${Math.round(
+          waitTime / 1000
+        )}s until 20 seconds before booking time...`
+      );
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+    }
     console.log(
-      `${logPrefix} It's 1 minute to booking. Logging in all accounts...`
+      `${logPrefix} It's 20 seconds to booking. Invoking Lambda functions...`
     );
   } else {
-    console.log(`${logPrefix} Immediate execution. Logging in accounts...`);
+    console.log(
+      `${logPrefix} Immediate execution. Invoking Lambda functions...`
+    );
   }
 
-  // 2. 로그인
-  const accounts = [];
-  for (const config of configs) {
-    const bookingStatus = await Booking.findOne({
-      account: config.NAME,
-      date: date,
-    });
-    if (!force) {
-      if (
-        bookingStatus &&
-        (bookingStatus.status === "성공" || bookingStatus.status === "실패")
-      ) {
-        console.log(
-          `[${config.NAME}][${date}] ⏭️ Skipping login as status is '${bookingStatus.status}'.`
-        );
-        continue;
-      }
-    }
-
-    const jar = new CookieJar();
-    const client = axiosCookieJarSupport(
-      axios.create({
-        jar,
-        withCredentials: true,
-        headers: { "User-Agent": "Mozilla/5.0" },
-      })
-    );
+  // 3. 각 계정에 대해 병렬로 Lambda 함수 호출
+  const invocationPromises = configs.map(async (config) => {
     const logName = config.NAME || config.LOGIN_ID;
+    console.log(`[${logName}] Invoking Lambda function synchronously...`);
 
-    client.interceptors.request.use((request) => {
-      console.log(
-        `[${logName}][${moment()
-          .tz("Asia/Seoul")
-          .format()}] ==> ${request.method.toUpperCase()} ${request.url}`
-      );
-      return request;
+    const payload = {
+      config,
+      immediate: options.immediate || false,
+    };
+
+    const command = new InvokeCommand({
+      FunctionName: LAMBDA_FUNCTION_NAME,
+      InvocationType: "RequestResponse", // 동기 호출
+      Payload: JSON.stringify(payload),
     });
-    client.interceptors.response.use(
-      (response) => {
-        console.log(
-          `[${logName}][${moment().tz("Asia/Seoul").format()}] <== ${
-            response.status
-          } ${response.config.url}`
-        );
-        return response;
-      },
-      (error) => {
-        if (error.response) {
-          console.error(
-            `[${logName}][${moment().tz("Asia/Seoul").format()}] <== ${
-              error.response.status
-            } ${error.response.config.url}`
-          );
-        } else {
-          console.error(
-            `[${logName}][${moment().tz("Asia/Seoul").format()}] <== ERROR ${
-              error.config ? error.config.url : "N/A"
-            } (${error.message})`
-          );
-        }
-        return Promise.reject(error);
-      }
-    );
 
     try {
-      const token = await getLoginToken(client);
-      const isLoggedIn = await doLogin(
-        client,
-        token,
-        config.LOGIN_ID,
-        config.LOGIN_PASSWORD
-      );
-      if (isLoggedIn) {
-        console.log(`[${logName}] ✅ Login successful.`);
-        accounts.push({ client, token, config });
+      const response = await lambda.send(command);
+      const result = JSON.parse(new TextDecoder().decode(response.Payload));
+      console.log(`[${logName}] ✅ Lambda returned result:`, result);
+
+      if (result.success) {
+        await updateBookingStatus(config.NAME, date, "성공", {
+          successTime: moment().tz("Asia/Seoul").format(),
+          bookedSlot: result.slot,
+        });
       } else {
-        console.error(`[${logName}] 🚨 Login failed.`);
         await updateBookingStatus(config.NAME, date, "실패", {
-          reason: "로그인 실패",
+          reason: result.reason || "Lambda에서 예약 실패",
         });
       }
     } catch (error) {
       console.error(
-        `[${logName}] 🚨 An error occurred during login:`,
-        error.message
+        `[${logName}] 🚨 Failed to invoke or process Lambda response:`,
+        error
       );
       await updateBookingStatus(config.NAME, date, "실패", {
-        reason: "로그인 중 오류 발생",
+        reason: `Lambda 호출 오류: ${error.message}`,
       });
     }
-  }
-
-  if (accounts.length === 0) {
-    console.log(
-      `${logPrefix} No accounts were successfully logged in. Aborting booking for this group.`
-    );
-    return;
-  }
-
-  // 3. 예약 시간까지 정밀 대기 (큐 실행 시에만)
-  if (!options.immediate) {
-    const bookingOpenTime = getBookingOpenTime(date);
-    await waitForBookingOpen(bookingOpenTime, date);
-
-    // // 정확히 오픈 시간 + 120ms까지 추가 대기
-    // const targetTime = bookingOpenTime.clone().add(120, "milliseconds");
-    // let now = moment().tz("Asia/Seoul");
-    // if (now.isBefore(targetTime)) {
-    //   const delay = targetTime.diff(now);
-    //   console.log(
-    //     `${logPrefix} Waiting for extra ${delay}ms to reach precise booking time...`
-    //   );
-    //   await new Promise((resolve) => setTimeout(resolve, delay));
-    // }
-  }
-
-  // 4. 슬롯은 계정별로 개별 LIVE 조회 (동시 실행)
-
-  // 5. 각 계정에 대해 병렬로 예약 시도
-  const bookingPromises = accounts.map((account) => {
-    return (async () => {
-      const { config } = account;
-      const logName = config.NAME || config.LOGIN_ID;
-
-      const bookingLoopStart = Date.now();
-      const BOOKING_TIMEOUT = 60 * 1000; // 1분
-
-      while (Date.now() - bookingLoopStart < BOOKING_TIMEOUT) {
-        // 계정별 LIVE 슬롯 조회 (재시도 로직 추가)
-        let availableTimes = [];
-        const MAX_FETCH_RETRIES = 8;
-        const FETCH_RETRY_DELAY = 50; // ms
-
-        for (let i = 0; i < MAX_FETCH_RETRIES; i++) {
-          try {
-            availableTimes = await fetchBookingTimes(
-              account.client,
-              account.token,
-              date
-            );
-            if (availableTimes.length > 0) {
-              console.log(
-                `[${logName}] ✅ Slot fetch success on attempt ${i + 1}`
-              );
-              break; // 슬롯 찾았으면 재시도 중단
-            }
-            console.log(
-              `[${logName}] 🟡 Slot fetch attempt ${
-                i + 1
-              }/${MAX_FETCH_RETRIES} returned 0 slots. Retrying...`
-            );
-          } catch (e) {
-            console.warn(
-              `[${logName}] Live fetch attempt ${i + 1} failed: ${e.message}`
-            );
-          }
-          if (i < MAX_FETCH_RETRIES - 1) {
-            await new Promise((resolve) =>
-              setTimeout(resolve, FETCH_RETRY_DELAY)
-            );
-          }
-        }
-
-        if (availableTimes.length === 0) {
-          console.log(
-            `[${logName}] No available slots found after all retries. Stopping.`
-          );
-          break; // 재시도 후에도 슬롯이 없으면 루프 종료
-        }
-
-        // 해당 계정의 설정(START_TIME, END_TIME)에 맞는 슬롯 필터링
-        const startStr = config.START_TIME.replace(":", "");
-        const endStr = config.END_TIME.replace(":", "");
-        const s = startStr <= endStr ? startStr : endStr;
-        const e = startStr <= endStr ? endStr : startStr;
-        const descending = startStr > endStr;
-
-        const targetTimes = availableTimes.filter((slot) => {
-          return slot.bk_time >= s && slot.bk_time <= e;
-        });
-
-        targetTimes.sort((a, b) => {
-          if (descending) {
-            return b.bk_time.localeCompare(a.bk_time);
-          } else {
-            return a.bk_time.localeCompare(b.bk_time);
-          }
-        });
-
-        if (targetTimes.length === 0) {
-          console.log(
-            `[${logName}] No slots in desired range. Retrying after delay...`
-          );
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          continue; // 원하는 시간대 슬롯 없으면 다시 시도
-        }
-
-        // 첫 번째 슬롯부터 순차적으로 시도
-        let bookingSuccess = false;
-        for (const targetSlot of targetTimes) {
-          const result = await attemptBooking(account, targetSlot);
-          if (result.success) {
-            bookingSuccess = true;
-            return; // 성공 시 이 계정의 모든 작업 완전 종료
-          }
-          // 422 오류로 슬롯을 놓쳤다면, 슬롯 목록이 낡았으므로 루프를 중단하고 새로고침
-          if (result.wasTaken) {
-            break;
-          }
-        }
-
-        // for-loop가 중단되었거나(wasTaken) 모든 슬롯 시도 후 실패 시
-        if (!bookingSuccess) {
-          console.log(
-            `[${logName}] All attempts in this round failed or slots were stale. Refetching...`
-          );
-          await new Promise((resolve) => setTimeout(resolve, 300));
-        }
-      }
-
-      // 1분 타임아웃 또는 슬롯 소진으로 루프 종료
-      console.log(`[${logName}] Booking loop finished.`);
-      await updateBookingStatus(config.NAME, date, "실패", {
-        reason: "1분 내 예약 실패",
-      });
-    })();
   });
 
-  await Promise.all(bookingPromises);
+  await Promise.all(invocationPromises);
 
-  console.log(`${logPrefix} --- Booking process finished ---`);
+  console.log(`${logPrefix} --- All Lambda invocations are sent ---`);
 }
 
 function getBookingOpenTime(targetDateStr) {
@@ -607,92 +273,6 @@ async function waitForBookingOpen(openTime, dateStr) {
   await new Promise((resolve) => setTimeout(resolve, 100));
 }
 
-async function selectAndConfirmBooking(
-  client,
-  xsrfToken, // 세션 XSRF 토큰
-  timeSlot,
-  // peopleCount, // HTML에서 파싱하므로 제거
-  dateStr
-) {
-  // 1. 예약 시간 선택 및 토큰 추출
-  console.log(
-    `4) Selecting time and preparing to confirm: ${timeSlot.bk_time} on course ${timeSlot.bk_cours}...`
-  );
-  const { bk_cours: cours, bk_time: time, bk_hole: hole } = timeSlot;
-  const createUrl = `https://www.debeach.co.kr/booking/create?date=${dateStr}&cours=${cours}&time=${time}&hole=${hole}`;
-
-  const createRes = await client.get(createUrl, {
-    headers: {
-      Accept: "*/*",
-      "X-Requested-With": "XMLHttpRequest",
-      "X-XSRF-TOKEN": xsrfToken,
-      Referer: "https://www.debeach.co.kr/booking",
-    },
-  });
-
-  const $ = cheerio.load(createRes.data);
-  const bookingToken = $('form#form-create input[name="_token"]').val();
-  const peopleCount = $('form#form-create input[name="incnt"]:checked').val();
-
-  if (!bookingToken) {
-    console.error("🚨 Could not find booking token. Skipping slot.");
-    // 이 경우, 루프에서 다음 슬롯으로 넘어가도록 null을 반환하거나 에러를 던지지 않음
-    return;
-  }
-  console.log(`✅ Got booking token: ${bookingToken}`);
-
-  // 2. 예약 확정 요청
-  if (!peopleCount) {
-    console.error(
-      "🚨 Could not find checked people count (incnt). Skipping slot."
-    );
-    return;
-  }
-  console.log(`✅ Parsed people count: ${peopleCount}`);
-
-  console.log(`5) Confirming booking for ${peopleCount} people...`);
-  const payload = new URLSearchParams();
-  payload.append("_token", bookingToken);
-  payload.append("date", dateStr);
-  payload.append("cours", cours);
-  payload.append("time", time);
-  payload.append("hole", hole);
-  payload.append("incnt", peopleCount);
-  payload.append("booking_agree", "0");
-  payload.append("booking_agree", "1");
-
-  const confirmRes = await client.post(
-    "https://www.debeach.co.kr/booking",
-    payload.toString(),
-    {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "application/json, text/javascript, */*; q=0.01",
-        "X-Requested-With": "XMLHttpRequest",
-        "X-XSRF-TOKEN": xsrfToken,
-        Referer: "https://www.debeach.co.kr/booking",
-      },
-      validateStatus: (status) => status >= 200 && status < 400, // 422를 에러로 처리
-    }
-  );
-
-  console.log("✅ Booking confirmation response:", confirmRes.status);
-  console.log("📋 Response data:", confirmRes.data);
-
-  // `redirect` 키가 있으면 성공으로 간주
-  if (confirmRes.data && confirmRes.data.redirect) {
-    console.log(
-      `🎉🎉🎉 Booking successful! Message: ${confirmRes.data.message} 🎉🎉🎉`
-    );
-  } else {
-    const errorMessage =
-      (confirmRes.data && confirmRes.data.message) ||
-      "Booking failed for an unknown reason.";
-    console.error(`🚨 Booking failed: ${errorMessage}`);
-    throw new Error(errorMessage);
-  }
-}
-
 // 예약 상태를 파일에 저장/업데이트하는 함수
 async function updateBookingStatus(name, date, status, bookingData = {}) {
   const maxRetries = 3;
@@ -728,10 +308,7 @@ async function updateBookingStatus(name, date, status, bookingData = {}) {
 
 async function runAutoBooking(bookingRequests, options = { immediate: false }) {
   // Ensure DB is connected before proceeding
-  if (mongoose.connection.readyState !== 1) {
-    console.log("MongoDB is not connected. Attempting to connect...");
-    await connectDB();
-  }
+  await connectDB();
 
   // 1. DB에서 활성(granted: true) 사용자 목록을 먼저 가져옵니다.
   const activeUsers = await User.find({ granted: true }).select(

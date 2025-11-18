@@ -26,6 +26,7 @@
     "mongoose": "^8.19.3",
     "ntp-client": "^0.5.3",
     "pm2": "^5.4.2",
-    "tough-cookie": "^6.0.0"
+    "tough-cookie": "^6.0.0",
+    "@aws-sdk/client-lambda": "^3.454.0"
   }
 }

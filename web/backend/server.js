@@ -7,7 +7,7 @@ import { User, Booking } from "./models.js"; // Import models
 import { runAutoBooking, getBookingOpenTime } from "../../auto/debeach_auto.js";
 import moment from "moment-timezone";
 import connectDB from "./db.js";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
@@ -25,7 +25,9 @@ app.use(express.json());
 app.post("/api/auth/signup", async (req, res) => {
   const { name, username, password } = req.body;
   if (!name || !username || !password) {
-    return res.status(400).json({ message: "Name, username and password are required." });
+    return res
+      .status(400)
+      .json({ message: "Name, username and password are required." });
   }
 
   try {
@@ -34,11 +36,15 @@ app.post("/api/auth/signup", async (req, res) => {
       username,
       password,
       golfPassword: password,
-      role: 'user',
+      role: "user",
       granted: false,
     });
     await user.save();
-    res.status(201).json({ message: "User created successfully. Please wait for admin approval." });
+    res
+      .status(201)
+      .json({
+        message: "User created successfully. Please wait for admin approval.",
+      });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({ message: "Username already exists." });
@@ -48,9 +54,9 @@ app.post("/api/auth/signup", async (req, res) => {
 });
 
 const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
-    return res.status(401).json({ message: 'Authentication token required.' });
+    return res.status(401).json({ message: "Authentication token required." });
   }
 
   try {
@@ -58,20 +64,20 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid or expired token.' });
+    return res.status(401).json({ message: "Invalid or expired token." });
   }
 };
 
 const adminOnly = (req, res, next) => {
-  if (req.user?.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin access required.' });
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ message: "Admin access required." });
   }
   next();
 };
 
 app.get("/api/auth/check", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
+    const user = await User.findById(req.user.userId).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -81,7 +87,7 @@ app.get("/api/auth/check", authMiddleware, async (req, res) => {
         name: user.name,
         username: user.username,
         role: user.role,
-        golfPassword: user.golfPassword || '',
+        golfPassword: user.golfPassword || "",
       },
     });
   } catch (error) {
@@ -91,8 +97,8 @@ app.get("/api/auth/check", authMiddleware, async (req, res) => {
 
 app.put("/api/profile/golf-password", authMiddleware, async (req, res) => {
   const { golfPassword } = req.body;
-  if (typeof golfPassword !== 'string') {
-    return res.status(400).json({ message: '골프장 비밀번호를 입력해주세요.' });
+  if (typeof golfPassword !== "string") {
+    return res.status(400).json({ message: "골프장 비밀번호를 입력해주세요." });
   }
 
   try {
@@ -100,31 +106,33 @@ app.put("/api/profile/golf-password", authMiddleware, async (req, res) => {
       req.user.userId,
       { golfPassword },
       { new: true }
-    ).select('name username role golfPassword');
+    ).select("name username role golfPassword");
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: "User not found." });
     }
 
     res.json({
-      message: '골프장 비밀번호가 저장되었습니다.',
+      message: "골프장 비밀번호가 저장되었습니다.",
       user: {
         id: user._id,
         name: user.name,
         username: user.username,
         role: user.role,
-        golfPassword: user.golfPassword || '',
+        golfPassword: user.golfPassword || "",
       },
     });
   } catch (error) {
-    res.status(500).json({ message: '비밀번호 저장에 실패했습니다.', error });
+    res.status(500).json({ message: "비밀번호 저장에 실패했습니다.", error });
   }
 });
 
 app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
-    return res.status(400).json({ message: "Username and password are required." });
+    return res
+      .status(400)
+      .json({ message: "Username and password are required." });
   }
 
   try {
@@ -139,7 +147,9 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     if (!user.granted) {
-      return res.status(403).json({ message: "Account not approved by administrator." });
+      return res
+        .status(403)
+        .json({ message: "Account not approved by administrator." });
     }
 
     if (!user.golfPassword) {
@@ -150,7 +160,7 @@ app.post("/api/auth/login", async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: "1d" }
     );
 
     res.json({
@@ -160,7 +170,7 @@ app.post("/api/auth/login", async (req, res) => {
         name: user.name,
         username: user.username,
         role: user.role,
-        golfPassword: user.golfPassword || '',
+        golfPassword: user.golfPassword || "",
       },
     });
   } catch (error) {
@@ -206,42 +216,45 @@ async function enqueueOrUpdate(job) {
 }
 
 // User management routes (admin only)
-app.get('/api/users', authMiddleware, adminOnly, async (req, res) => {
+app.get("/api/users", authMiddleware, adminOnly, async (req, res) => {
   try {
-    const users = await User.find({}, '-password');
+    const users = await User.find({}, "-password");
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch users', error });
+    res.status(500).json({ message: "Failed to fetch users", error });
   }
 });
 
-app.put('/api/users/:id', authMiddleware, adminOnly, async (req, res) => {
+app.put("/api/users/:id", authMiddleware, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const { granted, role } = req.body;
-    const user = await User.findByIdAndUpdate(id, { granted, role }, { new: true }).select('-password');
+    const user = await User.findByIdAndUpdate(
+      id,
+      { granted, role },
+      { new: true }
+    ).select("-password");
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to update user', error });
+    res.status(500).json({ message: "Failed to update user", error });
   }
 });
 
-app.delete('/api/users/:id', authMiddleware, adminOnly, async (req, res) => {
+app.delete("/api/users/:id", authMiddleware, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findByIdAndDelete(id);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ message: 'Failed to delete user', error });
+    res.status(500).json({ message: "Failed to delete user", error });
   }
 });
-
 
 // 모든 예약 정보를 MongoDB에서 읽어오는 API
 app.get("/api/bookings", authMiddleware, async (req, res) => {
@@ -288,17 +301,22 @@ if (existsSync(FRONTEND_DIST_PATH)) {
 // 계정 목록을 MongoDB에서 가져오는 API
 app.get("/api/accounts", authMiddleware, async (req, res) => {
   try {
-    if (req.user.role === 'admin') {
-      const users = await User.find({ role: 'user' }, 'name username golfPassword');
+    if (req.user.role === "admin") {
+      const users = await User.find(
+        { role: "user" },
+        "name username golfPassword"
+      );
       const result = users.map((user) => ({
         name: user.name,
         loginId: user.username,
-        loginPassword: user.golfPassword || '',
+        loginPassword: user.golfPassword || "",
       }));
       return res.json(result);
     }
 
-    const user = await User.findById(req.user.userId).select('name username golfPassword');
+    const user = await User.findById(req.user.userId).select(
+      "name username golfPassword"
+    );
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -307,7 +325,7 @@ app.get("/api/accounts", authMiddleware, async (req, res) => {
       {
         name: user.name,
         loginId: user.username,
-        loginPassword: user.golfPassword || '',
+        loginPassword: user.golfPassword || "",
       },
     ]);
   } catch (error) {
@@ -458,6 +476,20 @@ app.delete("/api/bookings/:date/:account", authMiddleware, async (req, res) => {
       return res
         .status(404)
         .json({ message: "삭제할 예약을 찾을 수 없습니다." });
+    }
+    // 큐에서 동일한 계정/날짜 조합의 작업 제거 (자동 예약 재실행 방지)
+    try {
+      const queue = await loadQueue();
+      const filteredQueue = queue.filter(
+        (job) =>
+          !(
+            (job.account ?? job.NAME) === account &&
+            (job.date ?? job.TARGET_DATE) === date
+          )
+      );
+      await saveQueue(filteredQueue);
+    } catch (e) {
+      console.error("예약 삭제 후 큐 정리 중 오류:", e.message);
     }
 
     res.json({ message: "예약이 삭제되었습니다." });

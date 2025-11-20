@@ -1,0 +1,109 @@
+"arn:aws:iam::106055905364:role/book-debeach-lambda-role"
+
+
+* 처음 생성하는 경우:
+<YOUR_AWS_ACCOUNT_ID>와 <YOUR_REGION>을 실제 값으로 변경하여 아래 명령어를 실행합니다.
+--timeout 90 으로 실행 시간을 90초(1분 30초)로 설정합니다.
+
+aws lambda create-function \
+--function-name book-debeach \
+--runtime nodejs20.x \
+--role arn:aws:iam::106055905364:role/book-debeach-lambda-role \
+--handler index.handler \
+--zip-file fileb://deployment_package.zip \
+--region ap-northeast-2 \
+--timeout 90 \
+--memory-size 256
+
+* AWS 계정 ID (AWS Account ID)
+AWS CLI 사용: 다음 명령어를 터미널에 입력하면 계정 정보를 포함한 현재 로그인된 사용자 정보가 출력됩니다. 여기서 Account 값이 계정 ID입니다.
+aws sts get-caller-identity
+
+* AWS CLI 사용: 현재 CLI에 설정된 기본 리전을 확인하려면 다음 명령어를 사용합니다.
+aws configure get region
+
+
+* 새로 빌드한 .zip 파일로 코드만 업데이트합니다.
+aws lambda update-function-code \
+--function-name book-debeach \
+--zip-file fileb://deployment_package.zip
+
+
+* 함수 설정(타임아웃 등)을 변경하려면 update-function-configuration 명령어를 사용합니다.
+aws lambda update-function-configuration \
+--function-name book-debeach \
+--timeout 90
+
+
+* AWS CLI로 함수 목록/정보 확인
+aws lambda list-functions --region ap-northeast-2
+여기에서 book-debeach가 보이면 배포는 된 겁니다.
+
+자세한 설정을 보려면:
+aws lambda get-function \
+  --function-name book-debeach \
+  --region ap-northeast-2
+
+
+* AWS CLI로 직접 테스트 실행 (핸들러 호출)
+Orchestrator를 거치지 않고, 람다만 단독으로 호출해서 잘 도는지 볼 수 있습니다.
+테스트용 이벤트 JSON 파일 생성 (예: event-test.json):
+json
+{
+  "config": {
+    "NAME": "테스트계정",
+    "LOGIN_ID": "11000000",
+    "LOGIN_PASSWORD": "password",
+    "TARGET_DATE": "20251202",
+    "START_TIME": "09:00",
+    "END_TIME": "09:30"
+  },
+  "immediate": true
+}
+
+aws lambda invoke \
+  --function-name book-debeach \
+  --region ap-northeast-2 \
+  --payload file://event-test.json \
+  --cli-binary-format raw-in-base64-out \
+  output.json
+
+
+* CloudWatch Logs로 실제 실행 로그 확인
+AWS 콘솔 → CloudWatch → Logs → Log groups
+/aws/lambda/book-debeach 로그 그룹을 찾습니다.
+가장 최근 로그 스트림을 열어 보면:
+Lambda invoked with event: ...
+[계정명] Immediate execution. Skipping wait.
+로그인/부킹 시도 로그
+에러 발생 시 스택 트레이스
+
+
+
+* 다시 빌드
+cd /Users/joonholee/Joon/1-Project/dev/book/lambda/book-debeach
+npm run build
+
+* 람다 업데이트
+aws lambda update-function-code \
+  --function-name book-debeach \
+  --zip-file fileb://deployment_package.zip \
+  --region ap-northeast-2
+
+* 테스트 실행
+aws lambda invoke \
+  --function-name book-debeach \
+  --region ap-northeast-2 \
+  --payload file://test/event-test.json \
+  --cli-binary-format raw-in-base64-out \
+  test/output.json
+
+* 람다 로그
+aws logs tail /aws/lambda/book-debeach \
+  --region ap-northeast-2 \
+  --since 1h
+
+
+
+* CLI 타임아웃 세팅하기
+aws configure set cli_read_timeout 60   # 60초로 세팅하기

@@ -1,0 +1,61 @@
+개요
+EBS 인스턴스가 쓰는 IAM 역할(aws-elasticbeanstalk-ec2-role)에
+lambda:InvokeFunction 권한을 CLI로 붙이면 됩니다.
+
+아래 예시는 AWS CLI v2 기준입니다.
+
+1. 정책 JSON 파일 만들기
+로컬에서 예를 들어 lambda-invoke-book-debeach.json 파일 생성:
+
+json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowInvokeBookDebeace",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction",
+        "lambda:InvokeFunctionUrl"
+      ],
+      "Resource": "arn:aws:lambda:ap-northeast-2:106055905364:function:book-debeach"
+    }
+  ]
+}
+리소스를 패턴으로 주고 싶으면 예:
+
+json
+"Resource": "arn:aws:lambda:ap-northeast-2:106055905364:function:book-*"
+2. IAM 역할에 인라인 정책으로 추가
+bash
+aws iam put-role-policy \
+  --role-name aws-elasticbeanstalk-ec2-role \
+  --policy-name LambdaInvokeBookDebeace \
+  --policy-document file://lambda-invoke-book-debeach.json
+--role-name : EBS EC2 인스턴스에 연결된 역할 이름
+(다르면 실제 이름으로 교체)
+--policy-name : 원하는 임의의 이름
+성공하면 별도 출력 없이 종료됩니다.
+
+3. 권한 붙었는지 확인
+bash
+aws iam get-role-policy \
+  --role-name aws-elasticbeanstalk-ec2-role \
+  --policy-name LambdaInvokeBookDebeace
+정책 JSON이 그대로 나오면 적용 완료입니다.
+
+4. Lambda 리소스 정책으로 허용(옵션)
+동일 계정이면 위만으로 보통 충분하지만,
+Lambda 쪽 리소스 정책에 직접 허용을 추가하려면:
+
+bash
+aws lambda add-permission \
+  --function-name book-debeach \
+  --statement-id AllowInvokeFromEbEc2Role \
+  --action lambda:InvokeFunction \
+  --principal arn:aws:iam::106055905364:role/aws-elasticbeanstalk-ec2-role
+이미 같은 statement-id가 있으면 에러가 나니, 그때는
+aws lambda get-policy --function-name book-debeach 로 확인 후 조정하면 됩니다.
+
+추가로, 실제 EB 환경에서 쓰는 역할 이름이 aws-elasticbeanstalk-ec2-role이 맞는지
+aws elasticbeanstalk describe-environments / 콘솔에서 한 번만 확인하면 더 안전합니다. 원하면 그 확인용 CLI도 알려 줄게.

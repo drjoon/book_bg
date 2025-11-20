@@ -1,0 +1,11 @@
+{
+  "config": {
+    "NAME": "손덕일",
+    "LOGIN_ID": "11021511",
+    "LOGIN_PASSWORD": "sdi12345",
+    "TARGET_DATE": "20251126",
+    "START_TIME": "06:00",
+    "END_TIME": "05:00"
+  },
+  "immediate": true
+}

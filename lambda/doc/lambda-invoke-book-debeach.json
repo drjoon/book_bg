@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowInvokeBookDebeace",
+      "Effect": "Allow",
+      "Action": ["lambda:InvokeFunction", "lambda:InvokeFunctionUrl"],
+      "Resource": "arn:aws:lambda:ap-northeast-2:106055905364:function:book-debeach"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "config": {
+    "NAME": "오수양",
+    "LOGIN_ID": "11010751",
+    "LOGIN_PASSWORD": "mq2803",
+    "TARGET_DATE": "20251202",
+    "START_TIME": "06:00",
+    "END_TIME": "06:10"
+  },
+  "immediate": true
+}

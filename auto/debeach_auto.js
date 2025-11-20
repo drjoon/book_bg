@@ -102,14 +102,14 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // 2. 예약 시간 20초 전까지 대기
+  // 2. 예약 시간 10초 전까지 대기
   if (!options.immediate) {
     const bookingOpenTime = getBookingOpenTime(date);
-    const twentySecondsBefore = bookingOpenTime.clone().subtract(10, "seconds");
+    const tenSecondsBefore = bookingOpenTime.clone().subtract(10, "seconds");
     let now = moment().tz("Asia/Seoul");
 
-    if (now.isBefore(twentySecondsBefore)) {
-      const waitTime = twentySecondsBefore.diff(now);
+    if (now.isBefore(tenSecondsBefore)) {
+      const waitTime = tenSecondsBefore.diff(now);
       console.log(
         `${logPrefix} Waiting ${Math.round(
           waitTime / 1000

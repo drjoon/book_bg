@@ -8,12 +8,17 @@ import { runAutoBooking, getBookingOpenTime } from "../../auto/debeach_auto.js";
 import moment from "moment-timezone";
 import connectDB from "./db.js";
 import jwt from "jsonwebtoken";
+import { ensureTeeBucket } from "./s3.js";
 
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 connectDB();
+
+ensureTeeBucket().catch((e) =>
+  console.warn("[TEE_S3] ensureTeeBucket error:", e?.message || e)
+);
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8081;
@@ -40,11 +45,9 @@ app.post("/api/auth/signup", async (req, res) => {
       granted: false,
     });
     await user.save();
-    res
-      .status(201)
-      .json({
-        message: "User created successfully. Please wait for admin approval.",
-      });
+    res.status(201).json({
+      message: "User created successfully. Please wait for admin approval.",
+    });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({ message: "Username already exists." });
@@ -336,7 +339,7 @@ app.get("/api/accounts", authMiddleware, async (req, res) => {
 
 // 신규 예약 생성 (MongoDB)
 app.post("/api/bookings", authMiddleware, async (req, res) => {
-  const { NAME, TARGET_DATE, START_TIME, END_TIME } = req.body;
+  const { NAME, TARGET_DATE, START_TIME, END_TIME, MEMO } = req.body;
   if (!NAME || !TARGET_DATE || !START_TIME || !END_TIME) {
     return res.status(400).json({ message: "필수 정보가 누락되었습니다." });
   }
@@ -362,6 +365,7 @@ app.post("/api/bookings", authMiddleware, async (req, res) => {
       endTime: END_TIME,
       successTime: null,
       bookedSlot: null,
+      memo: typeof MEMO === "string" ? MEMO : undefined,
     });
 
     const savedBooking = await newBooking.save();
@@ -382,10 +386,15 @@ app.post("/api/bookings", authMiddleware, async (req, res) => {
           const shouldUpdateTime =
             existingBooking.startTime !== START_TIME ||
             existingBooking.endTime !== END_TIME;
+          const shouldUpdateMemo =
+            typeof MEMO === "string" && existingBooking.memo !== MEMO;
 
-          if (shouldUpdateTime) {
+          if (shouldUpdateTime || shouldUpdateMemo) {
             existingBooking.startTime = START_TIME;
             existingBooking.endTime = END_TIME;
+            if (shouldUpdateMemo) {
+              existingBooking.memo = MEMO;
+            }
             if (!isSuccess) {
               existingBooking.status = "접수";
               existingBooking.successTime = null;
@@ -423,7 +432,7 @@ app.post("/api/bookings", authMiddleware, async (req, res) => {
 // 예약 변경 (MongoDB)
 app.put("/api/bookings/:date/:account", authMiddleware, async (req, res) => {
   const { date, account } = req.params;
-  const { startTime, endTime } = req.body;
+  const { startTime, endTime, memo } = req.body;
 
   if (!startTime || !endTime) {
     return res.status(400).json({ message: "시작 및 종료 시간이 필요합니다." });
@@ -442,9 +451,14 @@ app.put("/api/bookings/:date/:account", authMiddleware, async (req, res) => {
         .json({ message: "오픈 1분 이내에는 예약을 추가/수정할 수 없습니다." });
     }
 
+    const update = { startTime, endTime };
+    if (typeof memo === "string") {
+      update.memo = memo;
+    }
+
     const updatedBooking = await Booking.findOneAndUpdate(
       { date, account },
-      { startTime, endTime },
+      update,
       { new: true } // Return the updated document
     );
 

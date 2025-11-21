@@ -26,6 +26,7 @@ interface Booking {
   bookedSlot?: { bk_time: string; bk_cours: string } | null;
   startTime: string;
   endTime: string;
+  memo?: string | null;
 }
 
 interface NewBookingFormProps {
@@ -34,12 +35,26 @@ interface NewBookingFormProps {
   onBookingUpdated: (updatedBooking: {
     startTime: string;
     endTime: string;
+    memo?: string;
   }) => void;
   onBookingDeleted: () => void;
   isOpen: boolean;
   onClose: () => void;
   editingBooking: Booking | null;
 }
+
+const getStoredTime = (key: "start" | "end", fallback: string) => {
+  try {
+    if (typeof window === "undefined") return fallback;
+    const itemKey =
+      key === "start" ? "bookingDefaultStart" : "bookingDefaultEnd";
+    const value = window.localStorage.getItem(itemKey);
+    if (!value) return fallback;
+    return /^\d{4}$/.test(value) ? value : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 interface TimeInputProps {
   label: string;
@@ -68,53 +83,55 @@ const TimeInput: React.FC<TimeInputProps> = ({
         {label}
       </label>
       <div className="relative">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(clamp(e.target.value.replace(/[^0-9]/g, "")))}
-        placeholder="0000"
-        maxLength={4}
-        className="w-full pl-4 pr-20 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all font-mono text-lg tracking-widest"
-        required
-      />
-      <div className="absolute inset-y-0 right-2 flex flex-row items-center gap-1">
-        <div className="flex flex-col gap-0.5">
-          <button
-            type="button"
-            onClick={() => onAdjust(60)}
-            disabled={parseInt(value) >= 1500}
-            className="p-0.5 text-blue-400 hover:text-blue-600 disabled:text-gray-300"
-          >
-            <ChevronsUp className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onAdjust(-60)}
-            disabled={parseInt(value) <= 600}
-            className="p-0.5 text-blue-400 hover:text-blue-600 disabled:text-gray-300"
-          >
-            <ChevronsDown className="h-5 w-5" />
-          </button>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) =>
+            onChange(clamp(e.target.value.replace(/[^0-9]/g, "")))
+          }
+          placeholder="0000"
+          maxLength={4}
+          className="w-full pl-4 pr-20 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all font-mono text-lg tracking-widest"
+          required
+        />
+        <div className="absolute inset-y-0 right-2 flex flex-row items-center gap-1">
+          <div className="flex flex-col gap-0.5">
+            <button
+              type="button"
+              onClick={() => onAdjust(60)}
+              disabled={parseInt(value) >= 1500}
+              className="p-0.5 text-blue-400 hover:text-blue-600 disabled:text-gray-300"
+            >
+              <ChevronsUp className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onAdjust(-60)}
+              disabled={parseInt(value) <= 600}
+              className="p-0.5 text-blue-400 hover:text-blue-600 disabled:text-gray-300"
+            >
+              <ChevronsDown className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <button
+              type="button"
+              onClick={() => onAdjust(10)}
+              disabled={parseInt(value) >= 1500}
+              className="p-0.5 text-blue-400 hover:text-blue-600 disabled:text-gray-300"
+            >
+              <ChevronUp className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onAdjust(-10)}
+              disabled={parseInt(value) <= 600}
+              className="p-0.5 text-blue-400 hover:text-blue-600 disabled:text-gray-300"
+            >
+              <ChevronDown className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-0.5">
-          <button
-            type="button"
-            onClick={() => onAdjust(10)}
-            disabled={parseInt(value) >= 1500}
-            className="p-0.5 text-blue-400 hover:text-blue-600 disabled:text-gray-300"
-          >
-            <ChevronUp className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onAdjust(-10)}
-            disabled={parseInt(value) <= 600}
-            className="p-0.5 text-blue-400 hover:text-blue-600 disabled:text-gray-300"
-          >
-            <ChevronDown className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
       </div>
     </div>
   );
@@ -131,15 +148,27 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
 }) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccount, setSelectedAccount] = useState("");
-  const [startTime, setStartTime] = useState("0600");
-  const [endTime, setEndTime] = useState("0900");
+  const [startTime, setStartTime] = useState(() =>
+    getStoredTime("start", "0600")
+  );
+  const [endTime, setEndTime] = useState(() => getStoredTime("end", "0900"));
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [memo, setMemo] = useState("");
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
   const isEditMode = !!editingBooking;
+
+  const dateLabel = selectedDate
+    ? selectedDate.toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        weekday: "short",
+      })
+    : "";
 
   // 예약 성공 상태를 감지하기 위한 간단한 폴링 함수
   const pollUntilSuccess = async (
@@ -152,7 +181,9 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     return new Promise<void>((resolve, reject) => {
       const timer = setInterval(async () => {
         try {
-          const res = await axios.get<Record<string, Booking[]>>(`${API_BASE_URL}/api/bookings`);
+          const res = await axios.get<Record<string, Booking[]>>(
+            `${API_BASE_URL}/api/bookings`
+          );
           const data = res.data;
           const day = data[dateStr] || [];
           const match = day.find((b: any) => b.account === account);
@@ -208,7 +239,9 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const response = await axios.get<Account[]>(`${API_BASE_URL}/api/accounts`);
+        const response = await axios.get<Account[]>(
+          `${API_BASE_URL}/api/accounts`
+        );
         const data = Array.isArray(response.data) ? response.data : [];
         setAccounts(data);
         const defaultAccount = isEditMode
@@ -218,9 +251,11 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
         if (isEditMode) {
           setStartTime(editingBooking.startTime);
           setEndTime(editingBooking.endTime);
+          setMemo(editingBooking.memo ?? "");
         } else {
-          setStartTime("0600");
-          setEndTime("0900");
+          setStartTime(getStoredTime("start", "0600"));
+          setEndTime(getStoredTime("end", "0900"));
+          setMemo("");
         }
       } catch (error) {
         console.error("계정 정보를 가져오는 데 실패했습니다:", error);
@@ -237,6 +272,17 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       setLoading(false);
     }
   }, [isOpen, editingBooking, isEditMode]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      if (typeof window === "undefined") return;
+      window.localStorage.setItem("bookingDefaultStart", startTime);
+      window.localStorage.setItem("bookingDefaultEnd", endTime);
+    } catch {
+      // ignore storage errors
+    }
+  }, [startTime, endTime, isOpen]);
 
   const adjustTime = (
     time: string,
@@ -273,7 +319,8 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     }
 
     if (!account.loginPassword) {
-      const message = "골프장 비밀번호가 비어 있습니다. 계정 관리에서 먼저 저장해주세요.";
+      const message =
+        "골프장 비밀번호가 비어 있습니다. 계정 관리에서 먼저 저장해주세요.";
       setError(message);
       setLoading(false);
       showToast(message, "error");
@@ -286,6 +333,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       START_TIME: startTime,
       END_TIME: endTime,
       status: "접수",
+      memo: memo.trim() || undefined,
     };
 
     try {
@@ -294,6 +342,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
         TARGET_DATE: bookingData.TARGET_DATE,
         START_TIME: bookingData.START_TIME,
         END_TIME: bookingData.END_TIME,
+        MEMO: bookingData.memo,
       });
 
       if (bookingResponse.status === 200) {
@@ -357,13 +406,18 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     setLoading(true);
     showToast("예약 변경 신청 중...", "info");
     try {
-      await onBookingUpdated({ startTime, endTime });
+      await onBookingUpdated({
+        startTime,
+        endTime,
+        memo: memo.trim() || undefined,
+      });
 
       const bookingData = {
         ...editingBooking,
         TARGET_DATE: moment(selectedDate).format("YYYYMMDD"),
         startTime,
         endTime,
+        memo: memo.trim() || undefined,
       } as Booking & { TARGET_DATE: string };
       // @ts-ignore 제거를 위해 date 삭제 후 타입 재정의
       delete (bookingData as any).date;
@@ -393,7 +447,8 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     } catch (err: any) {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
         const message =
-          err.response.data?.message || "이미 예약이 존재하여 변경할 수 없습니다.";
+          err.response.data?.message ||
+          "이미 예약이 존재하여 변경할 수 없습니다.";
         setError(message);
         showToast(message, "error");
         onBookingAdded();
@@ -427,8 +482,13 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
         >
           <X className="w-6 h-6" />
         </button>
-        <h3 className="text-2xl font-bold mb-6 text-gray-800">
-          {isEditMode ? "예약 변경" : "신규 예약"}
+        <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-baseline gap-2">
+          <span>{isEditMode ? "예약 변경" : "신규 예약"}</span>
+          {dateLabel && (
+            <span className="text-sm font-medium text-gray-500">
+              {dateLabel}
+            </span>
+          )}
         </h3>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -480,6 +540,19 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
               value={endTime}
               onChange={setEndTime}
               onAdjust={(amount) => adjustTime(endTime, setEndTime, amount)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              메모 (동반자 이름 등, 선택)
+            </label>
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-sm resize-none"
+              placeholder="예: 홍길동, 김철수 동반 예정"
             />
           </div>
 

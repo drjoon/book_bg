@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const availableSlotSchema = new mongoose.Schema({
   date: { type: String, required: true },
@@ -22,6 +22,11 @@ const bookingSchema = new mongoose.Schema({
   endTime: String,
   successTime: String,
   bookedSlot: availableSlotSchema, // Embed the slot schema
+  memo: { type: String },
+  teeTotal: Number,
+  teeFirstHalf: Number,
+  teeSecondHalf: Number,
+  teeInRange: Number,
 });
 
 // Create a compound index to ensure unique bookings per account and date
@@ -33,11 +38,11 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   golfPassword: { type: String },
   granted: { type: Boolean, default: false },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, enum: ["user", "admin"], default: "user" },
 });
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
@@ -47,6 +52,9 @@ userSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = mongoose.model('User', userSchema);
-export const AvailableSlot = mongoose.model('AvailableSlot', availableSlotSchema);
-export const Booking = mongoose.model('Booking', bookingSchema);
+export const User = mongoose.model("User", userSchema);
+export const AvailableSlot = mongoose.model(
+  "AvailableSlot",
+  availableSlotSchema
+);
+export const Booking = mongoose.model("Booking", bookingSchema);

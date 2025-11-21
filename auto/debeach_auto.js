@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 import { Booking, User } from "../web/backend/models.js";
+import { saveTeeSnapshot } from "../web/backend/s3.js";
 import connectDB from "../web/backend/db.js";
 
 // --- Console Log Timestamp Monkey-Patch ---
@@ -148,10 +149,21 @@ async function runBookingGroup(group, options) {
       console.log(`[${logName}] ✅ Lambda returned result:`, result);
 
       if (result.success) {
+        const stats = result.stats || {};
         await updateBookingStatus(config.NAME, date, "성공", {
           successTime: moment().tz("Asia/Seoul").format(),
           bookedSlot: result.slot,
+          teeTotal: stats.teeTotal,
+          teeFirstHalf: stats.teeFirstHalf,
+          teeSecondHalf: stats.teeSecondHalf,
+          teeInRange: stats.teeInRange,
         });
+
+        if (Array.isArray(result.slots) && result.slots.length > 0) {
+          await saveTeeSnapshot(result.slots, {
+            roundDate: date,
+          });
+        }
       } else {
         await updateBookingStatus(config.NAME, date, "실패", {
           reason: result.reason || "Lambda에서 예약 실패",

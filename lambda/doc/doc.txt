@@ -79,7 +79,6 @@ Lambda invoked with event: ...
 에러 발생 시 스택 트레이스
 
 
-
 * 다시 빌드
 cd /Users/joonholee/Joon/1-Project/dev/book/lambda/book-debeach
 npm run build

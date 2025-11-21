@@ -147,6 +147,34 @@ async function selectAndConfirmBooking(client, xsrfToken, timeSlot, dateStr) {
   }
 }
 
+function computeTeeStats(availableTimes, startHHmm, endHHmm) {
+  if (!Array.isArray(availableTimes) || availableTimes.length === 0) {
+    return {
+      teeTotal: 0,
+      teeFirstHalf: 0,
+      teeSecondHalf: 0,
+      teeInRange: 0,
+    };
+  }
+
+  const total = availableTimes.length;
+  const firstHalf = availableTimes.filter((s) => s.bk_time < "0900").length;
+  const secondHalf = availableTimes.filter((s) => s.bk_time >= "0900").length;
+
+  const start = startHHmm;
+  const end = endHHmm;
+  const inRange = availableTimes.filter(
+    (s) => s.bk_time >= start && s.bk_time <= end
+  ).length;
+
+  return {
+    teeTotal: total,
+    teeFirstHalf: firstHalf,
+    teeSecondHalf: secondHalf,
+    teeInRange: inRange,
+  };
+}
+
 async function attemptBooking(account, targetSlot) {
   const { client, token, config } = account;
   const logPrefix = `[${config.NAME}]`;
@@ -359,6 +387,8 @@ export const handler = async (event) => {
         return { success: false, reason: "No available slots." };
       }
 
+      const stats = computeTeeStats(availableTimes, s, e);
+
       const targetTimes = availableTimes
         .filter((slot) => slot.bk_time >= s && slot.bk_time <= e)
         .sort((a, b) =>
@@ -378,7 +408,12 @@ export const handler = async (event) => {
         const result = await attemptBooking(account, targetSlot);
         if (result.success) {
           console.log(`[${logName}] Booking successful (immediate).`);
-          return { success: true, slot: result.slot };
+          return {
+            success: true,
+            slot: result.slot,
+            stats,
+            slots: availableTimes,
+          };
         }
         // 즉시 실행에서는 wasTaken 이어도 refetch 하지 않고 바로 실패
       }
@@ -421,6 +456,8 @@ export const handler = async (event) => {
           continue;
         }
 
+        const stats = computeTeeStats(availableTimes, s, e);
+
         const targetTimes = availableTimes
           .filter((slot) => slot.bk_time >= s && slot.bk_time <= e)
           .sort((a, b) =>
@@ -438,7 +475,12 @@ export const handler = async (event) => {
           const result = await attemptBooking(account, targetSlot);
           if (result.success) {
             console.log(`[${logName}] Booking successful (queued mode).`);
-            return { success: true, slot: result.slot };
+            return {
+              success: true,
+              slot: result.slot,
+              stats,
+              slots: availableTimes,
+            };
           }
           if (result.wasTaken) {
             // 슬롯 목록이 낡았으니 다시 전체를 refetch 하기 위해 while 루프 재진입

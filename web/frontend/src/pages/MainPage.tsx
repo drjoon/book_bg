@@ -68,9 +68,12 @@ const AccountManager = ({
     if (!user) return;
     try {
       setSaving(true);
-      const response = await axios.put(`${API_BASE_URL}/api/profile/golf-password`, {
-        golfPassword,
-      });
+      const response = await axios.put(
+        `${API_BASE_URL}/api/profile/golf-password`,
+        {
+          golfPassword,
+        }
+      );
       setUser({
         ...user,
         golfPassword: response.data.user.golfPassword,
@@ -95,15 +98,21 @@ const AccountManager = ({
           className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl w-full max-w-md"
           onClick={(e) => e.stopPropagation()}
         >
-          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">내 정보</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+            내 정보
+          </h2>
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-500">계정명</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{user?.name}</p>
+              <p className="font-semibold text-gray-900 dark:text-white">
+                {user?.name}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">아이디</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{user?.username}</p>
+              <p className="font-semibold text-gray-900 dark:text-white">
+                {user?.username}
+              </p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -151,7 +160,9 @@ const AccountManager = ({
         className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl w-full max-w-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">사용자 관리</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+          사용자 관리
+        </h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -221,6 +232,11 @@ interface Booking {
   bookedSlot?: { bk_time: string; bk_cours: string } | null;
   startTime: string;
   endTime: string;
+  memo?: string | null;
+  teeTotal?: number | null;
+  teeFirstHalf?: number | null;
+  teeSecondHalf?: number | null;
+  teeInRange?: number | null;
 }
 
 type BookingsByDate = Record<string, Booking[]>;
@@ -233,6 +249,7 @@ export default function MainPage() {
   const [activeMonth, setActiveMonth] = useState(new Date());
   const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const logout = useAuthStore((state) => state.logout);
   const [tooltip, setTooltip] = useState<{
     content: string;
@@ -283,7 +300,7 @@ export default function MainPage() {
       const response = await axios.get<BookingsByDate>(
         `${API_BASE_URL}/api/bookings`
       );
-      if (user?.role === 'admin') {
+      if (user?.role === "admin") {
         setBookings(response.data);
       } else {
         const filteredBookings: BookingsByDate = {};
@@ -318,12 +335,18 @@ export default function MainPage() {
   const handleBookingClick = (booking: Booking, date: Date) => {
     setSelectedDate(date);
     setSelectedBooking(booking);
-    setIsNewBookingModalOpen(true);
+    if (booking.status === "성공") {
+      setIsHistoryModalOpen(true);
+      setIsNewBookingModalOpen(false);
+    } else {
+      setIsNewBookingModalOpen(true);
+    }
   };
 
   const handleUpdateBooking = async (updatedBooking: {
     startTime: string;
     endTime: string;
+    memo?: string;
   }) => {
     if (!selectedBooking || !selectedDate) return;
 
@@ -398,12 +421,16 @@ export default function MainPage() {
     const dayBookings = bookings[dateStr] || [];
 
     const getTooltipText = (booking: Booking) => {
-      const timeRange = `${booking.startTime} - ${booking.endTime}`;
+      const requestedRange = `${booking.startTime} - ${booking.endTime}`;
+      const bookedTime =
+        booking.bookedSlot?.bk_time || booking.successTime || null;
+      const timeText =
+        booking.status === "성공" && bookedTime ? bookedTime : requestedRange;
       const statusText = booking.status === "접수" ? "접수중" : booking.status;
-      if (user?.role === 'admin') {
-        return `${booking.account} ${timeRange} ${statusText}`;
+      if (user?.role === "admin") {
+        return `${booking.account} ${timeText} ${statusText}`;
       }
-      return `${timeRange} ${statusText}`;
+      return `${timeText} ${statusText}`;
     };
 
     return (
@@ -434,7 +461,7 @@ export default function MainPage() {
               booking.status
             )}`}
           >
-            {user?.role === 'admin' ? booking.account : booking.startTime}
+            {user?.role === "admin" ? booking.account : booking.startTime}
           </div>
         ))}
       </div>
@@ -512,6 +539,103 @@ export default function MainPage() {
         }}
         editingBooking={selectedBooking}
       />
+
+      {isHistoryModalOpen && selectedBooking && (
+        <div
+          className="fixed inset-0 bg-gradient-to-br from-blue-100 via-white to-pink-100 flex justify-center items-center z-50 p-4"
+          onClick={() => setIsHistoryModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative border border-blue-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setIsHistoryModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-blue-400 transition-colors"
+            >
+              <span className="sr-only">닫기</span>×
+            </button>
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">예약 내역</h3>
+            {selectedBooking.status === "성공" &&
+              selectedBooking.teeTotal != null && (
+                <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
+                  <span className="mr-1">이 시간대 기준 티 현황:</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">
+                    <span>●</span>
+                    <span>전체 {selectedBooking.teeTotal}개</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                    <span>①</span>
+                    <span>
+                      1부(09:00 이전) {selectedBooking.teeFirstHalf ?? 0}개
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                    <span>②</span>
+                    <span>
+                      2부(09:00 이후) {selectedBooking.teeSecondHalf ?? 0}개
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                    <span>◎</span>
+                    <span>
+                      내 예약 범위 {selectedBooking.teeInRange ?? 0}개
+                    </span>
+                  </span>
+                </div>
+              )}
+            <div className="space-y-5 text-sm text-gray-800">
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold text-gray-700">계정</p>
+                <div className="px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 text-gray-900 font-semibold">
+                  {selectedBooking.account}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <p className="text-sm font-semibold text-gray-700">
+                    신청 시간
+                  </p>
+                  <div className="px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 text-gray-900 font-mono">
+                    {selectedBooking.startTime} - {selectedBooking.endTime}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-sm font-semibold text-gray-700">
+                    부킹 시간
+                  </p>
+                  <div className="px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 text-gray-900 font-mono">
+                    {selectedBooking.bookedSlot?.bk_time ||
+                      selectedBooking.successTime ||
+                      "-"}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold text-gray-700">상태</p>
+                <div className="px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 text-gray-900">
+                  {selectedBooking.status}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold text-gray-700">메모</p>
+                <div className="min-h-[56px] px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 whitespace-pre-wrap text-sm text-gray-800">
+                  {selectedBooking.memo?.trim() || "(메모 없음)"}
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-blue-50 transition-colors text-sm"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {tooltip && (
         <div

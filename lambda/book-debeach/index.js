@@ -280,7 +280,7 @@ function getBookingOpenTime(targetDateStr) {
 
 async function waitForBookingOpen(openTime, logPrefix) {
   console.log(
-    `${logPrefix} Starting precision wait. Booking open time: ${openTime.format()}`
+    `${logPrefix} Starting precision wait. Target time (window start or open): ${openTime.format()}`
   );
 
   const ntpTime = await getNtpTime();
@@ -290,7 +290,7 @@ async function waitForBookingOpen(openTime, logPrefix) {
   let waitTime = openTime.diff(correctedTime());
   if (waitTime <= 5) {
     console.log(
-      `${logPrefix} Booking time has already passed. Proceeding immediately.`
+      `${logPrefix} Target time has already passed. Proceeding immediately.`
     );
     return;
   }
@@ -318,7 +318,7 @@ export const handler = async (event) => {
   const { config, immediate } = event;
   const logName = config.NAME || config.LOGIN_ID;
   const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
-  const windowStart = bookingOpenTime.clone().subtract(10, "seconds");
+  const windowStart = bookingOpenTime.clone();
   const windowEnd = bookingOpenTime.clone().add(20, "seconds");
 
   // 1. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
@@ -438,21 +438,27 @@ export const handler = async (event) => {
           const status = e.response && e.response.status;
 
           if (status === 429) {
-            const backoffMs = Math.floor(Math.random() * 1200) + 800; // 800~2000ms
+            const backoffMs = Math.floor(Math.random() * 2000) + 1500; // 1500~3500ms
             console.warn(
               `[${logName}] Slot fetch failed with 429. Backing off for ${backoffMs}ms: ${e.message}`
             );
             await new Promise((r) => setTimeout(r, backoffMs));
+          } else if (status === 401) {
+            const backoffMs = Math.floor(Math.random() * 2000) + 2000; // 2000~4000ms
+            console.warn(
+              `[${logName}] Slot fetch failed with 401. Backing off for ${backoffMs}ms: ${e.message}`
+            );
+            await new Promise((r) => setTimeout(r, backoffMs));
           } else {
             console.warn(`[${logName}] Slot fetch failed: ${e.message}`);
-            await new Promise((r) => setTimeout(r, 100));
+            await new Promise((r) => setTimeout(r, 300));
           }
 
           continue;
         }
 
         if (availableTimes.length === 0) {
-          await new Promise((r) => setTimeout(r, 100));
+          await new Promise((r) => setTimeout(r, 400));
           continue;
         }
 
@@ -467,7 +473,7 @@ export const handler = async (event) => {
           );
 
         if (targetTimes.length === 0) {
-          await new Promise((r) => setTimeout(r, 300));
+          await new Promise((r) => setTimeout(r, 500));
           continue;
         }
 
@@ -488,7 +494,7 @@ export const handler = async (event) => {
           }
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 400));
       }
 
       throw new Error("Booking failed within allowed window.");

@@ -70,6 +70,7 @@ async function runBookingGroup(group, options) {
   const { date, configs } = group;
   const logPrefix = `[GROUP ${date}]`;
   const force = options && options.force === true;
+  let finalConfigs = configs;
 
   console.log(
     `${logPrefix} Starting booking process for ${configs.length} accounts via Lambda.`
@@ -121,6 +122,52 @@ async function runBookingGroup(group, options) {
     console.log(
       `${logPrefix} It's 10 seconds to booking. Invoking Lambda functions...`
     );
+
+    // 오픈 10초 전: MongoDB에서 최신 예약 정보를 다시 읽어와 실행 대상 계정을 재계산
+    const activeUsers = await User.find({ granted: true }).select(
+      "name username golfPassword"
+    );
+    const activeUserNames = activeUsers.map((u) => u.name);
+    const accountMap = new Map(activeUsers.map((u) => [u.name, u]));
+
+    const latestBookings = await Booking.find({
+      account: { $in: activeUserNames },
+      date,
+      status: { $nin: ["성공", "실패"] },
+    });
+
+    const snapshotConfigs = latestBookings
+      .map((booking) => {
+        const account = accountMap.get(booking.account);
+        if (!account) return null;
+        if (!account.golfPassword) {
+          console.warn(
+            `[${booking.account}] 골프장 비밀번호가 설정되지 않아 예약을 건너뜁니다.`
+          );
+          return null;
+        }
+        return {
+          NAME: booking.account,
+          LOGIN_ID: account.username,
+          LOGIN_PASSWORD: account.golfPassword,
+          TARGET_DATE: booking.date,
+          START_TIME: booking.startTime,
+          END_TIME: booking.endTime,
+        };
+      })
+      .filter(Boolean);
+
+    if (snapshotConfigs.length === 0) {
+      console.log(
+        `${logPrefix} No booking configurations found from latest DB snapshot. Skipping Lambda invocation.`
+      );
+      return;
+    }
+
+    console.log(
+      `${logPrefix} Using latest DB snapshot for ${snapshotConfigs.length} account(s).`
+    );
+    finalConfigs = snapshotConfigs;
   } else {
     console.log(
       `${logPrefix} Immediate execution. Invoking Lambda functions...`
@@ -128,7 +175,7 @@ async function runBookingGroup(group, options) {
   }
 
   // 3. 각 계정에 대해 병렬로 Lambda 함수 호출
-  const invocationPromises = configs.map(async (config) => {
+  const invocationPromises = finalConfigs.map(async (config) => {
     const logName = config.NAME || config.LOGIN_ID;
     console.log(`[${logName}] Invoking Lambda function synchronously...`);
 

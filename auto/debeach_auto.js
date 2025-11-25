@@ -71,6 +71,7 @@ async function runBookingGroup(group, options) {
   const logPrefix = `[GROUP ${date}]`;
   const force = options && options.force === true;
   let finalConfigs = configs;
+  let offsetMs = null;
 
   console.log(
     `${logPrefix} Starting booking process for ${configs.length} accounts via Lambda.`
@@ -122,6 +123,20 @@ async function runBookingGroup(group, options) {
     console.log(
       `${logPrefix} It's 10 seconds to booking. Invoking Lambda functions...`
     );
+
+    // 오픈 10초 전: NTP로 시스템 시간 오프셋 계산 (그룹당 1회)
+    try {
+      const ntpTime = await getNtpTime();
+      offsetMs = moment(ntpTime).diff(moment().tz("Asia/Seoul"));
+      console.log(
+        `${logPrefix} Using NTP offset for Lambda payload: ${offsetMs}ms`
+      );
+    } catch (e) {
+      console.warn(
+        `${logPrefix} Failed to get NTP time for offset. Proceeding without offset: ${e.message}`
+      );
+      offsetMs = null;
+    }
 
     // 오픈 10초 전: MongoDB에서 최신 예약 정보를 다시 읽어와 실행 대상 계정을 재계산
     const activeUsers = await User.find({ granted: true }).select(
@@ -182,6 +197,7 @@ async function runBookingGroup(group, options) {
     const payload = {
       config,
       immediate: options.immediate || false,
+      offsetMs,
     };
 
     const command = new InvokeCommand({

@@ -278,14 +278,26 @@ function getBookingOpenTime(targetDateStr) {
   return openTime;
 }
 
-async function waitForBookingOpen(openTime, logPrefix) {
+async function waitForBookingOpen(openTime, logPrefix, offsetMs) {
   console.log(
     `${logPrefix} Starting precision wait. Target time (window start or open): ${openTime.format()}`
   );
 
-  const ntpTime = await getNtpTime();
-  const offset = moment(ntpTime).diff(moment());
-  const correctedTime = () => moment().add(offset, "ms");
+  const baseNow = () => moment().tz("Asia/Seoul");
+  const correctedTime =
+    typeof offsetMs === "number" && !Number.isNaN(offsetMs)
+      ? () => baseNow().add(offsetMs, "ms")
+      : () => baseNow();
+
+  if (typeof offsetMs === "number" && !Number.isNaN(offsetMs)) {
+    console.log(
+      `${logPrefix} Using precomputed NTP offset from payload: ${offsetMs}ms`
+    );
+  } else {
+    console.log(
+      `${logPrefix} No valid offsetMs provided. Using system time as-is (Asia/Seoul).`
+    );
+  }
 
   let waitTime = openTime.diff(correctedTime());
   if (waitTime <= 5) {
@@ -315,7 +327,7 @@ async function waitForBookingOpen(openTime, logPrefix) {
 
 export const handler = async (event) => {
   console.log("Lambda invoked with event:", event);
-  const { config, immediate } = event;
+  const { config, immediate, offsetMs } = event;
   const logName = config.NAME || config.LOGIN_ID;
   const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
   const windowStart = bookingOpenTime.clone();
@@ -324,7 +336,7 @@ export const handler = async (event) => {
   // 1. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
   try {
     if (!immediate) {
-      await waitForBookingOpen(windowStart, `[${logName}]`);
+      await waitForBookingOpen(windowStart, `[${logName}]`, offsetMs);
     } else {
       console.log(`[${logName}] Immediate execution. Skipping wait.`);
     }

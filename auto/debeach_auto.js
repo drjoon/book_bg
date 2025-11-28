@@ -228,8 +228,13 @@ async function runBookingGroup(group, options) {
           });
         }
       } else {
+        const stats = result.stats || {};
         await updateBookingStatus(config.NAME, date, "실패", {
           reason: result.reason || "Lambda에서 예약 실패",
+          teeTotal: stats.teeTotal,
+          teeFirstHalf: stats.teeFirstHalf,
+          teeSecondHalf: stats.teeSecondHalf,
+          teeInRange: stats.teeInRange,
         });
       }
     } catch (error) {

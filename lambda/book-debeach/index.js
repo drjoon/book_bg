@@ -175,12 +175,12 @@ function computeTeeStats(availableTimes, startHHmm, endHHmm) {
   };
 }
 
-async function attemptBooking(account, targetSlot) {
+async function attemptBooking(account, targetSlot, failedSlots) {
   const { client, token, config } = account;
   const logPrefix = `[${config.NAME}]`;
 
   try {
-    const randomDelay = Math.floor(Math.random() * 251);
+    const randomDelay = Math.floor(Math.random() * 151); // 0~150ms로 지터 범위 축소
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
     console.log(
@@ -211,16 +211,19 @@ async function attemptBooking(account, targetSlot) {
       console.log(
         `${logPrefix} ⚠️ Slot ${targetSlot.bk_time} was taken. Breaking to refetch slots.`
       );
+      if (failedSlots && typeof failedSlots.add === "function") {
+        failedSlots.add(targetSlot.bk_time);
+      }
       return { success: false, slot: targetSlot, wasTaken: true };
     } else if (error.response && error.response.status === 429) {
-      const retryAfter = Math.random() * 1500 + 2000;
+      const retryAfter = Math.random() * 800 + 1200; // 1200~2000ms로 backoff 단축
       console.log(
         `${logPrefix} ⏳ 429 Too Many Requests. Retrying after ${Math.round(
           retryAfter
         )}ms...`
       );
       await new Promise((resolve) => setTimeout(resolve, retryAfter));
-      return await attemptBooking(account, targetSlot);
+      return await attemptBooking(account, targetSlot, failedSlots);
     } else {
       console.error(
         `${logPrefix} ❌ Unexpected error for ${targetSlot.bk_time}:`,
@@ -329,19 +332,8 @@ export const handler = async (event) => {
   console.log("Lambda invoked with event:", event);
   const { config, immediate, offsetMs } = event;
   const logName = config.NAME || config.LOGIN_ID;
-  const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
-  const windowStart = bookingOpenTime.clone();
-  const windowEnd = bookingOpenTime.clone().add(20, "seconds");
-
-  // 1. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
   try {
-    if (!immediate) {
-      await waitForBookingOpen(windowStart, `[${logName}]`, offsetMs);
-    } else {
-      console.log(`[${logName}] Immediate execution. Skipping wait.`);
-    }
-
-    // 2. 로그인
+    // 1. 로그인 (오픈 전 미리 세션 준비)
     const jar = new CookieJar();
     const client = axiosCookieJarSupport(
       axios.create({
@@ -373,6 +365,17 @@ export const handler = async (event) => {
 
     const account = { client, token, config };
 
+    // 2. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
+    const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
+    const windowStart = bookingOpenTime.clone().add(100, "milliseconds");
+    const windowEnd = bookingOpenTime.clone().add(20, "seconds");
+
+    if (!immediate) {
+      await waitForBookingOpen(windowStart, `[${logName}]`, offsetMs);
+    } else {
+      console.log(`[${logName}] Immediate execution. Skipping wait.`);
+    }
+
     const startStr = config.START_TIME.replace(":", "");
     const endStr = config.END_TIME.replace(":", "");
     const s = startStr <= endStr ? startStr : endStr;
@@ -396,7 +399,8 @@ export const handler = async (event) => {
 
       if (availableTimes.length === 0) {
         console.log(`[${logName}] No available slots returned from server.`);
-        return { success: false, reason: "No available slots." };
+        const stats = computeTeeStats(availableTimes, s, e);
+        return { success: false, reason: "No available slots.", stats };
       }
 
       const stats = computeTeeStats(availableTimes, s, e);
@@ -413,7 +417,7 @@ export const handler = async (event) => {
         console.log(
           `[${logName}] No slots in desired range: ${s}~${e}. Total slots: ${availableTimes.length}`
         );
-        return { success: false, reason: "No slots in desired range." };
+        return { success: false, reason: "No slots in desired range.", stats };
       }
 
       for (const targetSlot of targetTimes) {
@@ -433,10 +437,13 @@ export const handler = async (event) => {
       return {
         success: false,
         reason: "All target slots failed in immediate mode.",
+        stats,
       };
     } else {
       // ✅ 예약 실행 모드: 예약 윈도우 내에서 반복 시도
       const windowEndTs = windowEnd.valueOf();
+      const failedSlotTimes = new Set();
+      let lastStats = null;
 
       while (Date.now() < windowEndTs) {
         let availableTimes = [];
@@ -450,7 +457,7 @@ export const handler = async (event) => {
           const status = e.response && e.response.status;
 
           if (status === 429) {
-            const backoffMs = Math.floor(Math.random() * 2000) + 1500; // 1500~3500ms
+            const backoffMs = Math.floor(Math.random() * 800) + 1200; // 1200~2000ms로 단축
             console.warn(
               `[${logName}] Slot fetch failed with 429. Backing off for ${backoffMs}ms: ${e.message}`
             );
@@ -475,9 +482,15 @@ export const handler = async (event) => {
         }
 
         const stats = computeTeeStats(availableTimes, s, e);
+        lastStats = stats;
 
         const targetTimes = availableTimes
-          .filter((slot) => slot.bk_time >= s && slot.bk_time <= e)
+          .filter(
+            (slot) =>
+              slot.bk_time >= s &&
+              slot.bk_time <= e &&
+              !failedSlotTimes.has(slot.bk_time)
+          )
           .sort((a, b) =>
             descending
               ? b.bk_time.localeCompare(a.bk_time)
@@ -490,7 +503,11 @@ export const handler = async (event) => {
         }
 
         for (const targetSlot of targetTimes) {
-          const result = await attemptBooking(account, targetSlot);
+          const result = await attemptBooking(
+            account,
+            targetSlot,
+            failedSlotTimes
+          );
           if (result.success) {
             console.log(`[${logName}] Booking successful (queued mode).`);
             return {
@@ -509,7 +526,11 @@ export const handler = async (event) => {
         await new Promise((resolve) => setTimeout(resolve, 400));
       }
 
-      throw new Error("Booking failed within allowed window.");
+      return {
+        success: false,
+        reason: "Booking failed within allowed window.",
+        stats: lastStats,
+      };
     }
   } catch (error) {
     console.error(`[${logName}] An error occurred in Lambda:`, error.message);

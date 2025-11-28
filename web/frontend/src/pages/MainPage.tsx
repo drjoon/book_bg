@@ -335,11 +335,14 @@ export default function MainPage() {
   const handleBookingClick = (booking: Booking, date: Date) => {
     setSelectedDate(date);
     setSelectedBooking(booking);
-    if (booking.status === "성공") {
+    if (booking.status === "성공" || booking.status === "실패") {
+      // 예약 시도가 완료된 경우(성공/실패)는 항상 예약 내역 모달을 표시
       setIsHistoryModalOpen(true);
       setIsNewBookingModalOpen(false);
     } else {
+      // 아직 진행 중(예약/접수/재시도)인 경우에만 예약 변경/신규 폼을 표시
       setIsNewBookingModalOpen(true);
+      setIsHistoryModalOpen(false);
     }
   };
 
@@ -555,35 +558,44 @@ export default function MainPage() {
             >
               <span className="sr-only">닫기</span>×
             </button>
-            <h3 className="text-2xl font-bold mb-4 text-gray-800">예약 내역</h3>
-            {selectedBooking.status === "성공" &&
-              selectedBooking.teeTotal != null && (
-                <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
-                  <span className="mr-1">이 시간대 기준 티 현황:</span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">
-                    <span>●</span>
-                    <span>전체 {selectedBooking.teeTotal}개</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-                    <span>①</span>
-                    <span>
-                      1부(09:00 이전) {selectedBooking.teeFirstHalf ?? 0}개
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                    <span>②</span>
-                    <span>
-                      2부(09:00 이후) {selectedBooking.teeSecondHalf ?? 0}개
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                    <span>◎</span>
-                    <span>
-                      내 예약 범위 {selectedBooking.teeInRange ?? 0}개
-                    </span>
-                  </span>
-                </div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-800 flex items-baseline gap-2">
+              <span>예약 내역</span>
+              {selectedDate && (
+                <span className="text-sm font-medium text-gray-500">
+                  {selectedDate.toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    weekday: "short",
+                  })}
+                </span>
               )}
+            </h3>
+            {selectedBooking.teeTotal != null && (
+              <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
+                <span className="mr-1">이 시간대 기준 티 현황:</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">
+                  <span>●</span>
+                  <span>전체 {selectedBooking.teeTotal}개</span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                  <span>①</span>
+                  <span>
+                    1부(09:00 이전) {selectedBooking.teeFirstHalf ?? 0}개
+                  </span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                  <span>②</span>
+                  <span>
+                    2부(09:00 이후) {selectedBooking.teeSecondHalf ?? 0}개
+                  </span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                  <span>◎</span>
+                  <span>내 예약 범위 {selectedBooking.teeInRange ?? 0}개</span>
+                </span>
+              </div>
+            )}
             <div className="space-y-5 text-sm text-gray-800">
               <div className="space-y-1.5">
                 <p className="text-sm font-semibold text-gray-700">계정</p>

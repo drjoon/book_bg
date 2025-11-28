@@ -234,6 +234,32 @@ async function attemptBooking(account, targetSlot, failedSlots) {
   }
 }
 
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+function rotateSlotsForAccount(slots, config) {
+  if (!Array.isArray(slots) || slots.length === 0) {
+    return slots;
+  }
+  const id = config.NAME || config.LOGIN_ID || "";
+  if (!id) return slots;
+
+  const n = slots.length;
+  const offset = simpleHash(id) % n;
+  if (offset === 0) return slots;
+
+  const rotated = new Array(n);
+  for (let i = 0; i < n; i++) {
+    rotated[i] = slots[(offset + i) % n];
+  }
+  return rotated;
+}
+
 // --- Helper Functions for Lambda ---
 
 const NTP_SERVERS = ["time.apple.com", "time.google.com", "pool.ntp.org"];
@@ -484,7 +510,7 @@ export const handler = async (event) => {
         const stats = computeTeeStats(availableTimes, s, e);
         lastStats = stats;
 
-        const targetTimes = availableTimes
+        let targetTimes = availableTimes
           .filter(
             (slot) =>
               slot.bk_time >= s &&
@@ -496,6 +522,9 @@ export const handler = async (event) => {
               ? b.bk_time.localeCompare(a.bk_time)
               : a.bk_time.localeCompare(b.bk_time)
           );
+
+        // 계정별로 첫 시도 슬롯이 겹치지 않도록 순서를 회전
+        targetTimes = rotateSlotsForAccount(targetTimes, config);
 
         if (targetTimes.length === 0) {
           await new Promise((r) => setTimeout(r, 500));

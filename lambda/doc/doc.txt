@@ -105,4 +105,4 @@ aws logs tail /aws/lambda/book-debeach \
 
 
 * CLI 타임아웃 세팅하기
-aws configure set cli_read_timeout 60   # 60초로 세팅하기
+aws configure set cli_read_timeout 35   # 35초로 세팅하기

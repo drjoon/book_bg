@@ -13,7 +13,7 @@ const originalConsole = {
   warn: console.warn,
 };
 
-const getTimestamp = () => moment().tz('Asia/Seoul').format('HH:mm:ss.SSS');
+const getTimestamp = () => moment().tz("Asia/Seoul").format("HH:mm:ss.SSS");
 
 console.log = (...args) => {
   originalConsole.log(`[${getTimestamp()}]`, ...args);
@@ -32,7 +32,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const queuePath = path.resolve(__dirname, "./queue.json");
 let processing = false;
-
 
 async function loadQueue() {
   try {
@@ -77,7 +76,10 @@ async function processQueue() {
         const date = job.date ?? job.TARGET_DATE;
         try {
           const existing = await Booking.findOne({ account, date });
-          if (existing && (existing.status === '성공' || existing.status === '실패')) {
+          if (
+            existing &&
+            (existing.status === "성공" || existing.status === "실패")
+          ) {
             continue;
           }
           await Booking.updateOne(
@@ -113,7 +115,12 @@ async function processQueue() {
         // 실행된 작업은 큐에서 제거
         const currentQueue = await loadQueue();
         const remainingAfterRun = currentQueue.filter(
-          (job) => !runnable.some(r => (r.account ?? r.NAME) === (job.account ?? job.NAME) && (r.date ?? r.TARGET_DATE) === (job.date ?? job.TARGET_DATE))
+          (job) =>
+            !runnable.some(
+              (r) =>
+                (r.account ?? r.NAME) === (job.account ?? job.NAME) &&
+                (r.date ?? r.TARGET_DATE) === (job.date ?? job.TARGET_DATE)
+            )
         );
         await saveQueue(remainingAfterRun);
       } catch (err) {
@@ -126,6 +133,14 @@ async function processQueue() {
   }
 }
 
-connectDB();
-setInterval(processQueue, 5000);
-console.log("Worker started. Watching queue.json...");
+async function startWorker() {
+  try {
+    await connectDB();
+    setInterval(processQueue, 5000);
+    console.log("Worker started. Watching queue.json...");
+  } catch (e) {
+    console.error("[WORKER] Failed to initialize worker:", e.message);
+  }
+}
+
+startWorker();

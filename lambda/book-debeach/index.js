@@ -3,7 +3,6 @@ import { CookieJar } from "tough-cookie";
 import { wrapper as axiosCookieJarSupport } from "axios-cookiejar-support";
 import moment from "moment-timezone";
 import * as cheerio from "cheerio";
-import ntpClient from "ntp-client";
 
 // Lambda(Node 18) 환경에서 undici가 기대하는 File 전역이 없어서 ReferenceError가 나므로 간단한 폴리필
 if (typeof File === "undefined") {
@@ -80,9 +79,6 @@ async function fetchBookingTimes(client, xsrfToken, dateStr) {
     }
   );
 
-  const randomDelay = Math.floor(Math.random() * 101);
-  await new Promise((resolve) => setTimeout(resolve, randomDelay));
-
   return res.data;
 }
 
@@ -118,7 +114,7 @@ async function selectAndConfirmBooking(client, xsrfToken, timeSlot, dateStr) {
   payload.append("booking_agree", "0");
   payload.append("booking_agree", "1");
 
-  const randomDelay = Math.floor(Math.random() * 251);
+  const randomDelay = Math.floor(Math.random() * 431) + 300; // 300~730ms의 작은 지터
   await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
   const confirmRes = await client.post(
@@ -180,7 +176,8 @@ async function attemptBooking(account, targetSlot, failedSlots) {
   const logPrefix = `[${config.NAME}]`;
 
   try {
-    const randomDelay = Math.floor(Math.random() * 151); // 0~150ms로 지터 범위 축소
+    const jitter = Math.floor(Math.random() * 61) - 30; // -30~+30ms
+    const randomDelay = Math.max(0, jitter);
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
     console.log(
@@ -261,33 +258,6 @@ function rotateSlotsForAccount(slots, config) {
 }
 
 // --- Helper Functions for Lambda ---
-
-const NTP_SERVERS = ["time.apple.com", "time.google.com", "pool.ntp.org"];
-const MAX_NTP_RETRIES = 3;
-
-const getNtpTime = async () => {
-  for (let i = 0; i < MAX_NTP_RETRIES; i++) {
-    for (const server of NTP_SERVERS) {
-      try {
-        const time = await new Promise((resolve, reject) => {
-          ntpClient.getNetworkTime(server, 123, (err, date) => {
-            if (err) reject(err);
-            else resolve(date);
-          });
-        });
-        console.log(`NTP time synchronized with ${server}:`, time);
-        return time;
-      } catch (err) {
-        console.warn(
-          `NTP Error with ${server} (Attempt ${i + 1}):`,
-          err.message
-        );
-      }
-    }
-  }
-  console.error("All NTP servers failed. Falling back to system time.");
-  return new Date();
-};
 
 function getBookingOpenTime(targetDateStr) {
   const targetDate = moment.tz(targetDateStr, "YYYYMMDD", "Asia/Seoul");
@@ -393,7 +363,11 @@ export const handler = async (event) => {
 
     // 2. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
     const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
-    const windowStart = bookingOpenTime.clone().add(100, "milliseconds");
+    // 슬롯 첫 조회를 오픈 시각(예: 09:00:00) 이후 약 150ms 시점에 맞추기 위한 오프셋
+    const firstFetchOffsetMs = 150;
+    const windowStart = bookingOpenTime
+      .clone()
+      .add(firstFetchOffsetMs, "milliseconds");
     const windowEnd = bookingOpenTime.clone().add(20, "seconds");
 
     if (!immediate) {
@@ -408,15 +382,25 @@ export const handler = async (event) => {
     const e = startStr <= endStr ? endStr : startStr;
     const descending = startStr > endStr;
 
+    // 첫 슬롯 조회 기준 통계를 저장하기 위한 변수
+    let baseSlots = null;
+    let baseStats = null;
+
     // 3. 예약 시도
     if (immediate) {
       // ✅ 즉시 실행 모드: 각 시간대를 한 번씩만 시도하고, 실패하면 바로 종료
       let availableTimes = [];
       try {
+        console.log(
+          `[${logName}] ⏱️ Starting initial slot fetch (immediate mode) for ${config.TARGET_DATE}`
+        );
         availableTimes = await fetchBookingTimes(
           client,
           token,
           config.TARGET_DATE
+        );
+        console.log(
+          `[${logName}] ✅ Slot fetch completed (immediate). Count: ${availableTimes.length}`
         );
       } catch (e) {
         console.warn(`[${logName}] Slot fetch failed: ${e.message}`);
@@ -426,10 +410,24 @@ export const handler = async (event) => {
       if (availableTimes.length === 0) {
         console.log(`[${logName}] No available slots returned from server.`);
         const stats = computeTeeStats(availableTimes, s, e);
+        if (!baseStats) {
+          baseStats = stats;
+          baseSlots = availableTimes;
+          console.log(
+            `[${logName}] 📊 Initial tee stats - total: ${stats.teeTotal}, firstHalf: ${stats.teeFirstHalf}, secondHalf: ${stats.teeSecondHalf}, inRange: ${stats.teeInRange}`
+          );
+        }
         return { success: false, reason: "No available slots.", stats };
       }
 
       const stats = computeTeeStats(availableTimes, s, e);
+      if (!baseStats) {
+        baseStats = stats;
+        baseSlots = availableTimes;
+        console.log(
+          `[${logName}] 📊 Initial tee stats - total: ${stats.teeTotal}, firstHalf: ${stats.teeFirstHalf}, secondHalf: ${stats.teeSecondHalf}, inRange: ${stats.teeInRange}`
+        );
+      }
 
       const targetTimes = availableTimes
         .filter((slot) => slot.bk_time >= s && slot.bk_time <= e)
@@ -453,8 +451,8 @@ export const handler = async (event) => {
           return {
             success: true,
             slot: result.slot,
-            stats,
-            slots: availableTimes,
+            stats: baseStats || stats,
+            slots: baseSlots || availableTimes,
           };
         }
         // 즉시 실행에서는 wasTaken 이어도 refetch 하지 않고 바로 실패
@@ -463,7 +461,8 @@ export const handler = async (event) => {
       return {
         success: false,
         reason: "All target slots failed in immediate mode.",
-        stats,
+        stats: baseStats || stats,
+        slots: baseSlots || availableTimes,
       };
     } else {
       // ✅ 예약 실행 모드: 예약 윈도우 내에서 반복 시도
@@ -474,10 +473,16 @@ export const handler = async (event) => {
       while (Date.now() < windowEndTs) {
         let availableTimes = [];
         try {
+          console.log(
+            `[${logName}] ⏱️ Starting slot fetch (queued mode) for ${config.TARGET_DATE}`
+          );
           availableTimes = await fetchBookingTimes(
             client,
             token,
             config.TARGET_DATE
+          );
+          console.log(
+            `[${logName}] ✅ Slot fetch completed (queued). Count: ${availableTimes.length}`
           );
         } catch (e) {
           const status = e.response && e.response.status;
@@ -508,6 +513,19 @@ export const handler = async (event) => {
         }
 
         const stats = computeTeeStats(availableTimes, s, e);
+        // 슬롯 응답을 받은 뒤 0~50ms 정도만 짧게 대기 후 부킹 시도 시작 (1순위 딜레이 축소)
+        const postFetchDelayMs = Math.floor(Math.random() * 51); // 0~50ms
+        console.log(
+          `[${logName}] ⏱️ Waiting ${postFetchDelayMs}ms after slot fetch before booking attempts.`
+        );
+        await new Promise((r) => setTimeout(r, postFetchDelayMs));
+        if (!baseStats) {
+          baseStats = stats;
+          baseSlots = availableTimes;
+          console.log(
+            `[${logName}] 📊 Initial tee stats - total: ${stats.teeTotal}, firstHalf: ${stats.teeFirstHalf}, secondHalf: ${stats.teeSecondHalf}, inRange: ${stats.teeInRange}`
+          );
+        }
         lastStats = stats;
 
         let targetTimes = availableTimes
@@ -542,8 +560,8 @@ export const handler = async (event) => {
             return {
               success: true,
               slot: result.slot,
-              stats,
-              slots: availableTimes,
+              stats: baseStats || stats,
+              slots: baseSlots || availableTimes,
             };
           }
           if (result.wasTaken) {
@@ -558,7 +576,8 @@ export const handler = async (event) => {
       return {
         success: false,
         reason: "Booking failed within allowed window.",
-        stats: lastStats,
+        stats: baseStats || lastStats,
+        slots: baseSlots,
       };
     }
   } catch (error) {

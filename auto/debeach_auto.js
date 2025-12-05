@@ -324,7 +324,7 @@ function getBookingOpenTime(targetDateStr) {
     openTime.add(10, "hours").subtract(10, "days");
   } // 토요일
   else {
-    openTime.add(9, "hours").subtract(14, "days");
+    openTime.add(9, "hours").subtract(14, "days"); //.add(5, "minutes");
   } // 평일
 
   return openTime;

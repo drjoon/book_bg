@@ -1,1 +1,2 @@
-ERROR: InvalidParameterValueError - Environment named golf-book is in an invalid state for this operation. Must be Ready.
+Retrieving logs...
+ERROR: TimeoutError - The EB CLI timed out after 2 minute(s). The operation might still be running. To keep viewing events, run 'eb events -f'.

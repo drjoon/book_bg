@@ -242,6 +242,11 @@ async function runBookingGroup(group, options) {
       cfg.START_TIME = newStart;
       cfg.END_TIME = newEnd;
 
+      // 동일 시간대 그룹 내에서 계정마다 1순위 타겟 슬롯이 겹치지 않도록
+      // Lambda의 rotateSlotsForAccount 에서 사용할 PRIMARY_SLOT_OFFSET도 함께 설정한다.
+      // (0번 계정은 기본 순서, 이후 계정들은 index 기반으로 회전)
+      cfg.PRIMARY_SLOT_OFFSET = index;
+
       console.log(
         `${logPrefix} Adjusted time range for ${cfg.NAME}: ${cfg.START_TIME}~${cfg.END_TIME} (offset +${offsetMinutes}min)`
       );

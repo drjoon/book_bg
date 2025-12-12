@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # 사용법: ./scripts/eb-setenv-from-dotenv.sh [EB_ENV_NAME]
-# 예:    ./scripts/eb-setenv-from-dotenv.sh golf-book
-ENV_NAME=${1:-golf-book}
+# 예:    ./scripts/eb-setenv-from-dotenv.sh book2
+ENV_NAME=${1:-book2}
 
 # .env 파일 경로 (질문에 나온 파일)
 ENV_FILE="web/backend/.env"

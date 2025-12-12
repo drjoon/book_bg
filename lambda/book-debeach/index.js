@@ -129,7 +129,7 @@ async function selectAndConfirmBooking(client, xsrfToken, timeSlot, dateStr) {
         Referer: "https://www.debeach.co.kr/booking",
       },
       validateStatus: (status) => status >= 200 && status < 400,
-      timeout: 3000,
+      timeout: 5000,
     }
   );
 
@@ -176,7 +176,7 @@ async function attemptBooking(account, targetSlot, failedSlots) {
   const logPrefix = `[${config.NAME}]`;
 
   try {
-    const jitter = Math.floor(Math.random() * 61) - 30; // -30~+30ms
+    const jitter = Math.floor(Math.random() * 401) - 200; // -200~+200ms
     const randomDelay = Math.max(0, jitter);
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
@@ -243,11 +243,23 @@ function rotateSlotsForAccount(slots, config) {
   if (!Array.isArray(slots) || slots.length === 0) {
     return slots;
   }
+  // 오수양 계정은 슬롯 순서를 회전시키지 않고, 설정한 시간 범위 내에서
+  // 정렬된 순서 그대로 시도하도록 예외 처리한다.
+  if (config.NAME === "오수양") {
+    return slots;
+  }
+
   const id = config.NAME || config.LOGIN_ID || "";
   if (!id) return slots;
 
   const n = slots.length;
-  const offset = simpleHash(id) % n;
+  // 기본은 계정 이름/ID 기반 해시로 분산
+  let offset = simpleHash(id) % n;
+  // Orchestrator에서 PRIMARY_SLOT_OFFSET을 넘겨주면 이를 추가로 반영해
+  // 동일 계정군 내 1순위 타겟 충돌을 더 줄인다.
+  if (typeof config.PRIMARY_SLOT_OFFSET === "number") {
+    offset = (offset + (config.PRIMARY_SLOT_OFFSET % n) + n) % n;
+  }
   if (offset === 0) return slots;
 
   const rotated = new Array(n);
@@ -363,8 +375,8 @@ export const handler = async (event) => {
 
     // 2. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
     const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
-    // 슬롯 첫 조회를 오픈 시각(예: 09:00:00) 이후 약 150ms 시점에 맞추기 위한 오프셋
-    const firstFetchOffsetMs = 150;
+    // 슬롯 첫 조회를 오픈 시각(예: 09:00:00) 이후 약 200ms 시점에 맞추기 위한 오프셋
+    const firstFetchOffsetMs = 200;
     const windowStart = bookingOpenTime
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
@@ -407,6 +419,14 @@ export const handler = async (event) => {
         return { success: false, reason: `Slot fetch failed: ${e.message}` };
       }
 
+      // 너무 빠른 부킹 시도로 인한 봇 차단을 피하기 위해
+      // 슬롯 조회 직후 최소 400ms 정도 대기 후 부킹을 시도한다 (400~450ms 랜덤)
+      const immediatePostFetchDelayMs = 350 + Math.floor(Math.random() * 51);
+      console.log(
+        `[${logName}] ⏱️ Waiting ${immediatePostFetchDelayMs}ms after initial slot fetch before booking attempts (immediate mode).`
+      );
+      await new Promise((r) => setTimeout(r, immediatePostFetchDelayMs));
+
       if (availableTimes.length === 0) {
         console.log(`[${logName}] No available slots returned from server.`);
         const stats = computeTeeStats(availableTimes, s, e);
@@ -443,6 +463,11 @@ export const handler = async (event) => {
         );
         return { success: false, reason: "No slots in desired range.", stats };
       }
+
+      const primary = targetTimes[0];
+      console.log(
+        `[${logName}] 🎯 Primary target (immediate): ${primary.bk_time} on course ${primary.bk_cours} (totalTargets=${targetTimes.length})`
+      );
 
       for (const targetSlot of targetTimes) {
         const result = await attemptBooking(account, targetSlot);
@@ -501,20 +526,21 @@ export const handler = async (event) => {
             await new Promise((r) => setTimeout(r, backoffMs));
           } else {
             console.warn(`[${logName}] Slot fetch failed: ${e.message}`);
-            await new Promise((r) => setTimeout(r, 300));
+            await new Promise((r) => setTimeout(r, 400));
           }
 
           continue;
         }
 
         if (availableTimes.length === 0) {
-          await new Promise((r) => setTimeout(r, 400));
+          await new Promise((r) => setTimeout(r, 500));
           continue;
         }
 
         const stats = computeTeeStats(availableTimes, s, e);
-        // 슬롯 응답을 받은 뒤 0~50ms 정도만 짧게 대기 후 부킹 시도 시작 (1순위 딜레이 축소)
-        const postFetchDelayMs = Math.floor(Math.random() * 51); // 0~50ms
+        // 슬롯 응답을 받은 뒤 너무 빠르게 부킹을 시도하면 봇으로 인식될 수 있으므로
+        // 최소 400ms 정도는 쉬고(400~450ms 랜덤) 부킹 시도 시작
+        const postFetchDelayMs = 300 + Math.floor(Math.random() * 51); // 400~450ms
         console.log(
           `[${logName}] ⏱️ Waiting ${postFetchDelayMs}ms after slot fetch before booking attempts.`
         );
@@ -544,8 +570,15 @@ export const handler = async (event) => {
         // 계정별로 첫 시도 슬롯이 겹치지 않도록 순서를 회전
         targetTimes = rotateSlotsForAccount(targetTimes, config);
 
+        if (targetTimes.length > 0) {
+          const primary = targetTimes[0];
+          console.log(
+            `[${logName}] 🎯 Primary target (queued loop): ${primary.bk_time} on course ${primary.bk_cours} (totalTargets=${targetTimes.length})`
+          );
+        }
+
         if (targetTimes.length === 0) {
-          await new Promise((r) => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 600));
           continue;
         }
 
@@ -570,7 +603,7 @@ export const handler = async (event) => {
           }
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 400));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       return {

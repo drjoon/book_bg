@@ -100,7 +100,7 @@ aws lambda invoke \
 * 람다 로그
 aws logs tail /aws/lambda/book-debeach \
   --region ap-northeast-2 \
-  --since 1h
+  --since 24h
 
 
 

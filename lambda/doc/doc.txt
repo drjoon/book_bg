@@ -11,7 +11,7 @@ aws lambda create-function \
 --role arn:aws:iam::106055905364:role/book-debeach-lambda-role \
 --handler index.handler \
 --zip-file fileb://deployment_package.zip \
---region ap-northeast-2 \
+--region ap-south-1 \
 --timeout 90 \
 --memory-size 256
 
@@ -36,13 +36,13 @@ aws lambda update-function-configuration \
 
 
 * AWS CLI로 함수 목록/정보 확인
-aws lambda list-functions --region ap-northeast-2
+aws lambda list-functions --region ap-south-1
 여기에서 book-debeach가 보이면 배포는 된 겁니다.
 
 자세한 설정을 보려면:
 aws lambda get-function \
   --function-name book-debeach \
-  --region ap-northeast-2
+  --region ap-south-1
 
 
 * AWS CLI로 직접 테스트 실행 (핸들러 호출)
@@ -63,7 +63,7 @@ json
 
 aws lambda invoke \
   --function-name book-debeach \
-  --region ap-northeast-2 \
+  --region ap-south-1 \
   --payload file://event-test.json \
   --cli-binary-format raw-in-base64-out \
   output.json
@@ -87,19 +87,19 @@ npm run build
 aws lambda update-function-code \
   --function-name book-debeach \
   --zip-file fileb://deployment_package.zip \
-  --region ap-northeast-2
+  --region ap-south-1
 
 * 테스트 실행
 aws lambda invoke \
   --function-name book-debeach \
-  --region ap-northeast-2 \
+  --region ap-south-1 \
   --payload file://test/event-test.json \
   --cli-binary-format raw-in-base64-out \
   test/output.json
 
 * 람다 로그
 aws logs tail /aws/lambda/book-debeach \
-  --region ap-northeast-2 \
+  --region ap-south-1 \
   --since 24h
 
 

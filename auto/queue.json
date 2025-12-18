@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "account": "오수양",
+    "date": "20260101",
+    "startTime": "1000",
+    "endTime": "1300",
+    "force": false
+  }
+]

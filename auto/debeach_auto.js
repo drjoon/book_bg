@@ -62,8 +62,25 @@ const getNtpTime = async () => {
 };
 
 // Lambda 클라이언트 초기화 (리전은 실제 환경에 맞게 설정)
-const lambda = new LambdaClient({ region: "ap-northeast-2" });
-const LAMBDA_FUNCTION_NAME = "book-debeach"; // 생성할 Lambda 함수 이름
+const LAMBDA_REGION =
+  process.env.LAMBDA_REGION || process.env.AWS_REGION || "ap-northeast-2";
+const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME || "book-debeach";
+const lambda = new LambdaClient({ region: LAMBDA_REGION });
+console.log(
+  `[LAMBDA] Using region=${LAMBDA_REGION}, function=${LAMBDA_FUNCTION_NAME}`
+);
+
+const isTerminalStatus = (status) => {
+  if (!status) return false;
+  return (
+    status === "성공" ||
+    status === "실패" ||
+    status === "취소" ||
+    status === "cancel" ||
+    status === "canceled" ||
+    status === "cancelled"
+  );
+};
 
 // 특정 날짜 그룹에 대한 전체 예약 과정을 관리하는 함수 (Lambda 호출자로 변경)
 async function runBookingGroup(group, options) {
@@ -256,6 +273,30 @@ async function runBookingGroup(group, options) {
   // 3. 각 계정에 대해 병렬로 Lambda 함수 호출
   const invocationPromises = finalConfigs.map(async (config) => {
     const logName = config.NAME || config.LOGIN_ID;
+
+    // 실행 직전 DB 상태 재확인: 취소/삭제/종료 상태면 로그인(람다 호출) 자체를 스킵
+    if (!force) {
+      try {
+        const existing = await Booking.findOne({ account: config.NAME, date });
+        if (!existing) {
+          console.log(
+            `[${logName}][${date}] Skip invoking Lambda because booking was deleted.`
+          );
+          return;
+        }
+        if (isTerminalStatus(existing.status)) {
+          console.log(
+            `[${logName}][${date}] Skip invoking Lambda because booking status is '${existing.status}'.`
+          );
+          return;
+        }
+      } catch (e) {
+        console.warn(
+          `[${logName}][${date}] Failed to re-check booking status before invoke: ${e.message}`
+        );
+      }
+    }
+
     console.log(`[${logName}] Invoking Lambda function synchronously...`);
 
     const payload = {

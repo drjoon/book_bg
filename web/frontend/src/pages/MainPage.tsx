@@ -416,6 +416,110 @@ export default function MainPage() {
     }
   };
 
+  const pollUntilTerminal = async (
+    account: string,
+    dateStr: string,
+    timeoutMs = 60_000,
+    intervalMs = 1500
+  ) => {
+    const start = Date.now();
+    return new Promise<"성공" | "실패">((resolve, reject) => {
+      const timer = setInterval(async () => {
+        try {
+          const res = await axios.get<BookingsByDate>(
+            `${API_BASE_URL}/api/bookings`
+          );
+          const day = res.data?.[dateStr] || [];
+          const match = day.find((b) => b.account === account);
+
+          if (match && (match.status === "성공" || match.status === "실패")) {
+            clearInterval(timer);
+            resolve(match.status);
+            return;
+          }
+
+          if (Date.now() - start > timeoutMs) {
+            clearInterval(timer);
+            reject(new Error("결과 확인 시간 초과"));
+          }
+        } catch (e) {
+          if (axios.isAxiosError(e) && e.response?.status === 401) {
+            clearInterval(timer);
+            logout();
+            reject(new Error("세션이 만료되었습니다."));
+            return;
+          }
+
+          if (Date.now() - start > timeoutMs) {
+            clearInterval(timer);
+            reject(new Error("결과 확인 시간 초과"));
+          }
+        }
+      }, intervalMs);
+    });
+  };
+
+  const handleRetryBookingImmediately = async () => {
+    if (!selectedBooking || !selectedDate) return;
+
+    showToast("즉시 재시도 요청 중...", "info");
+
+    try {
+      const dateStr = moment(selectedDate).format("YYYYMMDD");
+
+      const res = await axios.post(`${API_BASE_URL}/api/submit-booking`, {
+        account: selectedBooking.account,
+        date: dateStr,
+        startTime: selectedBooking.startTime,
+        endTime: selectedBooking.endTime,
+        force: true,
+      });
+
+      const message =
+        (res.data as { message?: string } | undefined)?.message ||
+        "재시도 요청이 접수되었습니다.";
+      const isQueued = message.includes("큐");
+      showToast(message, isQueued ? "info" : "success");
+
+      fetchBookings();
+      setIsHistoryModalOpen(false);
+
+      const shouldPoll = !isQueued && message.includes("즉시");
+      if (shouldPoll) {
+        try {
+          const status = await pollUntilTerminal(
+            selectedBooking.account,
+            dateStr
+          );
+          fetchBookings();
+          if (status === "성공") {
+            showToast("재시도 결과: 성공", "success");
+          } else {
+            showToast("재시도 결과: 실패", "error");
+          }
+        } catch (e) {
+          if (e instanceof Error) {
+            showToast(`재시도 결과 확인 실패: ${e.message}`, "error");
+          } else {
+            showToast("재시도 결과 확인 실패", "error");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error retrying booking:", error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        showToast("세션이 만료되었습니다. 다시 로그인해주세요.", "error");
+        logout();
+        return;
+      }
+      const message =
+        (axios.isAxiosError(error)
+          ? (error.response?.data as { message?: string } | undefined)?.message
+          : undefined) || "즉시 재시도에 실패했습니다.";
+      showToast(message, "error");
+    }
+  };
+
   const user = useAuthStore((state) => state.user);
 
   const getTileContent = ({ date, view }: { date: Date; view: string }) => {
@@ -637,6 +741,37 @@ export default function MainPage() {
               </div>
             </div>
             <div className="mt-6 flex justify-end">
+              {selectedBooking.status === "실패" && (
+                <div className="mr-auto flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsHistoryModalOpen(false);
+                      setIsNewBookingModalOpen(true);
+                    }}
+                    className="px-4 py-2 rounded-lg bg-blue-400 text-white hover:bg-blue-500 transition-colors text-sm"
+                  >
+                    내용 변경
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRetryBookingImmediately}
+                    className="px-4 py-2 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors text-sm"
+                  >
+                    즉시 재시도
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDeleteBooking();
+                      setIsHistoryModalOpen(false);
+                    }}
+                    className="px-4 py-2 rounded-lg bg-red-400 text-white hover:bg-red-500 transition-colors text-sm"
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setIsHistoryModalOpen(false)}

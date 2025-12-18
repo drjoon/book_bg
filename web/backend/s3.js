@@ -8,7 +8,8 @@ import {
 } from "@aws-sdk/client-s3";
 
 const BUCKET_NAME = process.env.TEE_S3_BUCKET; // 예: golf-book-tee-snapshots
-const REGION = process.env.AWS_REGION || "ap-northeast-2";
+const REGION =
+  process.env.TEE_S3_REGION || process.env.AWS_REGION || "ap-northeast-2";
 const COURSE_ID = process.env.TEE_COURSE_ID || "debeach";
 
 if (!BUCKET_NAME) {
@@ -25,8 +26,31 @@ export async function ensureTeeBucket() {
     console.log(`[TEE_S3] Bucket already exists: ${BUCKET_NAME}`);
     return;
   } catch (e) {
-    if (e?.$metadata?.httpStatusCode !== 404) {
-      console.warn("[TEE_S3] HeadBucket error, but continue:", e.message || e);
+    const status = e?.$metadata?.httpStatusCode;
+    const code = e?.name || e?.Code || e?.code;
+
+    if (status !== 404) {
+      console.warn(
+        "[TEE_S3] HeadBucket error, but continue:",
+        JSON.stringify({
+          bucket: BUCKET_NAME,
+          region: REGION,
+          status,
+          code,
+          message: e?.message,
+        })
+      );
+
+      if (status === 301) {
+        console.warn(
+          "[TEE_S3] Possible region mismatch. Check bucket region vs env AWS_REGION/TEE_S3_REGION."
+        );
+      }
+      if (status === 403) {
+        console.warn(
+          "[TEE_S3] Possible permission issue. Check EC2/EBS instance role policy for s3:ListBucket/GetObject/PutObject."
+        );
+      }
       return;
     }
   }
@@ -106,6 +130,15 @@ export async function saveTeeSnapshot(slots, { roundDate, bookingDate } = {}) {
       `[TEE_S3] Saved tee snapshot to S3: s3://${BUCKET_NAME}/${key}`
     );
   } catch (e) {
-    console.warn("[TEE_S3] Failed to save tee snapshot:", e.message || e);
+    console.warn(
+      "[TEE_S3] Failed to save tee snapshot:",
+      JSON.stringify({
+        bucket: BUCKET_NAME,
+        region: REGION,
+        status: e?.$metadata?.httpStatusCode,
+        code: e?.name || e?.Code || e?.code,
+        message: e?.message,
+      })
+    );
   }
 }

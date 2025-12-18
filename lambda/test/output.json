@@ -1,1 +1,110 @@
-{"success":false,"reason":"No available slots."}
+{
+  "success": true,
+  "slot": {
+    "bk_cours": "A",
+    "bk_part": "1",
+    "bk_time": "0748",
+    "bk_hole": "18",
+    "bk_base_greenfee": "210,000",
+    "bk_green_fee": "130,000",
+    "bk_event": "",
+    "bk_green_sale_rate": "38%",
+    "bk_cours_name": "OUT"
+  },
+  "stats": {
+    "teeTotal": 8,
+    "teeFirstHalf": 8,
+    "teeSecondHalf": 0,
+    "teeInRange": 7
+  },
+  "slots": [
+    {
+      "bk_cours": "A",
+      "bk_part": "1",
+      "bk_time": "0727",
+      "bk_hole": "18",
+      "bk_base_greenfee": "210,000",
+      "bk_green_fee": "130,000",
+      "bk_event": "",
+      "bk_green_sale_rate": "38%",
+      "bk_cours_name": "OUT"
+    },
+    {
+      "bk_cours": "B",
+      "bk_part": "1",
+      "bk_time": "0727",
+      "bk_hole": "18",
+      "bk_base_greenfee": "210,000",
+      "bk_green_fee": "130,000",
+      "bk_event": "",
+      "bk_green_sale_rate": "38%",
+      "bk_cours_name": "IN"
+    },
+    {
+      "bk_cours": "A",
+      "bk_part": "1",
+      "bk_time": "0734",
+      "bk_hole": "18",
+      "bk_base_greenfee": "210,000",
+      "bk_green_fee": "130,000",
+      "bk_event": "",
+      "bk_green_sale_rate": "38%",
+      "bk_cours_name": "OUT"
+    },
+    {
+      "bk_cours": "B",
+      "bk_part": "1",
+      "bk_time": "0734",
+      "bk_hole": "18",
+      "bk_base_greenfee": "210,000",
+      "bk_green_fee": "130,000",
+      "bk_event": "",
+      "bk_green_sale_rate": "38%",
+      "bk_cours_name": "IN"
+    },
+    {
+      "bk_cours": "A",
+      "bk_part": "1",
+      "bk_time": "0741",
+      "bk_hole": "18",
+      "bk_base_greenfee": "210,000",
+      "bk_green_fee": "130,000",
+      "bk_event": "",
+      "bk_green_sale_rate": "38%",
+      "bk_cours_name": "OUT"
+    },
+    {
+      "bk_cours": "B",
+      "bk_part": "1",
+      "bk_time": "0741",
+      "bk_hole": "18",
+      "bk_base_greenfee": "210,000",
+      "bk_green_fee": "130,000",
+      "bk_event": "",
+      "bk_green_sale_rate": "38%",
+      "bk_cours_name": "IN"
+    },
+    {
+      "bk_cours": "A",
+      "bk_part": "1",
+      "bk_time": "0748",
+      "bk_hole": "18",
+      "bk_base_greenfee": "210,000",
+      "bk_green_fee": "130,000",
+      "bk_event": "",
+      "bk_green_sale_rate": "38%",
+      "bk_cours_name": "OUT"
+    },
+    {
+      "bk_cours": "A",
+      "bk_part": "1",
+      "bk_time": "0802",
+      "bk_hole": "18",
+      "bk_base_greenfee": "210,000",
+      "bk_green_fee": "140,000",
+      "bk_event": "",
+      "bk_green_sale_rate": "33%",
+      "bk_cours_name": "OUT"
+    }
+  ]
+}

@@ -129,7 +129,7 @@ async function selectAndConfirmBooking(client, xsrfToken, timeSlot, dateStr) {
         Referer: "https://www.debeach.co.kr/booking",
       },
       validateStatus: (status) => status >= 200 && status < 400,
-      timeout: 5000,
+      timeout: 3000,
     }
   );
 
@@ -469,6 +469,8 @@ export const handler = async (event) => {
         `[${logName}] 🎯 Primary target (immediate): ${primary.bk_time} on course ${primary.bk_cours} (totalTargets=${targetTimes.length})`
       );
 
+      await new Promise((r) => setTimeout(r, 250));
+
       for (const targetSlot of targetTimes) {
         const result = await attemptBooking(account, targetSlot);
         if (result.success) {
@@ -540,7 +542,7 @@ export const handler = async (event) => {
         const stats = computeTeeStats(availableTimes, s, e);
         // 슬롯 응답을 받은 뒤 너무 빠르게 부킹을 시도하면 봇으로 인식될 수 있으므로
         // 최소 400ms 정도는 쉬고(400~450ms 랜덤) 부킹 시도 시작
-        const postFetchDelayMs = 300 + Math.floor(Math.random() * 51); // 400~450ms
+        const postFetchDelayMs = 400 + Math.floor(Math.random() * 51); // 400~450ms
         console.log(
           `[${logName}] ⏱️ Waiting ${postFetchDelayMs}ms after slot fetch before booking attempts.`
         );

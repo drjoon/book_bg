@@ -32,6 +32,108 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const queuePath = path.resolve(__dirname, "./queue.json");
 let processing = false;
+let lastEmptyRebuildAtMs = 0;
+const EMPTY_REBUILD_BACKOFF_MS = 60_000;
+
+function isTerminalStatus(status) {
+  if (!status) return false;
+  return (
+    status === "성공" ||
+    status === "실패" ||
+    status === "취소" ||
+    status === "cancel" ||
+    status === "canceled" ||
+    status === "cancelled"
+  );
+}
+
+async function rebuildQueueFromDb() {
+  try {
+    const todayDigits = moment().tz("Asia/Seoul").format("YYYYMMDD");
+
+    const normalizeDateDigits = (value) => {
+      if (!value) return "";
+      const digits = String(value).replace(/\D/g, "");
+      return digits.length >= 8 ? digits.slice(0, 8) : digits;
+    };
+
+    const bookings = await Booking.find({
+      status: {
+        $nin: ["성공", "실패", "취소", "cancel", "canceled", "cancelled"],
+      },
+    })
+      .select("account date startTime endTime status")
+      .lean();
+
+    const jobs = bookings
+      .map((b) => ({
+        account: b.account,
+        date: b.date,
+        startTime: b.startTime,
+        endTime: b.endTime,
+      }))
+      .filter((j) => {
+        if (!j.account || !j.date || !j.startTime || !j.endTime) return false;
+        const d = normalizeDateDigits(j.date);
+        if (d.length !== 8) return false;
+        return d >= todayDigits;
+      });
+
+    if (jobs.length > 0) {
+      await saveQueue(jobs);
+      console.log(`[WORKER] Rebuilt queue from DB. jobs=${jobs.length}`);
+    }
+    return jobs;
+  } catch (e) {
+    console.error("[WORKER] Failed to rebuild queue from DB:", e.message);
+    return null;
+  }
+}
+
+async function pruneQueueByDb(queue) {
+  if (!Array.isArray(queue) || queue.length === 0) return [];
+
+  const pairs = queue
+    .map((job) => ({
+      account: job.account ?? job.NAME,
+      date: job.date ?? job.TARGET_DATE,
+    }))
+    .filter((p) => p.account && p.date);
+
+  if (pairs.length === 0) return [];
+
+  const uniquePairs = [];
+  const seen = new Set();
+  for (const p of pairs) {
+    const key = `${p.account}::${p.date}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniquePairs.push(p);
+  }
+
+  let bookings = [];
+  try {
+    bookings = await Booking.find({
+      $or: uniquePairs.map((p) => ({ account: p.account, date: p.date })),
+    }).select("account date status");
+  } catch (e) {
+    console.error(
+      "[WORKER] Failed to read bookings for queue prune:",
+      e.message
+    );
+    return queue;
+  }
+
+  const map = new Map(bookings.map((b) => [`${b.account}::${b.date}`, b]));
+
+  return queue.filter((job) => {
+    const account = job.account ?? job.NAME;
+    const date = job.date ?? job.TARGET_DATE;
+    const booking = map.get(`${account}::${date}`);
+    if (!booking) return false;
+    return !isTerminalStatus(booking.status);
+  });
+}
 
 async function loadQueue() {
   try {
@@ -52,7 +154,7 @@ function isBookingTimeNear(job) {
   const openTime = getBookingOpenTime(date);
   return (
     now.isAfter(openTime.clone().subtract(1, "minute")) &&
-    now.isBefore(openTime.clone().add(1, "minute"))
+    now.isBefore(openTime.clone().add(2, "minute"))
   );
 }
 
@@ -60,15 +162,29 @@ async function processQueue() {
   if (processing) return;
   processing = true;
   try {
-    const queue = await loadQueue();
+    let queue = await loadQueue();
+    if (!Array.isArray(queue) || queue.length === 0) {
+      const nowMs = Date.now();
+      if (nowMs - lastEmptyRebuildAtMs >= EMPTY_REBUILD_BACKOFF_MS) {
+        lastEmptyRebuildAtMs = nowMs;
+        const rebuilt = await rebuildQueueFromDb();
+        if (Array.isArray(rebuilt) && rebuilt.length > 0) {
+          queue = rebuilt;
+        }
+      }
+    }
+    const pruned = await pruneQueueByDb(queue);
+    if (pruned.length !== queue.length) {
+      await saveQueue(pruned);
+    }
     const now = moment().tz("Asia/Seoul");
-    const runnable = queue.filter(isBookingTimeNear);
+    const runnable = pruned.filter(isBookingTimeNear);
 
     // 만료 잡 정리: 오픈+2분 경과 항목 제거 및 DB 상태 실패 반영
-    const expired = queue.filter((job) => {
+    const expired = pruned.filter((job) => {
       const date = job.date ?? job.TARGET_DATE;
       const openTime = getBookingOpenTime(date);
-      return now.isSameOrAfter(openTime.clone().add(1, "minute"));
+      return now.isSameOrAfter(openTime.clone().add(2, "minute"));
     });
     if (expired.length > 0) {
       for (const job of expired) {
@@ -76,6 +192,9 @@ async function processQueue() {
         const date = job.date ?? job.TARGET_DATE;
         try {
           const existing = await Booking.findOne({ account, date });
+          if (!existing) {
+            continue;
+          }
           if (
             existing &&
             (existing.status === "성공" || existing.status === "실패")
@@ -85,7 +204,7 @@ async function processQueue() {
           await Booking.updateOne(
             { account, date },
             { $set: { status: "실패" } },
-            { upsert: true }
+            { upsert: false }
           );
         } catch (e) {
           console.error(
@@ -96,7 +215,7 @@ async function processQueue() {
           );
         }
       }
-      const remaining = queue.filter((j) => !expired.includes(j));
+      const remaining = pruned.filter((j) => !expired.includes(j));
       await saveQueue(remaining);
     }
 

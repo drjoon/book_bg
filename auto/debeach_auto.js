@@ -125,20 +125,20 @@ async function runBookingGroup(group, options) {
   // 2. 예약 시간 10초 전까지 대기
   if (!options.immediate) {
     const bookingOpenTime = getBookingOpenTime(date);
-    const tenSecondsBefore = bookingOpenTime.clone().subtract(10, "seconds");
+    const twentySecondsBefore = bookingOpenTime.clone().subtract(20, "seconds");
     let now = moment().tz("Asia/Seoul");
 
-    if (now.isBefore(tenSecondsBefore)) {
-      const waitTime = tenSecondsBefore.diff(now);
+    if (now.isBefore(twentySecondsBefore)) {
+      const waitTime = twentySecondsBefore.diff(now);
       console.log(
         `${logPrefix} Waiting ${Math.round(
           waitTime / 1000
-        )}s until 10 seconds before booking time...`
+        )}s until 20 seconds before booking time...`
       );
       await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
     console.log(
-      `${logPrefix} It's 10 seconds to booking. Invoking Lambda functions...`
+      `${logPrefix} It's 20 seconds to booking. Invoking Lambda functions...`
     );
 
     // 오픈 10초 전: NTP로 시스템 시간 오프셋 계산 (그룹당 1회)

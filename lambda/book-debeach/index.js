@@ -114,7 +114,7 @@ async function selectAndConfirmBooking(client, xsrfToken, timeSlot, dateStr) {
   payload.append("booking_agree", "0");
   payload.append("booking_agree", "1");
 
-  const randomDelay = Math.floor(Math.random() * 431) + 300; // 300~730ms의 작은 지터
+  const randomDelay = Math.floor(Math.random() * 131) + 300; // 300~430ms의 작은 지터
   await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
   const confirmRes = await client.post(
@@ -176,7 +176,7 @@ async function attemptBooking(account, targetSlot, failedSlots) {
   const logPrefix = `[${config.NAME}]`;
 
   try {
-    const jitter = Math.floor(Math.random() * 401) - 200; // -200~+200ms
+    const jitter = Math.floor(Math.random() * 201) - 200; // -100~+100ms
     const randomDelay = Math.max(0, jitter);
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
@@ -249,17 +249,12 @@ function rotateSlotsForAccount(slots, config) {
     return slots;
   }
 
-  const id = config.NAME || config.LOGIN_ID || "";
-  if (!id) return slots;
-
   const n = slots.length;
-  // 기본은 계정 이름/ID 기반 해시로 분산
-  let offset = simpleHash(id) % n;
-  // Orchestrator에서 PRIMARY_SLOT_OFFSET을 넘겨주면 이를 추가로 반영해
-  // 동일 계정군 내 1순위 타겟 충돌을 더 줄인다.
-  if (typeof config.PRIMARY_SLOT_OFFSET === "number") {
-    offset = (offset + (config.PRIMARY_SLOT_OFFSET % n) + n) % n;
-  }
+  // 충돌 완화는 orchestrator가 전달하는 PRIMARY_SLOT_OFFSET만 사용
+  const offset =
+    typeof config.PRIMARY_SLOT_OFFSET === "number"
+      ? ((config.PRIMARY_SLOT_OFFSET % n) + n) % n
+      : 0;
   if (offset === 0) return slots;
 
   const rotated = new Array(n);
@@ -267,6 +262,19 @@ function rotateSlotsForAccount(slots, config) {
     rotated[i] = slots[(offset + i) % n];
   }
   return rotated;
+}
+
+function sortSlotsByProximity(slots, startHHmm) {
+  if (!Array.isArray(slots)) return [];
+  const toMinutes = (hhmm) =>
+    parseInt(hhmm.slice(0, 2), 10) * 60 + parseInt(hhmm.slice(2, 4), 10);
+  const startMin = toMinutes(startHHmm);
+  return [...slots].sort((a, b) => {
+    const diffA = Math.abs(toMinutes(a.bk_time) - startMin);
+    const diffB = Math.abs(toMinutes(b.bk_time) - startMin);
+    if (diffA !== diffB) return diffA - diffB;
+    return a.bk_time.localeCompare(b.bk_time);
+  });
 }
 
 // --- Helper Functions for Lambda ---
@@ -449,13 +457,10 @@ export const handler = async (event) => {
         );
       }
 
-      const targetTimes = availableTimes
-        .filter((slot) => slot.bk_time >= s && slot.bk_time <= e)
-        .sort((a, b) =>
-          descending
-            ? b.bk_time.localeCompare(a.bk_time)
-            : a.bk_time.localeCompare(b.bk_time)
-        );
+      let targetTimes = availableTimes.filter(
+        (slot) => slot.bk_time >= s && slot.bk_time <= e
+      );
+      targetTimes = sortSlotsByProximity(targetTimes, startStr);
 
       if (targetTimes.length === 0) {
         console.log(
@@ -468,8 +473,6 @@ export const handler = async (event) => {
       console.log(
         `[${logName}] 🎯 Primary target (immediate): ${primary.bk_time} on course ${primary.bk_cours} (totalTargets=${targetTimes.length})`
       );
-
-      await new Promise((r) => setTimeout(r, 250));
 
       for (const targetSlot of targetTimes) {
         const result = await attemptBooking(account, targetSlot);
@@ -541,8 +544,8 @@ export const handler = async (event) => {
 
         const stats = computeTeeStats(availableTimes, s, e);
         // 슬롯 응답을 받은 뒤 너무 빠르게 부킹을 시도하면 봇으로 인식될 수 있으므로
-        // 최소 400ms 정도는 쉬고(400~450ms 랜덤) 부킹 시도 시작
-        const postFetchDelayMs = 400 + Math.floor(Math.random() * 51); // 400~450ms
+        // 최소 100ms 정도는 쉬고(100~150ms 랜덤) 부킹 시도 시작
+        const postFetchDelayMs = 100 + Math.floor(Math.random() * 51); // 100~150ms
         console.log(
           `[${logName}] ⏱️ Waiting ${postFetchDelayMs}ms after slot fetch before booking attempts.`
         );
@@ -556,18 +559,13 @@ export const handler = async (event) => {
         }
         lastStats = stats;
 
-        let targetTimes = availableTimes
-          .filter(
-            (slot) =>
-              slot.bk_time >= s &&
-              slot.bk_time <= e &&
-              !failedSlotTimes.has(slot.bk_time)
-          )
-          .sort((a, b) =>
-            descending
-              ? b.bk_time.localeCompare(a.bk_time)
-              : a.bk_time.localeCompare(b.bk_time)
-          );
+        let targetTimes = availableTimes.filter(
+          (slot) =>
+            slot.bk_time >= s &&
+            slot.bk_time <= e &&
+            !failedSlotTimes.has(slot.bk_time)
+        );
+        targetTimes = sortSlotsByProximity(targetTimes, startStr);
 
         // 계정별로 첫 시도 슬롯이 겹치지 않도록 순서를 회전
         targetTimes = rotateSlotsForAccount(targetTimes, config);

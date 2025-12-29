@@ -79,11 +79,10 @@ Lambda invoked with event: ...
 에러 발생 시 스택 트레이스
 
 
-* 다시 빌드
+* 다시 빌드 & * 업데이트
 cd /Users/joonholee/Joon/1-Project/dev/book/lambda/book-debeach
 npm run build
 
-* 람다 업데이트
 aws lambda update-function-code \
   --function-name book-debeach \
   --zip-file fileb://deployment_package.zip \

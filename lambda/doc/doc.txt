@@ -105,3 +105,10 @@ aws logs tail /aws/lambda/book-debeach \
 
 * CLI 타임아웃 세팅하기
 aws configure set cli_read_timeout 35   # 35초로 세팅하기
+
+
+* 노드 버전 업
+aws lambda update-function-configuration \
+  --function-name book-debeach \
+  --runtime nodejs22.x \
+  --region ap-south-1

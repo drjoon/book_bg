@@ -20,30 +20,13 @@ interface ManagedUser {
 interface PasswordChangeRequestItem {
   id: string;
   requesterName: string;
+  requestType?: "app_password" | "debeach_password";
   status: "pending" | "approved" | "rejected";
   createdAt: string;
   rejectReason?: string;
   reviewedAt?: string | null;
   reviewedBy?: string;
 }
-
-const passwordRequestStatusMeta: Record<
-  PasswordChangeRequestItem["status"],
-  { label: string; className: string }
-> = {
-  pending: {
-    label: "승인 대기",
-    className: "bg-amber-50 text-amber-700 border-amber-200",
-  },
-  approved: {
-    label: "승인 완료",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  },
-  rejected: {
-    label: "반려",
-    className: "bg-rose-50 text-rose-700 border-rose-200",
-  },
-};
 
 interface Booking {
   account: string;
@@ -102,33 +85,44 @@ const AccountManager = ({
   const [profileForm, setProfileForm] = useState({
     name: user?.name ?? "",
     debeachLoginId: user?.debeachLoginId ?? "",
-    debeachLoginPassword: "",
   });
   const [passwordForm, setPasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
+    appNewPassword: "",
+    debeachNewPassword: "",
   });
-  const [passwordRequestStatus, setPasswordRequestStatus] =
-    useState<PasswordChangeRequestItem | null>(null);
-  const [passwordRequestHistory, setPasswordRequestHistory] = useState<
-    PasswordChangeRequestItem[]
-  >([]);
+  const [showAppPasswordRequestInput, setShowAppPasswordRequestInput] =
+    useState(false);
+  const [showDebeachPasswordRequestInput, setShowDebeachPasswordRequestInput] =
+    useState(false);
   const [passwordRequests, setPasswordRequests] = useState<
     PasswordChangeRequestItem[]
   >([]);
-  const [passwordRequestFilter, setPasswordRequestFilter] = useState<
-    "all" | PasswordChangeRequestItem["status"]
-  >("all");
-  const [rejectReasons, setRejectReasons] = useState<Record<string, string>>(
-    {},
-  );
   const [saving, setSaving] = useState(false);
-  const filteredPasswordRequests = passwordRequests.filter((request) =>
-    passwordRequestFilter === "all"
-      ? true
-      : request.status === passwordRequestFilter,
-  );
-
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "info",
+  ) => {
+    const div = document.createElement("div");
+    div.className =
+      `fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-4 py-3 rounded-lg shadow-lg text-sm pointer-events-none ` +
+      (type === "success"
+        ? "bg-green-500 text-white"
+        : type === "error"
+          ? "bg-red-500 text-white"
+          : "bg-gray-800 text-white");
+    div.textContent = message;
+    document.body.appendChild(div);
+    requestAnimationFrame(() => {
+      div.style.opacity = "1";
+      div.style.transition = "opacity 0.3s ease";
+    });
+    setTimeout(() => {
+      div.style.opacity = "0";
+      setTimeout(() => {
+        if (div.parentNode) document.body.removeChild(div);
+      }, 300);
+    }, 1800);
+  };
   const fetchUsers = async () => {
     if (user?.role !== "admin") return;
     try {
@@ -139,19 +133,6 @@ const AccountManager = ({
     }
   };
 
-  const fetchPasswordRequestStatus = async () => {
-    if (user?.role === "admin") return;
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/profile/password-request`,
-      );
-      setPasswordRequestStatus(response.data.request || null);
-      setPasswordRequestHistory(response.data.history || []);
-    } catch (error) {
-      console.error("Failed to fetch password request status:", error);
-    }
-  };
-
   const fetchPasswordRequests = async () => {
     if (user?.role !== "admin") return;
     try {
@@ -159,14 +140,6 @@ const AccountManager = ({
         `${API_BASE_URL}/api/password-change-requests`,
       );
       setPasswordRequests(response.data);
-      setRejectReasons(
-        Object.fromEntries(
-          (response.data as PasswordChangeRequestItem[]).map((item) => [
-            item.id,
-            item.rejectReason || "",
-          ]),
-        ),
-      );
     } catch (error) {
       console.error("Failed to fetch password requests:", error);
     }
@@ -177,9 +150,6 @@ const AccountManager = ({
       fetchUsers();
       fetchPasswordRequests();
     }
-    if (isOpen && user?.role !== "admin") {
-      fetchPasswordRequestStatus();
-    }
   }, [isOpen, user?.role]);
 
   useEffect(() => {
@@ -187,11 +157,12 @@ const AccountManager = ({
       setProfileForm({
         name: user?.name ?? "",
         debeachLoginId: user?.debeachLoginId ?? "",
-        debeachLoginPassword: "",
       });
-      setPasswordForm({ currentPassword: "", newPassword: "" });
+      setPasswordForm({ appNewPassword: "", debeachNewPassword: "" });
+      setShowAppPasswordRequestInput(false);
+      setShowDebeachPasswordRequestInput(false);
     }
-  }, [isOpen, user?.debeachLoginId, user?.hasDebeachPassword, user?.name]);
+  }, [isOpen, user?.debeachLoginId, user?.name]);
 
   const handleUserUpdate = async (
     userId: string,
@@ -207,7 +178,55 @@ const AccountManager = ({
     }
   };
 
-  const handleSaveProfile = async () => {
+  const handleAppPasswordRequest = async () => {
+    if (!passwordForm.appNewPassword) return;
+    try {
+      setSaving(true);
+      const response = await axios.put(`${API_BASE_URL}/api/profile/password`, {
+        newPassword: passwordForm.appNewPassword,
+      });
+      setPasswordForm((prev) => ({ ...prev, appNewPassword: "" }));
+      setShowAppPasswordRequestInput(false);
+      showToast(
+        response.data.message || "비밀번호 변경 요청을 보냈습니다.",
+        "success",
+      );
+    } catch (error) {
+      console.error("Failed to change app password:", error);
+      showToast("비밀번호 변경 요청에 실패했습니다.", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDebeachPasswordRequest = async () => {
+    if (!passwordForm.debeachNewPassword) return;
+    try {
+      setSaving(true);
+      const response = await axios.put(
+        `${API_BASE_URL}/api/profile/debeach-password`,
+        { newPassword: passwordForm.debeachNewPassword },
+      );
+      setPasswordForm((prev) => ({ ...prev, debeachNewPassword: "" }));
+      setShowDebeachPasswordRequestInput(false);
+      showToast(
+        response.data.message || "드비치 비밀번호 변경 요청을 보냈습니다.",
+        "success",
+      );
+    } catch (error) {
+      console.error("Failed to change Debeach password:", error);
+      showToast("드비치 비밀번호 변경 요청에 실패했습니다.", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCloseProfile = async () => {
+    if (user?.role === "admin") {
+      onClose();
+      return;
+    }
+
     try {
       setSaving(true);
       const response = await axios.put(
@@ -217,25 +236,8 @@ const AccountManager = ({
       setUser(response.data.user);
       onClose();
     } catch (error) {
-      console.error("Failed to save profile:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleChangePassword = async () => {
-    if (!passwordForm.currentPassword || !passwordForm.newPassword) return;
-    try {
-      setSaving(true);
-      const response = await axios.put(
-        `${API_BASE_URL}/api/profile/password`,
-        passwordForm,
-      );
-      setPasswordForm({ currentPassword: "", newPassword: "" });
-      setPasswordRequestStatus(response.data.request || null);
-      await fetchPasswordRequestStatus();
-    } catch (error) {
-      console.error("Failed to change app password:", error);
+      console.error("Failed to save profile on close:", error);
+      showToast("내 정보 저장에 실패했습니다.", "error");
     } finally {
       setSaving(false);
     }
@@ -249,13 +251,26 @@ const AccountManager = ({
       setSaving(true);
       await axios.post(
         `${API_BASE_URL}/api/password-change-requests/${requestId}/${action}`,
-        action === "reject"
-          ? { rejectReason: rejectReasons[requestId] || "" }
-          : {},
+        {},
       );
       await fetchPasswordRequests();
+      await fetchUsers();
     } catch (error) {
       console.error(`Failed to ${action} password request:`, error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async (managedUser: ManagedUser) => {
+    try {
+      setSaving(true);
+      await axios.delete(`${API_BASE_URL}/api/users/${managedUser.id}`);
+      setUsers((prev) => prev.filter((item) => item.id !== managedUser.id));
+      showToast(`${managedUser.name} 계정을 삭제했습니다.`, "success");
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      showToast("계정 삭제에 실패했습니다.", "error");
     } finally {
       setSaving(false);
     }
@@ -304,153 +319,79 @@ const AccountManager = ({
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                드비치 비밀번호
+                비밀번호 변경 요청
               </label>
-              <input
-                type="password"
-                value={profileForm.debeachLoginPassword}
-                onChange={(e) =>
-                  setProfileForm((prev) => ({
-                    ...prev,
-                    debeachLoginPassword: e.target.value,
-                  }))
-                }
-                placeholder={
-                  user?.hasDebeachPassword
-                    ? "변경 시에만 입력"
-                    : "드비치 비밀번호 입력"
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="border-t border-gray-100 pt-4 space-y-2">
-              <p className="text-sm font-medium text-gray-700">
-                앱 비밀번호 변경 요청
-              </p>
-              <input
-                type="password"
-                placeholder="현재 비밀번호"
-                value={passwordForm.currentPassword}
-                onChange={(e) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
-                    currentPassword: e.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                type="password"
-                placeholder="새 비밀번호"
-                value={passwordForm.newPassword}
-                onChange={(e) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
-                    newPassword: e.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {passwordRequestStatus && (
-                <div className="rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
-                  <span
-                    className={`mb-2 inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${passwordRequestStatusMeta[passwordRequestStatus.status].className}`}
-                  >
-                    {
-                      passwordRequestStatusMeta[passwordRequestStatus.status]
-                        .label
-                    }
-                  </span>
-                  <br />
-                  {passwordRequestStatus.status === "pending"
-                    ? "관리자 승인 대기 중입니다."
-                    : passwordRequestStatus.status === "approved"
-                      ? "최근 비밀번호 변경 요청이 승인되었습니다."
-                      : "최근 비밀번호 변경 요청이 반려되었습니다."}{" "}
-                  요청 시각:{" "}
-                  {moment(passwordRequestStatus.createdAt).format(
-                    "MM/DD HH:mm",
-                  )}
-                  {passwordRequestStatus.reviewedAt && (
-                    <span>
-                      {" "}
-                      | 처리 시각:{" "}
-                      {moment(passwordRequestStatus.reviewedAt).format(
-                        "MM/DD HH:mm",
-                      )}
-                    </span>
-                  )}
-                  {passwordRequestStatus.rejectReason && (
-                    <span>
-                      {" "}
-                      | 반려 사유: {passwordRequestStatus.rejectReason}
-                    </span>
-                  )}
-                </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!showAppPasswordRequestInput) {
+                    setShowAppPasswordRequestInput(true);
+                    return;
+                  }
+                  void handleAppPasswordRequest();
+                }}
+                disabled={saving}
+                className="rounded-xl bg-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-800 disabled:opacity-60"
+              >
+                비밀번호
+              </button>
+              {showAppPasswordRequestInput && (
+                <input
+                  type="password"
+                  placeholder="새 비밀번호"
+                  value={passwordForm.appNewPassword}
+                  onChange={(e) =>
+                    setPasswordForm((prev) => ({
+                      ...prev,
+                      appNewPassword: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               )}
-              {passwordRequestHistory.length > 0 && (
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
-                  <p className="mb-2 text-xs font-medium text-gray-700">
-                    요청 이력
-                  </p>
-                  <div className="space-y-2 text-xs text-gray-600">
-                    {passwordRequestHistory.map((item, index) => (
-                      <div
-                        key={`${item.createdAt}-${index}`}
-                        className="rounded-xl bg-white px-3 py-2"
-                      >
-                        <div>
-                          <span
-                            className={`mr-2 inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${passwordRequestStatusMeta[item.status].className}`}
-                          >
-                            {passwordRequestStatusMeta[item.status].label}
-                          </span>
-                          {item.status === "pending"
-                            ? "승인 대기"
-                            : item.status === "approved"
-                              ? "승인 완료"
-                              : "반려됨"}
-                          {" · "}
-                          요청 {moment(item.createdAt).format("MM/DD HH:mm")}
-                        </div>
-                        {item.reviewedAt && (
-                          <div>
-                            처리 {moment(item.reviewedAt).format("MM/DD HH:mm")}
-                          </div>
-                        )}
-                        {item.rejectReason && (
-                          <div>사유: {item.rejectReason}</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                드비치 비밀번호 변경 요청
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!showDebeachPasswordRequestInput) {
+                    setShowDebeachPasswordRequestInput(true);
+                    return;
+                  }
+                  void handleDebeachPasswordRequest();
+                }}
+                disabled={saving}
+                className="rounded-xl bg-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-800 disabled:opacity-60"
+              >
+                드비치 비밀번호
+              </button>
+              {showDebeachPasswordRequestInput && (
+                <input
+                  type="password"
+                  placeholder="새 드비치 비밀번호"
+                  value={passwordForm.debeachNewPassword}
+                  onChange={(e) =>
+                    setPasswordForm((prev) => ({
+                      ...prev,
+                      debeachNewPassword: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               )}
             </div>
           </div>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => void handleCloseProfile()}
+              disabled={saving}
               className="rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
             >
               닫기
-            </button>
-            <button
-              type="button"
-              onClick={handleChangePassword}
-              disabled={saving || Boolean(passwordRequestStatus)}
-              className="rounded-xl bg-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-800 disabled:opacity-60"
-            >
-              비밀번호 변경 요청
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveProfile}
-              disabled={saving}
-              className="rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500 disabled:opacity-60"
-            >
-              저장
             </button>
           </div>
         </div>
@@ -464,209 +405,172 @@ const AccountManager = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl"
+        className="w-full max-w-5xl rounded-[2rem] border border-stone-200 bg-stone-50/95 p-8 shadow-[0_24px_80px_rgba(28,25,23,0.14)] backdrop-blur-sm"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">사용자 관리</h2>
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-2xl font-semibold tracking-tight text-stone-800">
+            사용자 관리
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+            className="rounded-full border border-stone-200 bg-white px-4 py-2 text-sm text-stone-600 transition-colors hover:bg-stone-100"
           >
             닫기
           </button>
         </div>
-        <div className="mb-4 flex flex-wrap gap-2 text-sm">
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">
+        <div className="mb-5 flex flex-wrap gap-2 text-sm">
+          <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-stone-700">
             전체 {users.length}명
           </span>
-          <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">
+          <span className="rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-stone-600">
             승인 대기 {users.filter((item) => !item.granted).length}명
           </span>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">
+          <span className="rounded-full border border-stone-200 bg-[#f3f1eb] px-3 py-1 text-stone-700">
             승인 완료 {users.filter((item) => item.granted).length}명
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-[1.5rem] border border-stone-200 bg-white/80">
+          <table className="min-w-full divide-y divide-stone-200">
+            <thead className="bg-stone-100/80">
               <tr>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
+                <th className="px-5 py-3 text-left text-sm font-semibold text-stone-500">
                   이름
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
+                <th className="px-5 py-3 text-left text-sm font-semibold text-stone-500">
                   드비치 아이디
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                  승인
+                <th className="px-5 py-3 text-left text-sm font-semibold text-stone-500">
+                  회원 승인
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                  권한
+                <th className="px-5 py-3 text-left text-sm font-semibold text-stone-500">
+                  삭제
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {users.map((managedUser) => (
-                <tr key={managedUser.id}>
-                  <td className="px-4 py-2 text-sm text-gray-800">
-                    {managedUser.name}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-800">
-                    {managedUser.debeachLoginId}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-800">
-                    <input
-                      type="checkbox"
-                      checked={managedUser.granted}
-                      onChange={(event) =>
-                        handleUserUpdate(managedUser.id, {
-                          granted: event.target.checked,
-                        })
-                      }
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-800">
-                    <select
-                      value={managedUser.role}
-                      onChange={(event) =>
-                        handleUserUpdate(managedUser.id, {
-                          role: event.target.value as "user" | "admin",
-                        })
-                      }
-                      className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-stone-100">
+              {users.map((managedUser) => {
+                const appPasswordRequest = passwordRequests.find(
+                  (request) =>
+                    request.requesterName === managedUser.name &&
+                    request.requestType === "app_password" &&
+                    request.status === "pending",
+                );
+                const debeachPasswordRequest = passwordRequests.find(
+                  (request) =>
+                    request.requesterName === managedUser.name &&
+                    request.requestType === "debeach_password" &&
+                    request.status === "pending",
+                );
+
+                return (
+                  <tr key={managedUser.id}>
+                    <td className="px-5 py-4 text-sm text-stone-700">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium text-stone-800">
+                          {managedUser.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-stone-400">
+                            비밀번호
+                          </span>
+                          <button
+                            type="button"
+                            disabled={saving || !appPasswordRequest}
+                            onClick={() =>
+                              appPasswordRequest &&
+                              void handlePasswordRequestAction(
+                                appPasswordRequest.id,
+                                "approve",
+                              )
+                            }
+                            className="rounded-full border border-stone-200 bg-stone-200 px-3 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-300 disabled:opacity-30"
+                          >
+                            승인
+                          </button>
+                          <button
+                            type="button"
+                            disabled={saving || !appPasswordRequest}
+                            onClick={() =>
+                              appPasswordRequest &&
+                              void handlePasswordRequestAction(
+                                appPasswordRequest.id,
+                                "reject",
+                              )
+                            }
+                            className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
+                          >
+                            반려
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-stone-700">
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{managedUser.debeachLoginId}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-stone-400">
+                            드비치 비밀번호
+                          </span>
+                          <button
+                            type="button"
+                            disabled={saving || !debeachPasswordRequest}
+                            onClick={() =>
+                              debeachPasswordRequest &&
+                              void handlePasswordRequestAction(
+                                debeachPasswordRequest.id,
+                                "approve",
+                              )
+                            }
+                            className="rounded-full border border-stone-200 bg-stone-200 px-3 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-300 disabled:opacity-30"
+                          >
+                            승인
+                          </button>
+                          <button
+                            type="button"
+                            disabled={saving || !debeachPasswordRequest}
+                            onClick={() =>
+                              debeachPasswordRequest &&
+                              void handlePasswordRequestAction(
+                                debeachPasswordRequest.id,
+                                "reject",
+                              )
+                            }
+                            className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
+                          >
+                            반려
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-stone-700">
+                      <input
+                        type="checkbox"
+                        checked={managedUser.granted}
+                        onChange={(event) =>
+                          handleUserUpdate(managedUser.id, {
+                            granted: event.target.checked,
+                          })
+                        }
+                        className="h-4 w-4 rounded border-stone-300 text-stone-600 focus:ring-stone-400"
+                      />
+                    </td>
+                    <td className="px-5 py-4 text-sm text-stone-700">
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => void handleDeleteUser(managedUser)}
+                        className="rounded-full border border-stone-200 bg-stone-100 px-3 py-2 text-sm text-stone-600 transition-colors hover:bg-stone-200 disabled:opacity-40"
+                      >
+                        삭제
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-        <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-base font-semibold text-gray-900">
-              비밀번호 변경 요청
-            </h3>
-            <span className="text-xs text-gray-500">
-              표시 {filteredPasswordRequests.length}건 / 전체{" "}
-              {passwordRequests.length}건
-            </span>
-          </div>
-          <div className="mb-3 flex flex-wrap gap-2">
-            {(
-              [
-                ["all", "전체"],
-                ["pending", "대기"],
-                ["approved", "승인"],
-                ["rejected", "반려"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setPasswordRequestFilter(value)}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  passwordRequestFilter === value
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-600 ring-1 ring-gray-200"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="space-y-3">
-            {filteredPasswordRequests.length === 0 ? (
-              <p className="text-sm text-gray-500">요청 이력이 없습니다.</p>
-            ) : (
-              filteredPasswordRequests.map((request) => (
-                <div
-                  key={request.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-3"
-                >
-                  <div>
-                    <div className="flex items-center gap-2 font-medium text-gray-900">
-                      {request.requesterName}
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${passwordRequestStatusMeta[request.status].className}`}
-                      >
-                        {passwordRequestStatusMeta[request.status].label}
-                      </span>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      요청 시각{" "}
-                      {moment(request.createdAt).format("MM/DD HH:mm")}
-                    </div>
-                    {request.reviewedAt && (
-                      <div className="text-xs text-gray-500">
-                        처리 시각{" "}
-                        {moment(request.reviewedAt).format("MM/DD HH:mm")}
-                      </div>
-                    )}
-                    {request.rejectReason && (
-                      <div className="text-xs text-gray-500">
-                        반려 사유: {request.rejectReason}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {request.status === "pending" ? (
-                      <>
-                        <input
-                          type="text"
-                          value={rejectReasons[request.id] || ""}
-                          onChange={(event) =>
-                            setRejectReasons((prev) => ({
-                              ...prev,
-                              [request.id]: event.target.value,
-                            }))
-                          }
-                          placeholder="반려 사유"
-                          className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={() =>
-                            void handlePasswordRequestAction(
-                              request.id,
-                              "reject",
-                            )
-                          }
-                          className="rounded-xl bg-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-300 disabled:opacity-60"
-                        >
-                          반려
-                        </button>
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={() =>
-                            void handlePasswordRequestAction(
-                              request.id,
-                              "approve",
-                            )
-                          }
-                          className="rounded-xl bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-500 disabled:opacity-60"
-                        >
-                          승인
-                        </button>
-                      </>
-                    ) : (
-                      <span className="rounded-full bg-gray-100 px-3 py-2 text-xs text-gray-600">
-                        {request.status === "approved"
-                          ? "승인 완료"
-                          : "반려 완료"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -991,26 +895,6 @@ export default function MainPage() {
     }
   };
 
-  const shareSelectedBookingToChat = async () => {
-    if (!selectedBooking || !selectedDate || !selectedChatUsername) return;
-    const dateStr = moment(selectedDate).format("YYYYMMDD");
-    const bookedTime =
-      selectedBooking.bookedSlot?.bk_time || selectedBooking.successTime || "";
-    await sendMessage({
-      body: `[예약 공유] ${dateStr} ${selectedBooking.startTime}-${selectedBooking.endTime} ${selectedBooking.status}`,
-      bookingContext: {
-        account: selectedBooking.account,
-        date: dateStr,
-        startTime: selectedBooking.startTime,
-        endTime: selectedBooking.endTime,
-        memo: selectedBooking.memo || "",
-        status: selectedBooking.status,
-        bookedTime,
-      },
-    });
-    showToast("예약 정보를 대화로 공유했습니다.", "success");
-  };
-
   const handleChatInputKeyDown = (
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ) => {
@@ -1232,7 +1116,7 @@ export default function MainPage() {
     };
 
     return (
-      <div className="flex flex-col items-stretch text-xs mt-1 space-y-1 p-1 h-full">
+      <div className="mt-1 flex min-h-[96px] flex-col items-stretch gap-1.5 p-1 pb-2 text-xs">
         {dayBookings.map((booking, index) => (
           <div
             key={index}
@@ -1255,7 +1139,7 @@ export default function MainPage() {
                 );
               }
             }}
-            className={`w-full text-white rounded-md text-center text-[10px] leading-tight py-1 cursor-pointer ${getStatusColor(
+            className={`w-full rounded-md py-1 text-center text-[10px] leading-tight text-white cursor-pointer ${getStatusColor(
               booking.status,
             )}`}
           >
@@ -1599,16 +1483,16 @@ export default function MainPage() {
 
       {isHistoryModalOpen && selectedBooking && (
         <div
-          className="fixed inset-0 bg-gradient-to-br from-blue-100 via-white to-pink-100 flex justify-center items-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-gray-100 p-4"
           onClick={() => setIsHistoryModalOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative border border-blue-100"
+            className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setIsHistoryModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-blue-400 transition-colors"
+              className="absolute right-4 top-4 text-gray-400 transition-colors hover:text-blue-500"
             >
               <span className="sr-only">닫기</span>×
             </button>
@@ -1628,23 +1512,23 @@ export default function MainPage() {
             {selectedBooking.teeTotal != null && (
               <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
                 <span className="mr-1">이 시간대 기준 티 현황:</span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-blue-700">
                   <span>●</span>
                   <span>전체 {selectedBooking.teeTotal}개</span>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">
                   <span>①</span>
                   <span>
                     1부(09:00 이전) {selectedBooking.teeFirstHalf ?? 0}개
                   </span>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">
                   <span>②</span>
                   <span>
                     2부(09:00 이후) {selectedBooking.teeSecondHalf ?? 0}개
                   </span>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">
                   <span>◎</span>
                   <span>내 예약 범위 {selectedBooking.teeInRange ?? 0}개</span>
                 </span>
@@ -1653,7 +1537,7 @@ export default function MainPage() {
             <div className="space-y-5 text-sm text-gray-800">
               <div className="space-y-1.5">
                 <p className="text-sm font-semibold text-gray-700">계정</p>
-                <div className="px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 text-gray-900 font-semibold">
+                <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 font-semibold text-gray-900">
                   {selectedBooking.account}
                 </div>
               </div>
@@ -1662,7 +1546,7 @@ export default function MainPage() {
                   <p className="text-sm font-semibold text-gray-700">
                     신청 시간
                   </p>
-                  <div className="px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 text-gray-900 font-mono">
+                  <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 font-mono text-gray-900">
                     {selectedBooking.startTime} - {selectedBooking.endTime}
                   </div>
                 </div>
@@ -1670,7 +1554,7 @@ export default function MainPage() {
                   <p className="text-sm font-semibold text-gray-700">
                     부킹 시간
                   </p>
-                  <div className="px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 text-gray-900 font-mono">
+                  <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 font-mono text-gray-900">
                     {selectedBooking.bookedSlot?.bk_time ||
                       selectedBooking.successTime ||
                       "-"}
@@ -1679,30 +1563,18 @@ export default function MainPage() {
               </div>
               <div className="space-y-1.5">
                 <p className="text-sm font-semibold text-gray-700">상태</p>
-                <div className="px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 text-gray-900">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900">
                   {selectedBooking.status}
                 </div>
               </div>
               <div className="space-y-1.5">
                 <p className="text-sm font-semibold text-gray-700">메모</p>
-                <div className="min-h-[56px] px-4 py-3 border border-blue-100 rounded-lg bg-blue-50 whitespace-pre-wrap text-sm text-gray-800">
+                <div className="min-h-[56px] whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800">
                   {selectedBooking.memo?.trim() || "(메모 없음)"}
                 </div>
               </div>
             </div>
             <div className="mt-6 flex justify-end">
-              <div className="mr-auto flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void shareSelectedBookingToChat();
-                  }}
-                  disabled={!selectedChatUsername}
-                  className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors text-sm disabled:opacity-60"
-                >
-                  대화로 공유
-                </button>
-              </div>
               {selectedBooking.status === "실패" && (
                 <div className="mr-2 flex gap-2">
                   <button
@@ -1711,14 +1583,14 @@ export default function MainPage() {
                       setIsHistoryModalOpen(false);
                       setIsNewBookingModalOpen(true);
                     }}
-                    className="px-4 py-2 rounded-lg bg-blue-400 text-white hover:bg-blue-500 transition-colors text-sm"
+                    className="rounded-lg bg-blue-500 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-600"
                   >
                     내용 변경
                   </button>
                   <button
                     type="button"
                     onClick={handleRetryBookingImmediately}
-                    className="px-4 py-2 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors text-sm"
+                    className="rounded-lg bg-gray-100 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200"
                   >
                     즉시 재시도
                   </button>
@@ -1728,7 +1600,7 @@ export default function MainPage() {
                       handleDeleteBooking();
                       setIsHistoryModalOpen(false);
                     }}
-                    className="px-4 py-2 rounded-lg bg-red-400 text-white hover:bg-red-500 transition-colors text-sm"
+                    className="rounded-lg bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600"
                   >
                     삭제
                   </button>
@@ -1737,7 +1609,7 @@ export default function MainPage() {
               <button
                 type="button"
                 onClick={() => setIsHistoryModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-blue-50 transition-colors text-sm"
+                className="rounded-lg bg-gray-100 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200"
               >
                 닫기
               </button>

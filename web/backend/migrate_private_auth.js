@@ -1,21 +1,38 @@
+import fs from "fs/promises";
+import path from "path";
+
 import connectDB from "./db.js";
 import { User } from "./models.js";
 import { encryptCredential, looksEncryptedCredential } from "./crypto.js";
 
-const ADMIN_USERNAME = "drjoon";
-const ADMIN_INITIAL_PASSWORD = "*0987";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const BOOKING_CONFIG_PATH = path.resolve(
+  __dirname,
+  "../../auto/booking_configs.json",
+);
 
 async function migratePrivateAuth() {
   await connectDB();
+
+  const legacyConfigs = JSON.parse(
+    await fs.readFile(BOOKING_CONFIG_PATH, "utf-8"),
+  );
+  const legacyConfigMap = new Map(
+    legacyConfigs.map((config) => [String(config.NAME || "").trim(), config]),
+  );
 
   const users = await User.find({});
   let updatedCount = 0;
 
   for (const user of users) {
     let shouldSave = false;
+    const legacyConfig = legacyConfigMap.get(String(user.name || "").trim());
 
     if (typeof user.debeachLoginId !== "string") {
-      user.debeachLoginId = user.name === ADMIN_USERNAME ? "admin" : "";
+      user.debeachLoginId = "";
       shouldSave = true;
     }
 
@@ -32,17 +49,25 @@ async function migratePrivateAuth() {
       shouldSave = true;
     }
 
-    if (user.name === ADMIN_USERNAME) {
-      if (user.role !== "admin") {
-        user.role = "admin";
+    if (legacyConfig) {
+      const nextLoginId = String(legacyConfig.LOGIN_ID || "").trim();
+      const nextLoginPassword = String(
+        legacyConfig.LOGIN_PASSWORD || "",
+      ).trim();
+
+      if (nextLoginId && user.debeachLoginId !== nextLoginId) {
+        user.debeachLoginId = nextLoginId;
         shouldSave = true;
       }
-      if (!user.granted) {
-        user.granted = true;
-        shouldSave = true;
-      }
-      if (!user.debeachLoginId) {
-        user.debeachLoginId = "admin";
+
+      const encryptedLegacyPassword = nextLoginPassword
+        ? encryptCredential(nextLoginPassword)
+        : "";
+      if (
+        encryptedLegacyPassword &&
+        user.debeachLoginPassword !== encryptedLegacyPassword
+      ) {
+        user.debeachLoginPassword = encryptedLegacyPassword;
         shouldSave = true;
       }
     }
@@ -52,21 +77,6 @@ async function migratePrivateAuth() {
       updatedCount += 1;
       console.log(`[MIGRATE_PRIVATE_AUTH] updated ${user.name}`);
     }
-  }
-
-  const admin = await User.findOne({ name: ADMIN_USERNAME, role: "admin" });
-  if (!admin) {
-    const created = new User({
-      name: "drjoon",
-      password: ADMIN_INITIAL_PASSWORD,
-      debeachLoginId: "admin",
-      debeachLoginPassword: encryptCredential(""),
-      role: "admin",
-      granted: true,
-    });
-    await created.save();
-    updatedCount += 1;
-    console.log(`[MIGRATE_PRIVATE_AUTH] created ${ADMIN_USERNAME}`);
   }
 
   console.log(`[MIGRATE_PRIVATE_AUTH] done. updated=${updatedCount}`);

@@ -77,7 +77,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const trimmedName = String(watchedName || "").trim();
-    if (!trimmedName) {
+    if (!isPasswordRequestOpen || !trimmedName) {
       setRecentRequest(null);
       return;
     }
@@ -95,7 +95,7 @@ export default function LoginPage() {
     }, 300);
 
     return () => window.clearTimeout(timeoutId);
-  }, [watchedName]);
+  }, [watchedName, isPasswordRequestOpen]);
 
   const showToast = (
     message: string,
@@ -176,43 +176,6 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {recentRequest && (
-            <div
-              className={`mb-4 rounded-xl border px-4 py-3 text-xs ${
-                recentRequest.status === "pending"
-                  ? "border-amber-200 bg-amber-50 text-amber-700"
-                  : recentRequest.status === "approved"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-rose-200 bg-rose-50 text-rose-700"
-              }`}
-            >
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="font-semibold">
-                  최근 비밀번호 변경 요청 상태
-                </span>
-                <span className="rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold">
-                  {recentRequest.status === "pending"
-                    ? "승인 대기"
-                    : recentRequest.status === "approved"
-                      ? "승인 완료"
-                      : "반려"}
-                </span>
-              </div>
-              <div>
-                요청 시각:{" "}
-                {new Date(recentRequest.createdAt).toLocaleString("ko-KR")}
-              </div>
-              {recentRequest.reviewedAt && (
-                <div>
-                  처리 시각:{" "}
-                  {new Date(recentRequest.reviewedAt).toLocaleString("ko-KR")}
-                </div>
-              )}
-              {recentRequest.rejectReason && (
-                <div>반려 사유: {recentRequest.rejectReason}</div>
-              )}
-            </div>
-          )}
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-4 text-gray-900"
@@ -292,6 +255,45 @@ export default function LoginPage() {
               className="grid gap-3 text-gray-900"
             >
               <input type="hidden" {...registerPasswordRequest("name")} />
+              {recentRequest && (
+                <div
+                  className={`rounded-xl border px-4 py-3 text-xs ${
+                    recentRequest.status === "pending"
+                      ? "border-amber-200 bg-amber-50 text-amber-700"
+                      : recentRequest.status === "approved"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-rose-200 bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span className="font-semibold">
+                      최근 비밀번호 변경 요청 상태
+                    </span>
+                    <span className="rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold">
+                      {recentRequest.status === "pending"
+                        ? "승인 대기"
+                        : recentRequest.status === "approved"
+                          ? "승인 완료"
+                          : "반려"}
+                    </span>
+                  </div>
+                  <div>
+                    요청 시각:{" "}
+                    {new Date(recentRequest.createdAt).toLocaleString("ko-KR")}
+                  </div>
+                  {recentRequest.reviewedAt && (
+                    <div>
+                      처리 시각:{" "}
+                      {new Date(recentRequest.reviewedAt).toLocaleString(
+                        "ko-KR",
+                      )}
+                    </div>
+                  )}
+                  {recentRequest.rejectReason && (
+                    <div>반려 사유: {recentRequest.rejectReason}</div>
+                  )}
+                </div>
+              )}
               <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700 ring-1 ring-gray-200">
                 요청 대상: {watchedName || "로그인 이름을 먼저 입력해주세요."}
               </div>

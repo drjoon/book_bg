@@ -80,6 +80,32 @@ const serializeMessage = (message) => ({
   createdAt: message.createdAt,
 });
 
+const serializePasswordChangeRequest = (request) => ({
+  id: request._id,
+  requesterName: request.requesterName,
+  requestType: request.requestType || "app_password",
+  status: request.status,
+  createdAt: request.createdAt,
+  reviewedAt: request.reviewedAt,
+  reviewedBy: request.reviewedBy,
+  rejectReason: request.rejectReason || "",
+});
+
+const requestTypeLabel = {
+  app_password: "비밀번호",
+  debeach_password: "드비치 비밀번호",
+};
+
+const buildPasswordRequestMessage = (request, action) => {
+  const label = requestTypeLabel[request.requestType || "app_password"];
+  if (action === "approved") {
+    return request.requestType === "debeach_password"
+      ? `${label} 변경 요청이 승인되었습니다.`
+      : `${label} 변경 요청이 승인되었습니다. 새 비밀번호로 다시 로그인해주세요.`;
+  }
+  return `${label} 변경 요청이 반려되었습니다.`;
+};
+
 const resolveConversationUsers = async (req, otherUsername) => {
   if (!otherUsername) {
     throw new Error("대화 상대가 필요합니다.");
@@ -269,11 +295,9 @@ app.put("/api/profile", authMiddleware, async (req, res) => {
 });
 
 app.put("/api/profile/password", authMiddleware, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  if (!currentPassword || !newPassword) {
-    return res
-      .status(400)
-      .json({ message: "현재 비밀번호와 새 비밀번호를 입력해주세요." });
+  const { newPassword } = req.body;
+  if (!newPassword) {
+    return res.status(400).json({ message: "새 비밀번호를 입력해주세요." });
   }
   if (String(newPassword).length < 6) {
     return res
@@ -287,15 +311,9 @@ app.put("/api/profile/password", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    const isMatch = await user.comparePassword(currentPassword);
-    if (!isMatch) {
-      return res
-        .status(401)
-        .json({ message: "현재 비밀번호가 일치하지 않습니다." });
-    }
-
     const existingPendingRequest = await PasswordChangeRequest.findOne({
       userId: user._id,
+      requestType: "app_password",
       status: "pending",
     });
     if (existingPendingRequest) {
@@ -308,6 +326,7 @@ app.put("/api/profile/password", authMiddleware, async (req, res) => {
       userId: user._id,
       requesterName: user.name,
       newPassword,
+      requestType: "app_password",
       status: "pending",
     });
 
@@ -322,20 +341,70 @@ app.put("/api/profile/password", authMiddleware, async (req, res) => {
   }
 });
 
+app.put("/api/profile/debeach-password", authMiddleware, async (req, res) => {
+  const { newPassword } = req.body;
+  if (!newPassword) {
+    return res
+      .status(400)
+      .json({ message: "새 드비치 비밀번호를 입력해주세요." });
+  }
+
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const existingPendingRequest = await PasswordChangeRequest.findOne({
+      userId: user._id,
+      requestType: "debeach_password",
+      status: "pending",
+    });
+    if (existingPendingRequest) {
+      return res.status(409).json({
+        message:
+          "이미 관리자 승인 대기 중인 드비치 비밀번호 변경 요청이 있습니다.",
+      });
+    }
+
+    const request = await PasswordChangeRequest.create({
+      userId: user._id,
+      requesterName: user.name,
+      newPassword,
+      requestType: "debeach_password",
+      status: "pending",
+    });
+
+    res.status(201).json({
+      message: "관리자에게 드비치 비밀번호 변경 요청을 보냈습니다.",
+      request,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "드비치 비밀번호 변경 요청에 실패했습니다.",
+      error,
+    });
+  }
+});
+
 app.get("/api/profile/password-request", authMiddleware, async (req, res) => {
   try {
-    const request = await PasswordChangeRequest.findOne({
+    const appPasswordRequest = await PasswordChangeRequest.findOne({
       userId: req.user.userId,
+      requestType: "app_password",
     })
-      .select("status createdAt reviewedAt reviewedBy rejectReason")
+      .select("status createdAt reviewedAt reviewedBy rejectReason requestType")
       .sort({ createdAt: -1 });
-    const history = await PasswordChangeRequest.find({
+    const debeachPasswordRequest = await PasswordChangeRequest.findOne({
       userId: req.user.userId,
+      requestType: "debeach_password",
     })
-      .select("status createdAt reviewedAt reviewedBy rejectReason")
-      .sort({ createdAt: -1 })
-      .limit(10);
-    res.json({ request, history });
+      .select("status createdAt reviewedAt reviewedBy rejectReason requestType")
+      .sort({ createdAt: -1 });
+    res.json({
+      appPasswordRequest,
+      debeachPasswordRequest,
+    });
   } catch (error) {
     res.status(500).json({
       message: "비밀번호 변경 요청 상태를 불러오지 못했습니다.",
@@ -548,11 +617,14 @@ app.put("/api/users/:id", authMiddleware, adminOnly, async (req, res) => {
       req.body;
     const update = {};
     if (typeof granted === "boolean") update.granted = granted;
-    if (role === "user" || role === "admin") update.role = role;
+    if (typeof role === "string") update.role = role;
     if (typeof name === "string") update.name = name.trim();
     if (typeof debeachLoginId === "string")
       update.debeachLoginId = debeachLoginId.trim();
-    if (typeof debeachLoginPassword === "string")
+    if (
+      typeof debeachLoginPassword === "string" &&
+      debeachLoginPassword.trim() !== ""
+    )
       update.debeachLoginPassword = encryptCredential(debeachLoginPassword);
     const user = await User.findByIdAndUpdate(id, update, { new: true }).select(
       "-password",
@@ -587,10 +659,12 @@ app.get(
     try {
       const requests = await PasswordChangeRequest.find({})
         .select(
-          "requesterName status createdAt reviewedAt reviewedBy rejectReason",
+          "requesterName requestType status createdAt reviewedAt reviewedBy rejectReason",
         )
         .sort({ createdAt: -1 });
-      res.json(requests);
+      res.json(
+        requests.map((request) => serializePasswordChangeRequest(request)),
+      );
     } catch (error) {
       res.status(500).json({
         message: "비밀번호 변경 요청 목록을 불러오지 못했습니다.",
@@ -618,7 +692,11 @@ app.post(
         return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
       }
 
-      await user.setPassword(request.newPassword);
+      if (request.requestType === "debeach_password") {
+        user.debeachLoginPassword = encryptCredential(request.newPassword);
+      } else {
+        await user.setPassword(request.newPassword);
+      }
       await user.save();
 
       request.status = "approved";
@@ -630,11 +708,11 @@ app.post(
       await createSystemChatMessage({
         adminUsername: req.user.name,
         userUsername: request.requesterName,
-        body: "비밀번호 변경 요청이 승인되었습니다. 새 비밀번호로 다시 로그인해주세요.",
+        body: buildPasswordRequestMessage(request, "approved"),
       });
 
       res.json({
-        message: `${request.requesterName}님의 비밀번호 변경을 승인했습니다.`,
+        message: `${request.requesterName}님의 ${requestTypeLabel[request.requestType || "app_password"]} 변경을 승인했습니다.`,
       });
     } catch (error) {
       res
@@ -649,7 +727,6 @@ app.post(
   authMiddleware,
   adminOnly,
   async (req, res) => {
-    const rejectReason = String(req.body?.rejectReason || "").trim();
     try {
       const request = await PasswordChangeRequest.findById(req.params.id);
       if (!request || request.status !== "pending") {
@@ -659,7 +736,7 @@ app.post(
       }
 
       request.status = "rejected";
-      request.rejectReason = rejectReason;
+      request.rejectReason = "";
       request.reviewedBy = req.user.name;
       request.reviewedAt = new Date();
       await request.save();
@@ -667,13 +744,11 @@ app.post(
       await createSystemChatMessage({
         adminUsername: req.user.name,
         userUsername: request.requesterName,
-        body: rejectReason
-          ? `비밀번호 변경 요청이 반려되었습니다. 사유: ${rejectReason}`
-          : "비밀번호 변경 요청이 반려되었습니다. 자세한 내용은 관리자에게 문의해주세요.",
+        body: buildPasswordRequestMessage(request, "rejected"),
       });
 
       res.json({
-        message: `${request.requesterName}님의 비밀번호 변경 요청을 반려했습니다.`,
+        message: `${request.requesterName}님의 ${requestTypeLabel[request.requestType || "app_password"]} 변경 요청을 반려했습니다.`,
       });
     } catch (error) {
       res

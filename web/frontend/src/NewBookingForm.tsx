@@ -149,7 +149,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccount, setSelectedAccount] = useState("");
   const [startTime, setStartTime] = useState(() =>
-    getStoredTime("start", "0600")
+    getStoredTime("start", "0600"),
   );
   const [endTime, setEndTime] = useState(() => getStoredTime("end", "0900"));
   const [error, setError] = useState<string | null>(null);
@@ -175,14 +175,14 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     account: string,
     dateStr: string,
     timeoutMs = 60000,
-    intervalMs = 1500
+    intervalMs = 1500,
   ) => {
     const start = Date.now();
     return new Promise<void>((resolve, reject) => {
       const timer = setInterval(async () => {
         try {
           const res = await axios.get<Record<string, Booking[]>>(
-            `${API_BASE_URL}/api/bookings`
+            `${API_BASE_URL}/api/bookings`,
           );
           const data = res.data;
           const day = data[dateStr] || [];
@@ -212,7 +212,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
 
   const showToast = (
     message: string,
-    type: "success" | "error" | "info" = "info"
+    type: "success" | "error" | "info" = "info",
   ) => {
     const div = document.createElement("div");
     div.className =
@@ -220,8 +220,8 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       (type === "success"
         ? "bg-green-500 text-white"
         : type === "error"
-        ? "bg-red-500 text-white"
-        : "bg-gray-800 text-white");
+          ? "bg-red-500 text-white"
+          : "bg-gray-800 text-white");
     div.textContent = message;
     document.body.appendChild(div);
     requestAnimationFrame(() => {
@@ -240,13 +240,13 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
     const fetchAccounts = async () => {
       try {
         const response = await axios.get<Account[]>(
-          `${API_BASE_URL}/api/accounts`
+          `${API_BASE_URL}/api/accounts`,
         );
         const data = Array.isArray(response.data) ? response.data : [];
         setAccounts(data);
         const defaultAccount = isEditMode
           ? editingBooking.account
-          : data[0]?.name ?? user?.name ?? "";
+          : (data[0]?.name ?? user?.name ?? "");
         setSelectedAccount(defaultAccount);
         if (isEditMode) {
           setStartTime(editingBooking.startTime);
@@ -287,7 +287,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
   const adjustTime = (
     time: string,
     setTime: (time: string) => void,
-    amount: number
+    amount: number,
   ) => {
     const m = moment(time, "HHmm").add(amount, "minutes");
     const min = moment("0600", "HHmm");
@@ -437,7 +437,7 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
         try {
           await pollUntilSuccess(
             (editingBooking as Booking).account,
-            moment(selectedDate).format("YYYYMMDD")
+            moment(selectedDate).format("YYYYMMDD"),
           );
           showToast("예약이 성공 처리되었습니다.", "success");
           onBookingAdded();
@@ -523,12 +523,12 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="px-4 py-3 border border-blue-200 rounded-lg bg-blue-50 text-gray-900 font-semibold">
-                {selectedAccount || "연결된 계정이 없습니다"}
+              <div className="w-full px-4 py-3 border border-blue-200 rounded-lg bg-blue-50 text-gray-900 font-semibold shadow-sm">
+                {selectedAccount}
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TimeInput
               label="시작 시간"
               value={startTime}

@@ -91,6 +91,12 @@ const passwordChangeRequestSchema = new mongoose.Schema(
     },
     requesterName: { type: String, required: true },
     newPassword: { type: String, required: true },
+    requestType: {
+      type: String,
+      enum: ["app_password", "debeach_password"],
+      default: "app_password",
+      index: true,
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],

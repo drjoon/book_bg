@@ -1,4 +1,4 @@
-@import 'react-calendar/dist/Calendar.css';
+@import "react-calendar/dist/Calendar.css";
 
 @tailwind base;
 @tailwind components;
@@ -31,7 +31,7 @@ body {
 
 /* Day Tiles */
 .react-calendar__tile {
-  @apply text-gray-700 h-28 rounded-lg;
+  @apply text-gray-700 h-36 rounded-lg;
 }
 
 .react-calendar__tile:enabled:hover,
@@ -55,6 +55,8 @@ body {
 }
 
 /* Weekend days */
-.react-calendar__month-view__days__day--weekend:not(.react-calendar__tile--active) {
+.react-calendar__month-view__days__day--weekend:not(
+  .react-calendar__tile--active
+) {
   @apply text-red-500;
 }

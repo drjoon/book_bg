@@ -1,230 +1,50 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Calendar from "react-calendar";
 import moment from "moment";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, MessageCircle, ChevronLeft, Menu } from "lucide-react";
 import useAuthStore from "@/store/authStore";
 import { API_BASE_URL } from "../config";
 import NewBookingForm from "../NewBookingForm";
 import axios from "axios";
 
 interface ManagedUser {
-  _id: string;
+  id: string;
   name: string;
-  username: string;
   granted: boolean;
   role: "user" | "admin";
+  debeachLoginId: string;
+  hasDebeachPassword: boolean;
+  passwordRequestHistory?: PasswordChangeRequestItem[];
 }
 
-const AccountManager = ({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) => {
-  const [users, setUsers] = useState<ManagedUser[]>([]);
-  const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
-  const [golfPassword, setGolfPassword] = useState(user?.golfPassword ?? "");
-  const [saving, setSaving] = useState(false);
+interface PasswordChangeRequestItem {
+  id: string;
+  requesterName: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  rejectReason?: string;
+  reviewedAt?: string | null;
+  reviewedBy?: string;
+}
 
-  const fetchUsers = async () => {
-    if (user?.role !== "admin") return;
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/users`);
-      setUsers(response.data);
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen && user?.role === "admin") {
-      fetchUsers();
-    }
-  }, [isOpen, user?.role]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setGolfPassword(user?.golfPassword ?? "");
-    }
-  }, [isOpen, user?.golfPassword]);
-
-  const handleUserUpdate = async (
-    userId: string,
-    data: Partial<ManagedUser>
-  ) => {
-    try {
-      await axios.put(`${API_BASE_URL}/api/users/${userId}`, data);
-      setUsers((prev) =>
-        prev.map((u) => (u._id === userId ? { ...u, ...data } : u))
-      );
-    } catch (error) {
-      console.error("Failed to update user:", error);
-    }
-  };
-
-  const handleSaveGolfPassword = async () => {
-    if (!user) return;
-    try {
-      setSaving(true);
-      const response = await axios.put(
-        `${API_BASE_URL}/api/profile/golf-password`,
-        {
-          golfPassword,
-        }
-      );
-      setUser({
-        ...user,
-        golfPassword: response.data.user.golfPassword,
-      });
-      onClose();
-    } catch (error) {
-      console.error("Failed to save golf password:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  if (user?.role !== "admin") {
-    return (
-      <div
-        className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4"
-        onClick={onClose}
-      >
-        <div
-          className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl w-full max-w-md"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-            내 정보
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-500">계정명</p>
-              <p className="font-semibold text-gray-900 dark:text-white">
-                {user?.name}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">아이디</p>
-              <p className="font-semibold text-gray-900 dark:text-white">
-                {user?.username}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                골프장 비밀번호
-              </label>
-              <input
-                type="password"
-                value={golfPassword}
-                onChange={(e) => setGolfPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500">
-                자동 예약에 사용될 비밀번호입니다. 변경 후 저장해주세요.
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
-            >
-              닫기
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveGolfPassword}
-              disabled={saving}
-              className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-60"
-            >
-              {saving ? "저장 중..." : "저장"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl w-full max-w-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-          사용자 관리
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                  Name
-                </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                  Username
-                </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                  Granted
-                </th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
-                  Role
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user._id}>
-                  <td className="px-4 py-2 text-sm text-gray-100">
-                    {user.name}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-100">
-                    {user.username}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-100">
-                    <input
-                      type="checkbox"
-                      checked={user.granted}
-                      onChange={(event) =>
-                        handleUserUpdate(user._id, {
-                          granted: event.target.checked,
-                        })
-                      }
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-800">
-                    <select
-                      value={user.role}
-                      onChange={(event) =>
-                        handleUserUpdate(user._id, {
-                          role: event.target.value as "user" | "admin",
-                        })
-                      }
-                      className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+const passwordRequestStatusMeta: Record<
+  PasswordChangeRequestItem["status"],
+  { label: string; className: string }
+> = {
+  pending: {
+    label: "승인 대기",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  approved: {
+    label: "승인 완료",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  rejected: {
+    label: "반려",
+    className: "bg-rose-50 text-rose-700 border-rose-200",
+  },
 };
+
 interface Booking {
   account: string;
   status: "예약" | "접수" | "재시도" | "성공" | "실패";
@@ -239,10 +59,624 @@ interface Booking {
   teeInRange?: number | null;
 }
 
+interface MessageContact {
+  name: string;
+  granted: boolean;
+  unreadCount?: number;
+}
+
+interface ChatMessage {
+  id: string;
+  roomKey: string;
+  senderName: string;
+  adminUsername: string;
+  userUsername: string;
+  senderUsername: string;
+  senderRole: "user" | "admin";
+  body: string;
+  readBy?: string[];
+  bookingContext?: {
+    account?: string;
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    memo?: string;
+    status?: string;
+    bookedTime?: string;
+  } | null;
+  createdAt: string;
+}
+
 type BookingsByDate = Record<string, Booking[]>;
+
+const AccountManager = ({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
+  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name ?? "",
+    debeachLoginId: user?.debeachLoginId ?? "",
+    debeachLoginPassword: "",
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+  });
+  const [passwordRequestStatus, setPasswordRequestStatus] =
+    useState<PasswordChangeRequestItem | null>(null);
+  const [passwordRequestHistory, setPasswordRequestHistory] = useState<
+    PasswordChangeRequestItem[]
+  >([]);
+  const [passwordRequests, setPasswordRequests] = useState<
+    PasswordChangeRequestItem[]
+  >([]);
+  const [passwordRequestFilter, setPasswordRequestFilter] = useState<
+    "all" | PasswordChangeRequestItem["status"]
+  >("all");
+  const [rejectReasons, setRejectReasons] = useState<Record<string, string>>(
+    {},
+  );
+  const [saving, setSaving] = useState(false);
+  const filteredPasswordRequests = passwordRequests.filter((request) =>
+    passwordRequestFilter === "all"
+      ? true
+      : request.status === passwordRequestFilter,
+  );
+
+  const fetchUsers = async () => {
+    if (user?.role !== "admin") return;
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/users`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
+  };
+
+  const fetchPasswordRequestStatus = async () => {
+    if (user?.role === "admin") return;
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/profile/password-request`,
+      );
+      setPasswordRequestStatus(response.data.request || null);
+      setPasswordRequestHistory(response.data.history || []);
+    } catch (error) {
+      console.error("Failed to fetch password request status:", error);
+    }
+  };
+
+  const fetchPasswordRequests = async () => {
+    if (user?.role !== "admin") return;
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/password-change-requests`,
+      );
+      setPasswordRequests(response.data);
+      setRejectReasons(
+        Object.fromEntries(
+          (response.data as PasswordChangeRequestItem[]).map((item) => [
+            item.id,
+            item.rejectReason || "",
+          ]),
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to fetch password requests:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && user?.role === "admin") {
+      fetchUsers();
+      fetchPasswordRequests();
+    }
+    if (isOpen && user?.role !== "admin") {
+      fetchPasswordRequestStatus();
+    }
+  }, [isOpen, user?.role]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setProfileForm({
+        name: user?.name ?? "",
+        debeachLoginId: user?.debeachLoginId ?? "",
+        debeachLoginPassword: "",
+      });
+      setPasswordForm({ currentPassword: "", newPassword: "" });
+    }
+  }, [isOpen, user?.debeachLoginId, user?.hasDebeachPassword, user?.name]);
+
+  const handleUserUpdate = async (
+    userId: string,
+    data: Partial<ManagedUser>,
+  ) => {
+    try {
+      await axios.put(`${API_BASE_URL}/api/users/${userId}`, data);
+      setUsers((prev) =>
+        prev.map((item) => (item.id === userId ? { ...item, ...data } : item)),
+      );
+    } catch (error) {
+      console.error("Failed to update user:", error);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      const response = await axios.put(
+        `${API_BASE_URL}/api/profile`,
+        profileForm,
+      );
+      setUser(response.data.user);
+      onClose();
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword) return;
+    try {
+      setSaving(true);
+      const response = await axios.put(
+        `${API_BASE_URL}/api/profile/password`,
+        passwordForm,
+      );
+      setPasswordForm({ currentPassword: "", newPassword: "" });
+      setPasswordRequestStatus(response.data.request || null);
+      await fetchPasswordRequestStatus();
+    } catch (error) {
+      console.error("Failed to change app password:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordRequestAction = async (
+    requestId: string,
+    action: "approve" | "reject",
+  ) => {
+    try {
+      setSaving(true);
+      await axios.post(
+        `${API_BASE_URL}/api/password-change-requests/${requestId}/${action}`,
+        action === "reject"
+          ? { rejectReason: rejectReasons[requestId] || "" }
+          : {},
+      );
+      await fetchPasswordRequests();
+    } catch (error) {
+      console.error(`Failed to ${action} password request:`, error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  if (user?.role !== "admin") {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        onClick={onClose}
+      >
+        <div
+          className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="mb-5 text-2xl font-bold text-gray-900">내 정보</h2>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">이름</label>
+              <input
+                type="text"
+                value={profileForm.name}
+                onChange={(e) =>
+                  setProfileForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                드비치 아이디
+              </label>
+              <input
+                type="text"
+                value={profileForm.debeachLoginId}
+                onChange={(e) =>
+                  setProfileForm((prev) => ({
+                    ...prev,
+                    debeachLoginId: e.target.value,
+                  }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                드비치 비밀번호
+              </label>
+              <input
+                type="password"
+                value={profileForm.debeachLoginPassword}
+                onChange={(e) =>
+                  setProfileForm((prev) => ({
+                    ...prev,
+                    debeachLoginPassword: e.target.value,
+                  }))
+                }
+                placeholder={
+                  user?.hasDebeachPassword
+                    ? "변경 시에만 입력"
+                    : "드비치 비밀번호 입력"
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="border-t border-gray-100 pt-4 space-y-2">
+              <p className="text-sm font-medium text-gray-700">
+                앱 비밀번호 변경 요청
+              </p>
+              <input
+                type="password"
+                placeholder="현재 비밀번호"
+                value={passwordForm.currentPassword}
+                onChange={(e) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    currentPassword: e.target.value,
+                  }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="password"
+                placeholder="새 비밀번호"
+                value={passwordForm.newPassword}
+                onChange={(e) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    newPassword: e.target.value,
+                  }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {passwordRequestStatus && (
+                <div className="rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                  <span
+                    className={`mb-2 inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${passwordRequestStatusMeta[passwordRequestStatus.status].className}`}
+                  >
+                    {
+                      passwordRequestStatusMeta[passwordRequestStatus.status]
+                        .label
+                    }
+                  </span>
+                  <br />
+                  {passwordRequestStatus.status === "pending"
+                    ? "관리자 승인 대기 중입니다."
+                    : passwordRequestStatus.status === "approved"
+                      ? "최근 비밀번호 변경 요청이 승인되었습니다."
+                      : "최근 비밀번호 변경 요청이 반려되었습니다."}{" "}
+                  요청 시각:{" "}
+                  {moment(passwordRequestStatus.createdAt).format(
+                    "MM/DD HH:mm",
+                  )}
+                  {passwordRequestStatus.reviewedAt && (
+                    <span>
+                      {" "}
+                      | 처리 시각:{" "}
+                      {moment(passwordRequestStatus.reviewedAt).format(
+                        "MM/DD HH:mm",
+                      )}
+                    </span>
+                  )}
+                  {passwordRequestStatus.rejectReason && (
+                    <span>
+                      {" "}
+                      | 반려 사유: {passwordRequestStatus.rejectReason}
+                    </span>
+                  )}
+                </div>
+              )}
+              {passwordRequestHistory.length > 0 && (
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+                  <p className="mb-2 text-xs font-medium text-gray-700">
+                    요청 이력
+                  </p>
+                  <div className="space-y-2 text-xs text-gray-600">
+                    {passwordRequestHistory.map((item, index) => (
+                      <div
+                        key={`${item.createdAt}-${index}`}
+                        className="rounded-xl bg-white px-3 py-2"
+                      >
+                        <div>
+                          <span
+                            className={`mr-2 inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${passwordRequestStatusMeta[item.status].className}`}
+                          >
+                            {passwordRequestStatusMeta[item.status].label}
+                          </span>
+                          {item.status === "pending"
+                            ? "승인 대기"
+                            : item.status === "approved"
+                              ? "승인 완료"
+                              : "반려됨"}
+                          {" · "}
+                          요청 {moment(item.createdAt).format("MM/DD HH:mm")}
+                        </div>
+                        {item.reviewedAt && (
+                          <div>
+                            처리 {moment(item.reviewedAt).format("MM/DD HH:mm")}
+                          </div>
+                        )}
+                        {item.rejectReason && (
+                          <div>사유: {item.rejectReason}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+            >
+              닫기
+            </button>
+            <button
+              type="button"
+              onClick={handleChangePassword}
+              disabled={saving || Boolean(passwordRequestStatus)}
+              className="rounded-xl bg-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-800 disabled:opacity-60"
+            >
+              비밀번호 변경 요청
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveProfile}
+              disabled={saving}
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500 disabled:opacity-60"
+            >
+              저장
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">사용자 관리</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200"
+          >
+            닫기
+          </button>
+        </div>
+        <div className="mb-4 flex flex-wrap gap-2 text-sm">
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-blue-700">
+            전체 {users.length}명
+          </span>
+          <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">
+            승인 대기 {users.filter((item) => !item.granted).length}명
+          </span>
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">
+            승인 완료 {users.filter((item) => item.granted).length}명
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
+                  이름
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
+                  드비치 아이디
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
+                  승인
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600">
+                  권한
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {users.map((managedUser) => (
+                <tr key={managedUser.id}>
+                  <td className="px-4 py-2 text-sm text-gray-800">
+                    {managedUser.name}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-800">
+                    {managedUser.debeachLoginId}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-800">
+                    <input
+                      type="checkbox"
+                      checked={managedUser.granted}
+                      onChange={(event) =>
+                        handleUserUpdate(managedUser.id, {
+                          granted: event.target.checked,
+                        })
+                      }
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-800">
+                    <select
+                      value={managedUser.role}
+                      onChange={(event) =>
+                        handleUserUpdate(managedUser.id, {
+                          role: event.target.value as "user" | "admin",
+                        })
+                      }
+                      className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-base font-semibold text-gray-900">
+              비밀번호 변경 요청
+            </h3>
+            <span className="text-xs text-gray-500">
+              표시 {filteredPasswordRequests.length}건 / 전체{" "}
+              {passwordRequests.length}건
+            </span>
+          </div>
+          <div className="mb-3 flex flex-wrap gap-2">
+            {(
+              [
+                ["all", "전체"],
+                ["pending", "대기"],
+                ["approved", "승인"],
+                ["rejected", "반려"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setPasswordRequestFilter(value)}
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  passwordRequestFilter === value
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-600 ring-1 ring-gray-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-3">
+            {filteredPasswordRequests.length === 0 ? (
+              <p className="text-sm text-gray-500">요청 이력이 없습니다.</p>
+            ) : (
+              filteredPasswordRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-3"
+                >
+                  <div>
+                    <div className="flex items-center gap-2 font-medium text-gray-900">
+                      {request.requesterName}
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${passwordRequestStatusMeta[request.status].className}`}
+                      >
+                        {passwordRequestStatusMeta[request.status].label}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      요청 시각{" "}
+                      {moment(request.createdAt).format("MM/DD HH:mm")}
+                    </div>
+                    {request.reviewedAt && (
+                      <div className="text-xs text-gray-500">
+                        처리 시각{" "}
+                        {moment(request.reviewedAt).format("MM/DD HH:mm")}
+                      </div>
+                    )}
+                    {request.rejectReason && (
+                      <div className="text-xs text-gray-500">
+                        반려 사유: {request.rejectReason}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {request.status === "pending" ? (
+                      <>
+                        <input
+                          type="text"
+                          value={rejectReasons[request.id] || ""}
+                          onChange={(event) =>
+                            setRejectReasons((prev) => ({
+                              ...prev,
+                              [request.id]: event.target.value,
+                            }))
+                          }
+                          placeholder="반려 사유"
+                          className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() =>
+                            void handlePasswordRequestAction(
+                              request.id,
+                              "reject",
+                            )
+                          }
+                          className="rounded-xl bg-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-300 disabled:opacity-60"
+                        >
+                          반려
+                        </button>
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() =>
+                            void handlePasswordRequestAction(
+                              request.id,
+                              "approve",
+                            )
+                          }
+                          className="rounded-xl bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-500 disabled:opacity-60"
+                        >
+                          승인
+                        </button>
+                      </>
+                    ) : (
+                      <span className="rounded-full bg-gray-100 px-3 py-2 text-xs text-gray-600">
+                        {request.status === "approved"
+                          ? "승인 완료"
+                          : "반려 완료"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function MainPage() {
   // 상태 토글/전설 UI 제거
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const [bookings, setBookings] = useState<BookingsByDate>({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -250,7 +684,22 @@ export default function MainPage() {
   const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  const logout = useAuthStore((state) => state.logout);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [isMobileContactListOpen, setIsMobileContactListOpen] = useState(false);
+  const [contacts, setContacts] = useState<MessageContact[]>([]);
+  const [selectedChatUsername, setSelectedChatUsername] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messageBody, setMessageBody] = useState("");
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const sendingMessageRef = useRef(false);
+  const fabRef = useRef<HTMLDivElement | null>(null);
+  const chatWindowRef = useRef<HTMLDivElement | null>(null);
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const previousUnreadCountRef = useRef(0);
+  const latestMessageSignatureRef = useRef("");
   const [tooltip, setTooltip] = useState<{
     content: string;
     x: number;
@@ -259,7 +708,7 @@ export default function MainPage() {
 
   const showToast = (
     message: string,
-    type: "success" | "error" | "info" = "info"
+    type: "success" | "error" | "info" = "info",
   ) => {
     const div = document.createElement("div");
     div.className =
@@ -267,8 +716,8 @@ export default function MainPage() {
       (type === "success"
         ? "bg-green-500 text-white"
         : type === "error"
-        ? "bg-red-500 text-white"
-        : "bg-gray-800 text-white");
+          ? "bg-red-500 text-white"
+          : "bg-gray-800 text-white");
     div.textContent = message;
     document.body.appendChild(div);
     requestAnimationFrame(() => {
@@ -295,25 +744,17 @@ export default function MainPage() {
     return statusLegend[status] || "bg-gray-400";
   };
 
+  const totalUnreadCount = contacts.reduce(
+    (sum, contact) => sum + (contact.unreadCount || 0),
+    0,
+  );
+
   const fetchBookings = async () => {
     try {
       const response = await axios.get<BookingsByDate>(
-        `${API_BASE_URL}/api/bookings`
+        `${API_BASE_URL}/api/bookings`,
       );
-      if (user?.role === "admin") {
-        setBookings(response.data);
-      } else {
-        const filteredBookings: BookingsByDate = {};
-        for (const date in response.data) {
-          const dayBookings = response.data[date].filter(
-            (b) => b.account === user?.name
-          );
-          if (dayBookings.length > 0) {
-            filteredBookings[date] = dayBookings;
-          }
-        }
-        setBookings(filteredBookings);
-      }
+      setBookings(response.data);
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
       if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -326,6 +767,258 @@ export default function MainPage() {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  const fetchContacts = async () => {
+    try {
+      const response = await axios.get<MessageContact[]>(
+        `${API_BASE_URL}/api/messages/contacts`,
+      );
+      setContacts(response.data);
+      if (!selectedChatUsername && response.data.length > 0) {
+        setSelectedChatUsername(response.data[0].name);
+      }
+    } catch (error) {
+      console.error("Failed to fetch message contacts:", error);
+    }
+  };
+
+  const fetchMessages = async (
+    otherUsername: string,
+    options?: { silent?: boolean },
+  ) => {
+    if (!otherUsername) return;
+    try {
+      if (!options?.silent) {
+        setMessagesLoading(true);
+      }
+      const response = await axios.get<ChatMessage[]>(
+        `${API_BASE_URL}/api/messages`,
+        {
+          params: { with: otherUsername },
+        },
+      );
+      const dedupedMessages = Array.from(
+        new Map(response.data.map((message) => [message.id, message])).values(),
+      );
+      setMessages(dedupedMessages);
+      setContacts((prev) =>
+        prev.map((contact) =>
+          contact.name === otherUsername
+            ? { ...contact, unreadCount: 0 }
+            : contact,
+        ),
+      );
+      void fetchContacts();
+    } catch (error) {
+      console.error("Failed to fetch messages:", error);
+    } finally {
+      if (!options?.silent) {
+        setMessagesLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  useEffect(() => {
+    if (selectedChatUsername) {
+      fetchMessages(selectedChatUsername);
+    }
+  }, [selectedChatUsername]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      fetchContacts();
+      if (selectedChatUsername) {
+        fetchMessages(selectedChatUsername, { silent: true });
+      }
+    }, 10000);
+    return () => window.clearInterval(interval);
+  }, [selectedChatUsername]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!fabRef.current) return;
+      if (!fabRef.current.contains(event.target as Node)) {
+        setIsFabOpen(false);
+      }
+    };
+    if (isFabOpen) {
+      document.addEventListener("mousedown", handlePointerDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, [isFabOpen]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!isChatOpen || !chatWindowRef.current) return;
+      if (chatWindowRef.current.contains(event.target as Node)) return;
+      setIsChatOpen(false);
+      setIsMobileContactListOpen(false);
+    };
+    if (isChatOpen) {
+      document.addEventListener("mousedown", handlePointerDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, [isChatOpen]);
+
+  useEffect(() => {
+    if (!isChatOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      if (chatScrollRef.current) {
+        chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isChatOpen, messages, messagesLoading, selectedChatUsername]);
+
+  useEffect(() => {
+    if (!isChatOpen || !selectedChatUsername) return;
+    const frame = window.requestAnimationFrame(() => {
+      chatInputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isChatOpen, selectedChatUsername]);
+
+  useEffect(() => {
+    if (isChatOpen) {
+      setIsMobileContactListOpen(false);
+    }
+  }, [isChatOpen, selectedChatUsername]);
+
+  useEffect(() => {
+    const newestMessage = messages[messages.length - 1];
+    const nextSignature = newestMessage
+      ? `${newestMessage.id}:${newestMessage.readBy?.join(",") || ""}`
+      : "";
+
+    if (
+      newestMessage &&
+      latestMessageSignatureRef.current &&
+      newestMessage.senderUsername !== user?.name &&
+      !(isChatOpen && selectedChatUsername === newestMessage.senderUsername) &&
+      nextSignature !== latestMessageSignatureRef.current
+    ) {
+      showToast(`${newestMessage.senderUsername} 님의 새 메시지`, "info");
+      try {
+        const audioContext = new window.AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.08,
+          audioContext.currentTime + 0.01,
+        );
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.0001,
+          audioContext.currentTime + 0.18,
+        );
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.18);
+        oscillator.onended = () => {
+          void audioContext.close();
+        };
+      } catch (error) {
+        console.warn("Failed to play message notification sound:", error);
+      }
+    }
+
+    latestMessageSignatureRef.current = nextSignature;
+  }, [messages, user?.name, isChatOpen, selectedChatUsername]);
+
+  useEffect(() => {
+    if (
+      totalUnreadCount > previousUnreadCountRef.current &&
+      !(isChatOpen && selectedChatUsername)
+    ) {
+      showToast(`읽지 않은 메시지 ${totalUnreadCount}개`, "info");
+    }
+    previousUnreadCountRef.current = totalUnreadCount;
+  }, [totalUnreadCount, isChatOpen, selectedChatUsername]);
+
+  useEffect(() => {
+    const baseTitle = "Golf-book";
+    document.title =
+      totalUnreadCount > 0 ? `(${totalUnreadCount}) ${baseTitle}` : baseTitle;
+    return () => {
+      document.title = baseTitle;
+    };
+  }, [totalUnreadCount]);
+
+  const sendMessage = async (options?: {
+    body?: string;
+    bookingContext?: ChatMessage["bookingContext"];
+  }) => {
+    if (!selectedChatUsername) return;
+    if (sendingMessageRef.current) return;
+    const nextBody = (options?.body ?? messageBody).trim();
+    if (!nextBody) return;
+
+    try {
+      sendingMessageRef.current = true;
+      setSendingMessage(true);
+      const response = await axios.post(`${API_BASE_URL}/api/messages`, {
+        toUsername: selectedChatUsername,
+        body: nextBody,
+        bookingContext: options?.bookingContext,
+      });
+      const nextMessage = response.data.message as ChatMessage;
+      setMessages((prev) => {
+        const merged = [...prev, nextMessage];
+        return Array.from(
+          new Map(merged.map((message) => [message.id, message])).values(),
+        );
+      });
+      setMessageBody("");
+      void fetchMessages(selectedChatUsername, { silent: true });
+      void fetchContacts();
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      showToast("메시지 전송에 실패했습니다.", "error");
+    } finally {
+      sendingMessageRef.current = false;
+      setSendingMessage(false);
+    }
+  };
+
+  const shareSelectedBookingToChat = async () => {
+    if (!selectedBooking || !selectedDate || !selectedChatUsername) return;
+    const dateStr = moment(selectedDate).format("YYYYMMDD");
+    const bookedTime =
+      selectedBooking.bookedSlot?.bk_time || selectedBooking.successTime || "";
+    await sendMessage({
+      body: `[예약 공유] ${dateStr} ${selectedBooking.startTime}-${selectedBooking.endTime} ${selectedBooking.status}`,
+      bookingContext: {
+        account: selectedBooking.account,
+        date: dateStr,
+        startTime: selectedBooking.startTime,
+        endTime: selectedBooking.endTime,
+        memo: selectedBooking.memo || "",
+        status: selectedBooking.status,
+        bookedTime,
+      },
+    });
+    showToast("예약 정보를 대화로 공유했습니다.", "success");
+  };
+
+  const handleChatInputKeyDown = (
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      void sendMessage();
+    }
+  };
 
   const handleDayClick = (date: Date) => {
     setSelectedDate(date);
@@ -356,9 +1049,9 @@ export default function MainPage() {
     try {
       await axios.put(
         `${API_BASE_URL}/api/bookings/${moment(selectedDate).format(
-          "YYYYMMDD"
+          "YYYYMMDD",
         )}/${selectedBooking.account}`,
-        updatedBooking
+        updatedBooking,
       );
 
       fetchBookings();
@@ -389,8 +1082,8 @@ export default function MainPage() {
     try {
       await axios.delete(
         `${API_BASE_URL}/api/bookings/${moment(selectedDate).format(
-          "YYYYMMDD"
-        )}/${selectedBooking.account}`
+          "YYYYMMDD",
+        )}/${selectedBooking.account}`,
       );
 
       // Refresh bookings and close modal
@@ -420,14 +1113,14 @@ export default function MainPage() {
     account: string,
     dateStr: string,
     timeoutMs = 60_000,
-    intervalMs = 1500
+    intervalMs = 1500,
   ) => {
     const start = Date.now();
     return new Promise<"성공" | "실패">((resolve, reject) => {
       const timer = setInterval(async () => {
         try {
           const res = await axios.get<BookingsByDate>(
-            `${API_BASE_URL}/api/bookings`
+            `${API_BASE_URL}/api/bookings`,
           );
           const day = res.data?.[dateStr] || [];
           const match = day.find((b) => b.account === account);
@@ -489,7 +1182,7 @@ export default function MainPage() {
         try {
           const status = await pollUntilTerminal(
             selectedBooking.account,
-            dateStr
+            dateStr,
           );
           fetchBookings();
           if (status === "성공") {
@@ -519,8 +1212,6 @@ export default function MainPage() {
       showToast(message, "error");
     }
   };
-
-  const user = useAuthStore((state) => state.user);
 
   const getTileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view !== "month") return null;
@@ -560,12 +1251,12 @@ export default function MainPage() {
             onMouseMove={(e) => {
               if (tooltip) {
                 setTooltip((prev) =>
-                  prev ? { ...prev, x: e.clientX, y: e.clientY } : prev
+                  prev ? { ...prev, x: e.clientX, y: e.clientY } : prev,
                 );
               }
             }}
             className={`w-full text-white rounded-md text-center text-[10px] leading-tight py-1 cursor-pointer ${getStatusColor(
-              booking.status
+              booking.status,
             )}`}
           >
             {user?.role === "admin" ? booking.account : booking.startTime}
@@ -577,24 +1268,7 @@ export default function MainPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-200 via-gray-100 to-blue-200 text-gray-900 font-sans">
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
-        <header className="relative flex justify-end items-center mb-10">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setIsAccountModalOpen(true)}
-              className="p-2 rounded-full bg-white/80 hover:bg-blue-100 border border-blue-100 shadow-sm"
-            >
-              <User className="h-6 w-6 text-gray-600" />
-            </button>
-            <button
-              onClick={logout}
-              className="p-2 rounded-full bg-white/80 hover:bg-red-100 border border-red-100 shadow-sm"
-            >
-              <LogOut className="h-6 w-6 text-red-600" />
-            </button>
-          </div>
-        </header>
-
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-[1600px]">
         <main>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-xl border border-blue-100">
@@ -617,7 +1291,7 @@ export default function MainPage() {
                   new Date(
                     activeMonth.getFullYear(),
                     activeMonth.getMonth() + 1,
-                    1
+                    1,
                   )
                 }
                 onActiveStartDateChange={() => {}} // Prevent navigation on the second calendar
@@ -626,6 +1300,282 @@ export default function MainPage() {
           </div>
         </main>
       </div>
+
+      <div
+        ref={fabRef}
+        className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6"
+      >
+        {isFabOpen && (
+          <div className="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsChatOpen((prev) => !prev);
+                setIsFabOpen(false);
+              }}
+              className="relative flex h-12 items-center gap-2 rounded-full bg-white/95 px-4 text-sm font-medium text-gray-800 shadow-lg ring-1 ring-black/5 transition-transform hover:scale-[1.02] hover:bg-blue-50"
+            >
+              <MessageCircle className="h-4 w-4 text-blue-600" />
+              <span>채팅</span>
+              {totalUnreadCount > 0 && (
+                <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white">
+                  {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsAccountModalOpen(true);
+                setIsFabOpen(false);
+              }}
+              className="flex h-12 items-center gap-2 rounded-full bg-white/95 px-4 text-sm font-medium text-gray-800 shadow-lg ring-1 ring-black/5 transition-transform hover:scale-[1.02] hover:bg-blue-50"
+            >
+              <User className="h-4 w-4 text-gray-700" />
+              <span>프로필</span>
+            </button>
+            <button
+              type="button"
+              onClick={logout}
+              className="flex h-12 items-center gap-2 rounded-full bg-white/95 px-4 text-sm font-medium text-red-600 shadow-lg ring-1 ring-black/5 transition-transform hover:scale-[1.02] hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>로그아웃</span>
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsFabOpen((prev) => !prev)}
+          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl transition-transform hover:scale-105 hover:bg-blue-500"
+        >
+          <span
+            className={`absolute h-5 w-0.5 rounded bg-white transition-transform ${isFabOpen ? "rotate-90" : "rotate-0"}`}
+          />
+          <span className="absolute h-0.5 w-5 rounded bg-white" />
+          {totalUnreadCount > 0 && !isFabOpen && (
+            <span className="absolute -right-1 -top-1 min-w-6 rounded-full bg-red-500 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+              {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {isChatOpen && (
+        <div
+          ref={chatWindowRef}
+          className="fixed inset-x-3 bottom-24 z-40 flex h-[min(70vh,620px)] w-auto overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-2xl sm:inset-x-auto sm:right-6 sm:w-[min(92vw,840px)]"
+        >
+          <div
+            className={`${isMobileContactListOpen ? "flex" : "hidden"} w-[42%] min-w-[120px] max-w-[280px] flex-col border-r border-gray-100 bg-gray-50/80 sm:flex sm:w-72`}
+          >
+            <div className="border-b border-gray-100 px-5 py-4">
+              <h3 className="text-lg font-semibold text-gray-900">채팅</h3>
+              <p className="mt-1 text-xs text-gray-500">
+                상대를 선택해 일정과 결과를 대화하세요.
+              </p>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="space-y-2">
+                {contacts.map((contact) => (
+                  <button
+                    key={contact.name}
+                    type="button"
+                    onClick={() => {
+                      setSelectedChatUsername(contact.name);
+                      setContacts((prev) =>
+                        prev.map((item) =>
+                          item.name === contact.name
+                            ? { ...item, unreadCount: 0 }
+                            : item,
+                        ),
+                      );
+                      setIsMobileContactListOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors ${
+                      selectedChatUsername === contact.name
+                        ? "bg-blue-600 text-white shadow"
+                        : "bg-white text-gray-900 hover:bg-blue-50"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                        selectedChatUsername === contact.name
+                          ? "bg-white/20 text-white"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {contact.name.slice(0, 1)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-medium">
+                          {contact.name}
+                        </span>
+                        {!!contact.unreadCount && contact.unreadCount > 0 && (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${selectedChatUsername === contact.name ? "bg-white text-blue-600" : "bg-red-500 text-white"}`}
+                          >
+                            {contact.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className={`mt-1 text-xs ${selectedChatUsername === contact.name ? "text-blue-100" : "text-gray-500"}`}
+                      >
+                        {user?.role === "admin" && !contact.granted
+                          ? "승인 대기 사용자"
+                          : "채팅으로 일정 상의 가능"}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div
+            className={`flex min-w-0 flex-1 flex-col bg-white ${isMobileContactListOpen ? "hidden sm:flex" : "flex"}`}
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4 sm:px-6">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileContactListOpen((prev) => !prev)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 sm:hidden"
+                >
+                  {isMobileContactListOpen ? (
+                    <ChevronLeft className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </button>
+                <div>
+                  <h4 className="font-semibold text-gray-900">
+                    {selectedChatUsername || "대화 상대를 선택하세요"}
+                  </h4>
+                  <p className="mt-1 text-xs text-gray-500">
+                    예약 날짜, 시간, 메모, 결과를 바로 공유할 수 있어요.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsChatOpen(false)}
+                className="rounded-full px-3 py-1 text-sm text-gray-500 hover:bg-gray-100"
+              >
+                닫기
+              </button>
+            </div>
+            <div
+              ref={chatScrollRef}
+              className="flex-1 overflow-y-auto bg-[#eef3fb] px-3 py-4 sm:px-4 sm:py-5"
+            >
+              <div className="space-y-3">
+                {messagesLoading && messages.length === 0 ? (
+                  <p className="text-sm text-gray-500">대화 불러오는 중...</p>
+                ) : messages.length === 0 ? (
+                  <div className="rounded-2xl bg-white px-4 py-3 text-sm text-gray-500 shadow-sm">
+                    아직 채팅이 없습니다. 첫 메시지를 보내보세요.
+                  </div>
+                ) : (
+                  messages.map((message) => {
+                    const mine = message.senderUsername === user?.name;
+                    const otherReadCount = mine
+                      ? Math.max(
+                          0,
+                          (message.readBy || []).filter(
+                            (reader) => reader !== user?.name,
+                          ).length,
+                        )
+                      : 0;
+                    const unreadReceiptCount = mine
+                      ? Math.max(0, 1 - otherReadCount)
+                      : 0;
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                      >
+                        <div className="max-w-[90%] sm:max-w-[78%]">
+                          <div
+                            className={`mb-1 flex items-center gap-1 px-1 text-[11px] text-gray-500 ${mine ? "justify-end" : "justify-start"}`}
+                          >
+                            {!mine && <span>{message.senderUsername}</span>}
+                            {!mine && <span>·</span>}
+                            <span>
+                              {moment(message.createdAt).format("MM/DD HH:mm")}
+                            </span>
+                          </div>
+                          <div
+                            className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}
+                          >
+                            {mine && (
+                              <span className="pb-1 text-[11px] font-medium text-yellow-700">
+                                {unreadReceiptCount > 0
+                                  ? unreadReceiptCount
+                                  : ""}
+                              </span>
+                            )}
+                            <div
+                              className={`rounded-3xl px-4 py-3 shadow-sm ${mine ? "bg-[#ffe812] text-gray-900" : "bg-white text-gray-900"}`}
+                            >
+                              <div className="whitespace-pre-wrap text-sm leading-6">
+                                {message.body}
+                              </div>
+                              {message.bookingContext?.date && (
+                                <div className="mt-3 rounded-2xl border border-black/5 bg-black/5 px-3 py-2 text-xs leading-5">
+                                  <div>
+                                    {message.bookingContext.date}{" "}
+                                    {message.bookingContext.startTime}-
+                                    {message.bookingContext.endTime}
+                                  </div>
+                                  <div>
+                                    상태: {message.bookingContext.status || "-"}
+                                  </div>
+                                  <div>
+                                    부킹:{" "}
+                                    {message.bookingContext.bookedTime || "-"}
+                                  </div>
+                                  <div>
+                                    메모:{" "}
+                                    {message.bookingContext.memo ||
+                                      "(메모 없음)"}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+            <div className="border-t border-gray-100 bg-white px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex items-end gap-2 sm:gap-3">
+                <textarea
+                  ref={chatInputRef}
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  onKeyDown={handleChatInputKeyDown}
+                  rows={2}
+                  placeholder="Enter 전송, Shift+Enter 줄바꿈"
+                  className="min-h-[52px] flex-1 rounded-2xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none sm:min-h-[56px] sm:px-4"
+                />
+                <button
+                  type="button"
+                  onClick={() => void sendMessage()}
+                  disabled={!selectedChatUsername || sendingMessage}
+                  className="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-60 sm:px-5"
+                >
+                  {sendingMessage ? "전송 중..." : "보내기"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <NewBookingForm
         selectedDate={selectedDate}
@@ -741,8 +1691,20 @@ export default function MainPage() {
               </div>
             </div>
             <div className="mt-6 flex justify-end">
+              <div className="mr-auto flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void shareSelectedBookingToChat();
+                  }}
+                  disabled={!selectedChatUsername}
+                  className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors text-sm disabled:opacity-60"
+                >
+                  대화로 공유
+                </button>
+              </div>
               {selectedBooking.status === "실패" && (
-                <div className="mr-auto flex gap-2">
+                <div className="mr-2 flex gap-2">
                   <button
                     type="button"
                     onClick={() => {

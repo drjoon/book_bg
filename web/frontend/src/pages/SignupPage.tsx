@@ -17,8 +17,9 @@ import { API_BASE_URL } from "@/config";
 
 const signupSchema = z.object({
   name: z.string().min(1, "이름을 입력해주세요."),
-  username: z.string().min(3, "아이디는 최소 3자 이상이어야 합니다."),
   password: z.string().min(6, "비밀번호는 최소 6자 이상이어야 합니다."),
+  debeachLoginId: z.string().min(1, "드비치 아이디를 입력해주세요."),
+  debeachLoginPassword: z.string().min(1, "드비치 비밀번호를 입력해주세요."),
 });
 
 type SignupSchema = z.infer<typeof signupSchema>;
@@ -36,7 +37,7 @@ export default function SignupPage() {
 
   const showToast = (
     message: string,
-    type: "success" | "error" | "info" = "info"
+    type: "success" | "error" | "info" = "info",
   ) => {
     const div = document.createElement("div");
     const baseClass =
@@ -45,8 +46,8 @@ export default function SignupPage() {
       type === "success"
         ? "bg-green-500"
         : type === "error"
-        ? "bg-red-500"
-        : "bg-gray-800";
+          ? "bg-red-500"
+          : "bg-gray-800";
     div.className = `${baseClass} ${colorClass}`;
     div.textContent = message;
     div.style.opacity = "0";
@@ -67,7 +68,7 @@ export default function SignupPage() {
       await axios.post(`${API_BASE_URL}/api/auth/signup`, data);
       showToast(
         "가입 신청이 접수되었습니다. 관리자 승인 후 이용할 수 있어요.",
-        "success"
+        "success",
       );
       navigate("/login");
     } catch (error: any) {
@@ -87,7 +88,7 @@ export default function SignupPage() {
             회원가입
           </CardTitle>
           <CardDescription className="text-sm text-gray-600">
-            새로운 계정을 만들기 위해 정보를 입력해주세요.
+            이름, 비밀번호, 드비치 계정 정보로 가입 신청을 해주세요.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -103,19 +104,6 @@ export default function SignupPage() {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="username">아이디</Label>
-              <Input
-                id="username"
-                {...register("username")}
-                autoComplete="off"
-              />
-              {errors.username && (
-                <p className="text-red-500 text-xs">
-                  {errors.username.message}
-                </p>
-              )}
-            </div>
-            <div className="grid gap-2">
               <Label htmlFor="password">비밀번호</Label>
               <Input
                 id="password"
@@ -126,6 +114,33 @@ export default function SignupPage() {
               {errors.password && (
                 <p className="text-red-500 text-xs">
                   {errors.password.message}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="debeachLoginId">드비치 아이디</Label>
+              <Input
+                id="debeachLoginId"
+                {...register("debeachLoginId")}
+                autoComplete="off"
+              />
+              {errors.debeachLoginId && (
+                <p className="text-red-500 text-xs">
+                  {errors.debeachLoginId.message}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="debeachLoginPassword">드비치 비밀번호</Label>
+              <Input
+                id="debeachLoginPassword"
+                type="password"
+                {...register("debeachLoginPassword")}
+                autoComplete="new-password"
+              />
+              {errors.debeachLoginPassword && (
+                <p className="text-red-500 text-xs">
+                  {errors.debeachLoginPassword.message}
                 </p>
               )}
             </div>

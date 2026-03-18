@@ -3,10 +3,10 @@ import bcrypt from "bcrypt";
 import connectDB from "./db.js";
 import { User } from "./models.js";
 
-const [username, newPassword] = process.argv.slice(2);
+const [name, newPassword] = process.argv.slice(2);
 
-if (!username || !newPassword) {
-  console.error("Usage: node reset.js <username> <newPassword>");
+if (!name || !newPassword) {
+  console.error("Usage: node reset.js <name> <newPassword>");
   process.exit(1);
 }
 
@@ -16,17 +16,17 @@ const main = async () => {
 
     const password = await bcrypt.hash(newPassword, 10);
     const user = await User.findOneAndUpdate(
-      { username },
-      { $set: { password, golfPassword: newPassword } },
+      { name },
+      { $set: { password } },
       { new: true },
     );
 
     if (!user) {
-      console.error(`User not found: ${username}`);
+      console.error(`User not found: ${name}`);
       process.exit(1);
     }
 
-    console.log(`Password updated for ${user.username}`);
+    console.log(`Password updated for ${user.name}`);
     process.exit(0);
   } catch (error) {
     console.error("Failed to update password:", error);

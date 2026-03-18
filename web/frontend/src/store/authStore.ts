@@ -1,14 +1,15 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 interface User {
   id: string;
   name: string;
-  username: string;
-  role: 'user' | 'admin';
-  golfPassword?: string;
+  role: "user" | "admin";
+  granted: boolean;
+  debeachLoginId: string;
+  hasDebeachPassword: boolean;
 }
 
 interface AuthState {
@@ -30,12 +31,12 @@ const useAuthStore = create<AuthState>()(
 
       login: (token, user) => {
         set({ user, token, isAuthenticated: true });
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       },
 
       logout: () => {
         set({ user: null, token: null, isAuthenticated: false });
-        delete axios.defaults.headers.common['Authorization'];
+        delete axios.defaults.headers.common["Authorization"];
       },
 
       checkAuth: async () => {
@@ -47,17 +48,18 @@ const useAuthStore = create<AuthState>()(
         }
 
         try {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
           const response = await axios.get(`${API_BASE_URL}/api/auth/check`);
           const fetchedUser = response.data.user as User;
 
           const hasChanged =
             !currentUser ||
             currentUser.id !== fetchedUser.id ||
-            currentUser.username !== fetchedUser.username ||
             currentUser.name !== fetchedUser.name ||
             currentUser.role !== fetchedUser.role ||
-            (currentUser.golfPassword ?? '') !== (fetchedUser.golfPassword ?? '');
+            currentUser.granted !== fetchedUser.granted ||
+            currentUser.debeachLoginId !== fetchedUser.debeachLoginId ||
+            currentUser.hasDebeachPassword !== fetchedUser.hasDebeachPassword;
 
           if (!isAuthenticated || hasChanged) {
             set({ user: fetchedUser, isAuthenticated: true });
@@ -72,15 +74,15 @@ const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage', // unique name
-    }
-  )
+      name: "auth-storage", // unique name
+    },
+  ),
 );
 
 // Initialize axios header on load
 const initialToken = useAuthStore.getState().token;
 if (initialToken) {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${initialToken}`;
+  axios.defaults.headers.common["Authorization"] = `Bearer ${initialToken}`;
 }
 
 export default useAuthStore;

@@ -5,6 +5,7 @@ import moment from "moment-timezone";
 import { fileURLToPath } from "url";
 import { Booking } from "../web/backend/models.js";
 import connectDB from "../web/backend/db.js";
+import mongoose from "mongoose";
 
 // --- Console Log Timestamp Monkey-Patch ---
 const originalConsole = {
@@ -49,6 +50,12 @@ function isTerminalStatus(status) {
 
 async function rebuildQueueFromDb() {
   try {
+    // Ensure MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      console.warn("[WORKER] MongoDB not connected, skipping DB rebuild");
+      return null;
+    }
+
     const todayDigits = moment().tz("Asia/Seoul").format("YYYYMMDD");
 
     const normalizeDateDigits = (value) => {
@@ -93,6 +100,12 @@ async function rebuildQueueFromDb() {
 async function pruneQueueByDb(queue) {
   if (!Array.isArray(queue) || queue.length === 0) return [];
 
+  // Ensure MongoDB is connected
+  if (mongoose.connection.readyState !== 1) {
+    console.warn("[WORKER] MongoDB not connected, skipping queue prune");
+    return queue;
+  }
+
   const pairs = queue
     .map((job) => ({
       account: job.account ?? job.NAME,
@@ -119,7 +132,7 @@ async function pruneQueueByDb(queue) {
   } catch (e) {
     console.error(
       "[WORKER] Failed to read bookings for queue prune:",
-      e.message
+      e.message,
     );
     return queue;
   }
@@ -191,6 +204,14 @@ async function processQueue() {
         const account = job.account ?? job.NAME;
         const date = job.date ?? job.TARGET_DATE;
         try {
+          // Ensure MongoDB is connected
+          if (mongoose.connection.readyState !== 1) {
+            console.warn(
+              "[WORKER] MongoDB not connected, skipping expired job update",
+            );
+            continue;
+          }
+
           const existing = await Booking.findOne({ account, date });
           if (!existing) {
             continue;
@@ -204,14 +225,14 @@ async function processQueue() {
           await Booking.updateOne(
             { account, date },
             { $set: { status: "실패" } },
-            { upsert: false }
+            { upsert: false },
           );
         } catch (e) {
           console.error(
             "[WORKER] Failed to mark expired job as failed in DB:",
             account,
             date,
-            e.message
+            e.message,
           );
         }
       }
@@ -238,8 +259,8 @@ async function processQueue() {
             !runnable.some(
               (r) =>
                 (r.account ?? r.NAME) === (job.account ?? job.NAME) &&
-                (r.date ?? r.TARGET_DATE) === (job.date ?? job.TARGET_DATE)
-            )
+                (r.date ?? r.TARGET_DATE) === (job.date ?? job.TARGET_DATE),
+            ),
         );
         await saveQueue(remainingAfterRun);
       } catch (err) {

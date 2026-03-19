@@ -5,6 +5,7 @@ import { existsSync } from "fs";
 import path from "path";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
+import dotenv from "dotenv";
 import { User, Booking, Message, PasswordChangeRequest } from "./models.js"; // Import models
 import { runAutoBooking, getBookingOpenTime } from "../../auto/debeach_auto.js";
 import moment from "moment-timezone";
@@ -20,6 +21,9 @@ import {
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const dbReady = connectDB();
 

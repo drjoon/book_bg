@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOMAIN="book2.ap-south-1.elasticbeanstalk.com"
+DOMAIN="book.ap-south-1.elasticbeanstalk.com"
 EMAIL="drjoon@gmail.com"  # TODO: 실제 이메일로 교체
 
 echo "[INFO] Requesting/renewing certificate for ${DOMAIN}..."

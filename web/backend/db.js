@@ -1,13 +1,4 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 mongoose.set("bufferCommands", false);
 
@@ -17,6 +8,9 @@ const connectDB = async () => {
   }
 
   try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI environment variable is not set");
+    }
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("MongoDB connected successfully.");
   } catch (error) {

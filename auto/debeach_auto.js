@@ -67,7 +67,7 @@ const getNtpTime = async () => {
 
 // Lambda 클라이언트 초기화 (리전은 실제 환경에 맞게 설정)
 const LAMBDA_REGION =
-  process.env.LAMBDA_REGION || process.env.AWS_REGION || "ap-northeast-2";
+  process.env.LAMBDA_REGION || process.env.AWS_REGION || "ap-south-1";
 const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME || "book-debeach";
 const lambda = new LambdaClient({ region: LAMBDA_REGION });
 console.log(

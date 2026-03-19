@@ -6,6 +6,10 @@ import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { Booking, User } from "../web/backend/models.js";
 import { saveTeeSnapshot } from "../web/backend/s3.js";
 import connectDB from "../web/backend/db.js";
+import {
+  decryptCredential,
+  looksEncryptedCredential,
+} from "../web/backend/crypto.js";
 
 // --- Console Log Timestamp Monkey-Patch ---
 const originalConsole = {
@@ -51,7 +55,7 @@ const getNtpTime = async () => {
       } catch (err) {
         console.warn(
           `NTP Error with ${server} (Attempt ${i + 1}/${MAX_NTP_RETRIES}):`,
-          err
+          err,
         );
       }
     }
@@ -67,7 +71,7 @@ const LAMBDA_REGION =
 const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME || "book-debeach";
 const lambda = new LambdaClient({ region: LAMBDA_REGION });
 console.log(
-  `[LAMBDA] Using region=${LAMBDA_REGION}, function=${LAMBDA_FUNCTION_NAME}`
+  `[LAMBDA] Using region=${LAMBDA_REGION}, function=${LAMBDA_FUNCTION_NAME}`,
 );
 
 const isTerminalStatus = (status) => {
@@ -91,7 +95,7 @@ async function runBookingGroup(group, options) {
   let offsetMs = null;
 
   console.log(
-    `${logPrefix} Starting booking process for ${configs.length} accounts via Lambda.`
+    `${logPrefix} Starting booking process for ${configs.length} accounts via Lambda.`,
   );
 
   // 1. 각 계정별 상태를 '접수'로 초기화
@@ -104,13 +108,13 @@ async function runBookingGroup(group, options) {
           (existing.status === "성공" || existing.status === "실패")
         ) {
           console.log(
-            `[${config.NAME}][${date}] Skip initializing status as it's already '${existing.status}'.`
+            `[${config.NAME}][${date}] Skip initializing status as it's already '${existing.status}'.`,
           );
           continue;
         }
       } catch (e) {
         console.warn(
-          `[${config.NAME}][${date}] Failed to read existing status: ${e.message}`
+          `[${config.NAME}][${date}] Failed to read existing status: ${e.message}`,
         );
       }
     }
@@ -132,13 +136,13 @@ async function runBookingGroup(group, options) {
       const waitTime = twentySecondsBefore.diff(now);
       console.log(
         `${logPrefix} Waiting ${Math.round(
-          waitTime / 1000
-        )}s until 20 seconds before booking time...`
+          waitTime / 1000,
+        )}s until 20 seconds before booking time...`,
       );
       await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
     console.log(
-      `${logPrefix} It's 20 seconds to booking. Invoking Lambda functions...`
+      `${logPrefix} It's 20 seconds to booking. Invoking Lambda functions...`,
     );
 
     // 오픈 10초 전: NTP로 시스템 시간 오프셋 계산 (그룹당 1회)
@@ -146,18 +150,18 @@ async function runBookingGroup(group, options) {
       const ntpTime = await getNtpTime();
       offsetMs = moment(ntpTime).diff(moment().tz("Asia/Seoul"));
       console.log(
-        `${logPrefix} Using NTP offset for Lambda payload: ${offsetMs}ms`
+        `${logPrefix} Using NTP offset for Lambda payload: ${offsetMs}ms`,
       );
     } catch (e) {
       console.warn(
-        `${logPrefix} Failed to get NTP time for offset. Proceeding without offset: ${e.message}`
+        `${logPrefix} Failed to get NTP time for offset. Proceeding without offset: ${e.message}`,
       );
       offsetMs = null;
     }
 
     // 오픈 10초 전: MongoDB에서 최신 예약 정보를 다시 읽어와 실행 대상 계정을 재계산
     const activeUsers = await User.find({ granted: true }).select(
-      "name username golfPassword"
+      "name debeachLoginId debeachLoginPassword",
     );
     const activeUserNames = activeUsers.map((u) => u.name);
     const accountMap = new Map(activeUsers.map((u) => [u.name, u]));
@@ -172,16 +176,21 @@ async function runBookingGroup(group, options) {
       .map((booking) => {
         const account = accountMap.get(booking.account);
         if (!account) return null;
-        if (!account.golfPassword) {
+        if (!account.debeachLoginPassword) {
           console.warn(
-            `[${booking.account}] 골프장 비밀번호가 설정되지 않아 예약을 건너뜁니다.`
+            `[${booking.account}] 골프장 비밀번호가 설정되지 않아 예약을 건너뜁니다.`,
           );
           return null;
         }
+        const plainPassword = looksEncryptedCredential(
+          account.debeachLoginPassword,
+        )
+          ? decryptCredential(account.debeachLoginPassword)
+          : account.debeachLoginPassword;
         return {
           NAME: booking.account,
-          LOGIN_ID: account.username,
-          LOGIN_PASSWORD: account.golfPassword,
+          LOGIN_ID: account.debeachLoginId,
+          LOGIN_PASSWORD: plainPassword,
           TARGET_DATE: booking.date,
           START_TIME: booking.startTime,
           END_TIME: booking.endTime,
@@ -191,18 +200,18 @@ async function runBookingGroup(group, options) {
 
     if (snapshotConfigs.length === 0) {
       console.log(
-        `${logPrefix} No booking configurations found from latest DB snapshot. Skipping Lambda invocation.`
+        `${logPrefix} No booking configurations found from latest DB snapshot. Skipping Lambda invocation.`,
       );
       return;
     }
 
     console.log(
-      `${logPrefix} Using latest DB snapshot for ${snapshotConfigs.length} account(s).`
+      `${logPrefix} Using latest DB snapshot for ${snapshotConfigs.length} account(s): ${snapshotConfigs.map((c) => c.NAME).join(", ")}`,
     );
     finalConfigs = snapshotConfigs;
   } else {
     console.log(
-      `${logPrefix} Immediate execution. Invoking Lambda functions...`
+      `${logPrefix} Immediate execution. Invoking Lambda functions...`,
     );
   }
 
@@ -265,12 +274,15 @@ async function runBookingGroup(group, options) {
       cfg.PRIMARY_SLOT_OFFSET = index;
 
       console.log(
-        `${logPrefix} Adjusted time range for ${cfg.NAME}: ${cfg.START_TIME}~${cfg.END_TIME} (offset +${offsetMinutes}min)`
+        `${logPrefix} Adjusted time range for ${cfg.NAME}: ${cfg.START_TIME}~${cfg.END_TIME} (offset +${offsetMinutes}min)`,
       );
     });
   }
 
   // 3. 각 계정에 대해 병렬로 Lambda 함수 호출
+  console.log(
+    `${logPrefix} Will invoke ${finalConfigs.length} Lambda function(s) for: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
+  );
   const invocationPromises = finalConfigs.map(async (config) => {
     const logName = config.NAME || config.LOGIN_ID;
 
@@ -280,24 +292,26 @@ async function runBookingGroup(group, options) {
         const existing = await Booking.findOne({ account: config.NAME, date });
         if (!existing) {
           console.log(
-            `[${logName}][${date}] Skip invoking Lambda because booking was deleted.`
+            `[${logName}][${date}] Skip invoking Lambda because booking was deleted.`,
           );
           return;
         }
         if (isTerminalStatus(existing.status)) {
           console.log(
-            `[${logName}][${date}] Skip invoking Lambda because booking status is '${existing.status}'.`
+            `[${logName}][${date}] Skip invoking Lambda because booking status is '${existing.status}'.`,
           );
           return;
         }
       } catch (e) {
         console.warn(
-          `[${logName}][${date}] Failed to re-check booking status before invoke: ${e.message}`
+          `[${logName}][${date}] Failed to re-check booking status before invoke: ${e.message}`,
         );
       }
     }
 
-    console.log(`[${logName}] Invoking Lambda function synchronously...`);
+    console.log(
+      `[${logName}] Invoking Lambda function synchronously... (START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME}, PRIMARY_SLOT_OFFSET: ${config.PRIMARY_SLOT_OFFSET || 0})`,
+    );
 
     const payload = {
       config,
@@ -332,6 +346,24 @@ async function runBookingGroup(group, options) {
             roundDate: date,
           });
         }
+
+        // Broadcast success to WebSocket clients
+        try {
+          const { broadcastLambdaResult } =
+            await import("../web/backend/server.js");
+          broadcastLambdaResult({
+            type: "booking_success",
+            account: config.NAME,
+            date,
+            slot: result.slot,
+            stats,
+          });
+        } catch (wsError) {
+          console.warn(
+            `[${logName}] Failed to broadcast success via WebSocket:`,
+            wsError.message,
+          );
+        }
       } else {
         const stats = result.stats || {};
         await updateBookingStatus(config.NAME, date, "실패", {
@@ -341,15 +373,50 @@ async function runBookingGroup(group, options) {
           teeSecondHalf: stats.teeSecondHalf,
           teeInRange: stats.teeInRange,
         });
+
+        // Broadcast failure to WebSocket clients
+        try {
+          const { broadcastLambdaResult } =
+            await import("../web/backend/server.js");
+          broadcastLambdaResult({
+            type: "booking_failure",
+            account: config.NAME,
+            date,
+            reason: result.reason || "Lambda에서 예약 실패",
+            stats,
+          });
+        } catch (wsError) {
+          console.warn(
+            `[${logName}] Failed to broadcast failure via WebSocket:`,
+            wsError.message,
+          );
+        }
       }
     } catch (error) {
       console.error(
         `[${logName}] 🚨 Failed to invoke or process Lambda response:`,
-        error
+        error,
       );
       await updateBookingStatus(config.NAME, date, "실패", {
         reason: `Lambda 호출 오류: ${error.message}`,
       });
+
+      // Broadcast error to WebSocket clients
+      try {
+        const { broadcastLambdaResult } =
+          await import("../web/backend/server.js");
+        broadcastLambdaResult({
+          type: "booking_error",
+          account: config.NAME,
+          date,
+          reason: `Lambda 호출 오류: ${error.message}`,
+        });
+      } catch (wsError) {
+        console.warn(
+          `[${logName}] Failed to broadcast error via WebSocket:`,
+          wsError.message,
+        );
+      }
     }
   });
 
@@ -384,7 +451,7 @@ async function waitForBookingReady(openTime, dateStr) {
   // 이미 1분 이내로 남았으면 바로 진행
   if (now.isAfter(oneMinuteBefore)) {
     console.log(
-      `[WAIT ${dateStr}] Less than 1 minute to booking, proceeding to login.`
+      `[WAIT ${dateStr}] Less than 1 minute to booking, proceeding to login.`,
     );
     return true;
   }
@@ -394,8 +461,8 @@ async function waitForBookingReady(openTime, dateStr) {
     const sleepTime = Math.min(waitTimeMs, 30000); // 최대 30초마다 체크
     console.log(
       `[WAIT ${dateStr}] Booking opens in ${Math.round(
-        openTime.diff(moment().tz("Asia/Seoul")) / 1000
-      )}s. Waiting for ${sleepTime / 1000}s...`
+        openTime.diff(moment().tz("Asia/Seoul")) / 1000,
+      )}s. Waiting for ${sleepTime / 1000}s...`,
     );
     await new Promise((resolve) => setTimeout(resolve, sleepTime));
   }
@@ -405,7 +472,7 @@ async function waitForBookingReady(openTime, dateStr) {
 // 예약 시간까지 정밀 대기하는 함수
 async function waitForBookingOpen(openTime, dateStr) {
   console.log(
-    `[WAIT ${dateStr}] Starting precision wait. Booking open time: ${openTime.format()}`
+    `[WAIT ${dateStr}] Starting precision wait. Booking open time: ${openTime.format()}`,
   );
 
   // 초기 NTP 시간 동기화 (한 번만)
@@ -416,7 +483,7 @@ async function waitForBookingOpen(openTime, dateStr) {
 
   if (waitTime <= 5) {
     console.log(
-      `[WAIT ${dateStr}] Booking time has already passed. Proceeding immediately.`
+      `[WAIT ${dateStr}] Booking time has already passed. Proceeding immediately.`,
     );
   } else {
     // 5분 이상 남았으면 5분 전까지 대기
@@ -424,11 +491,11 @@ async function waitForBookingOpen(openTime, dateStr) {
       const sleepUntilFiveMinBefore = waitTime - 300000; // 5분 전까지의 시간
       console.log(
         `[WAIT ${dateStr}] Booking opens in ${Math.round(
-          waitTime / 1000
-        )}s. Sleeping until 5 minutes before...`
+          waitTime / 1000,
+        )}s. Sleeping until 5 minutes before...`,
       );
       await new Promise((resolve) =>
-        setTimeout(resolve, sleepUntilFiveMinBefore)
+        setTimeout(resolve, sleepUntilFiveMinBefore),
       );
 
       // 5분 이내에 도달했으므로 NTP 재동기화 (한 번만)
@@ -444,8 +511,8 @@ async function waitForBookingOpen(openTime, dateStr) {
 
       console.log(
         `[WAIT ${dateStr}] Booking opens in ${Math.round(
-          waitTime / 1000
-        )}s. Waiting for ${sleepTime / 1000}s...`
+          waitTime / 1000,
+        )}s. Waiting for ${sleepTime / 1000}s...`,
       );
       await new Promise((resolve) => setTimeout(resolve, sleepTime));
 
@@ -466,25 +533,25 @@ async function updateBookingStatus(name, date, status, bookingData = {}) {
       // 연결 상태 확인 (0: disconnected, 1: connected, 2: connecting, 3: disconnecting)
       if (mongoose.connection.readyState !== 1) {
         console.warn(
-          `[DB] MongoDB not fully connected (state: ${mongoose.connection.readyState}). Retrying...`
+          `[DB] MongoDB not fully connected (state: ${mongoose.connection.readyState}). Retrying...`,
         );
       }
       await Booking.updateOne(
         { account: name, date: date },
         { $set: { status, ...bookingData } },
-        { upsert: true }
+        { upsert: true },
       );
       return;
     } catch (error) {
       const wait = 300 * attempt;
       console.warn(
-        `Retry ${attempt}/${maxRetries} updating booking status for ${name} ${date}: ${error.message}. Waiting ${wait}ms...`
+        `Retry ${attempt}/${maxRetries} updating booking status for ${name} ${date}: ${error.message}. Waiting ${wait}ms...`,
       );
       await new Promise((r) => setTimeout(r, wait));
       if (attempt === maxRetries) {
         console.error(
           `Failed to update booking status for ${name} on ${date} in DB after retries:`,
-          error
+          error,
         );
       }
     }
@@ -497,7 +564,7 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
 
   // 1. DB에서 활성(granted: true) 사용자 목록을 먼저 가져옵니다.
   const activeUsers = await User.find({ granted: true }).select(
-    "name username golfPassword"
+    "name debeachLoginId debeachLoginPassword",
   );
   const activeUserNames = activeUsers.map((u) => u.name);
   const accountMap = new Map(activeUsers.map((u) => [u.name, u]));
@@ -512,11 +579,11 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
       console.warn(
         `[SYSTEM] The following accounts are not active or do not exist, skipping: ${[
           ...new Set(invalidAccounts),
-        ].join(", ")}`
+        ].join(", ")}`,
       );
     }
     bookingRequests = bookingRequests.filter((req) =>
-      activeUserNames.includes(req.account)
+      activeUserNames.includes(req.account),
     );
   } else {
     // 3. 인자가 없으면, 활성 사용자의 예약 요청만 DB에서 가져옵니다.
@@ -539,7 +606,7 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
           status: "실패",
           reason: "사용자가 비활성 상태이거나 삭제되었습니다.",
         },
-      }
+      },
     );
   }
 
@@ -555,16 +622,21 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
     .map((booking) => {
       const account = accountMap.get(booking.account);
       if (!account) return null; // Should not happen due to earlier checks
-      if (!account.golfPassword) {
+      if (!account.debeachLoginPassword) {
         console.warn(
-          `[${booking.account}] 골프장 비밀번호가 설정되지 않아 예약을 건너뜁니다.`
+          `[${booking.account}] 골프장 비밀번호가 설정되지 않아 예약을 건너뜁니다.`,
         );
         return null;
       }
+      const plainPassword = looksEncryptedCredential(
+        account.debeachLoginPassword,
+      )
+        ? decryptCredential(account.debeachLoginPassword)
+        : account.debeachLoginPassword;
       return {
         NAME: booking.account,
-        LOGIN_ID: account.username,
-        LOGIN_PASSWORD: account.golfPassword,
+        LOGIN_ID: account.debeachLoginId,
+        LOGIN_PASSWORD: plainPassword,
         TARGET_DATE: booking.date,
         START_TIME: booking.startTime,
         END_TIME: booking.endTime,
@@ -573,7 +645,9 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
     .filter(Boolean);
 
   if (configs.length === 0) {
-    console.log("No booking configurations found in .env file.");
+    console.log(
+      "No booking configurations found from DB-backed user credentials.",
+    );
     return { result: "no-configs" };
   }
 
@@ -589,7 +663,7 @@ async function runAutoBooking(bookingRequests, options = { immediate: false }) {
 
   // 각 그룹에 대해 병렬로 예약 프로세스 실행
   const groupPromises = Object.values(groups).map((group) =>
-    runBookingGroup(group, options)
+    runBookingGroup(group, options),
   );
   await Promise.all(groupPromises);
 

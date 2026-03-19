@@ -5,5 +5,26 @@
     "startTime": "1000",
     "endTime": "1300",
     "force": false
+  },
+  {
+    "account": "오수양",
+    "date": "20260402",
+    "startTime": "1000",
+    "endTime": "0700",
+    "force": false
+  },
+  {
+    "account": "오수양",
+    "date": "20260401",
+    "startTime": "0800",
+    "endTime": "0900",
+    "force": false
+  },
+  {
+    "account": "손덕일",
+    "date": "20260403",
+    "startTime": "1000",
+    "endTime": "1200",
+    "force": true
   }
 ]

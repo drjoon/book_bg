@@ -7,7 +7,7 @@
 
 aws lambda create-function \
 --function-name book-debeach \
---runtime nodejs20.x \
+--runtime nodejs22.x \
 --role arn:aws:iam::106055905364:role/book-debeach-lambda-role \
 --handler index.handler \
 --zip-file fileb://deployment_package.zip \

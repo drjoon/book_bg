@@ -670,6 +670,81 @@ export default function MainPage() {
 
   useEffect(() => {
     fetchBookings();
+
+    // WebSocket connection for real-time Lambda results
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${wsProtocol}//${window.location.hostname}:8081`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log("WebSocket connected for real-time booking updates");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Received WebSocket message:", data);
+
+        if (
+          data.type === "booking_success" ||
+          data.type === "booking_failure" ||
+          data.type === "booking_error"
+        ) {
+          // Update bookings state directly without API call
+          const dateStr = data.date;
+          const status = data.type === "booking_success" ? "성공" : "실패";
+
+          setBookings((prev) => {
+            const updated = { ...prev };
+            if (!updated[dateStr]) updated[dateStr] = [];
+
+            const bookingIndex = updated[dateStr].findIndex(
+              (b) => b.account === data.account,
+            );
+            if (bookingIndex >= 0) {
+              updated[dateStr][bookingIndex] = {
+                ...updated[dateStr][bookingIndex],
+                status,
+                bookedSlot:
+                  data.slot || updated[dateStr][bookingIndex].bookedSlot,
+                teeTotal: data.stats?.teeTotal,
+                teeFirstHalf: data.stats?.teeFirstHalf,
+                teeSecondHalf: data.stats?.teeSecondHalf,
+                teeInRange: data.stats?.teeInRange,
+              };
+            }
+            return updated;
+          });
+
+          // Show toast notification
+          if (data.type === "booking_success") {
+            showToast(
+              `${data.account} 예약 성공! (${data.slot?.bk_time || "시간 미상"})`,
+              "success",
+            );
+          } else {
+            showToast(
+              `${data.account} 예약 실패: ${data.reason || "알 수 없는 오류"}`,
+              "error",
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Failed to parse WebSocket message:", error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket disconnected");
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
   const fetchContacts = async () => {
@@ -993,47 +1068,24 @@ export default function MainPage() {
     }
   };
 
-  const pollUntilTerminal = async (
+  // Wait for WebSocket push only (no polling)
+  const waitForBookingResult = async (
     account: string,
     dateStr: string,
     timeoutMs = 60_000,
-    intervalMs = 1500,
-  ) => {
-    const start = Date.now();
-    return new Promise<"성공" | "실패">((resolve, reject) => {
-      const timer = setInterval(async () => {
-        try {
-          const res = await axios.get<BookingsByDate>(
-            `${API_BASE_URL}/api/bookings`,
-          );
-          const day = res.data?.[dateStr] || [];
-          const match = day.find((b) => b.account === account);
+  ): Promise<"성공" | "실패"> => {
+    const startTime = Date.now();
 
-          if (match && (match.status === "성공" || match.status === "실패")) {
-            clearInterval(timer);
-            resolve(match.status);
-            return;
-          }
+    while (Date.now() - startTime < timeoutMs) {
+      const booking = bookings[dateStr]?.find((b) => b.account === account);
+      if (booking && (booking.status === "성공" || booking.status === "실패")) {
+        return booking.status;
+      }
+      // Wait 100ms before checking again (WebSocket will update bookings state)
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
 
-          if (Date.now() - start > timeoutMs) {
-            clearInterval(timer);
-            reject(new Error("결과 확인 시간 초과"));
-          }
-        } catch (e) {
-          if (axios.isAxiosError(e) && e.response?.status === 401) {
-            clearInterval(timer);
-            logout();
-            reject(new Error("세션이 만료되었습니다."));
-            return;
-          }
-
-          if (Date.now() - start > timeoutMs) {
-            clearInterval(timer);
-            reject(new Error("결과 확인 시간 초과"));
-          }
-        }
-      }, intervalMs);
-    });
+    throw new Error("결과 확인 시간 초과");
   };
 
   const handleRetryBookingImmediately = async () => {
@@ -1064,11 +1116,10 @@ export default function MainPage() {
       const shouldPoll = !isQueued && message.includes("즉시");
       if (shouldPoll) {
         try {
-          const status = await pollUntilTerminal(
+          const status = await waitForBookingResult(
             selectedBooking.account,
             dateStr,
           );
-          fetchBookings();
           if (status === "성공") {
             showToast("재시도 결과: 성공", "success");
           } else {

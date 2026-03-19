@@ -1,0 +1,1 @@
+lsof -i :8081 | grep -v COMMAND | awk '{print $2}' | xargs kill -9

@@ -3,6 +3,8 @@ import cors from "cors";
 import fs from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
 import { User, Booking, Message, PasswordChangeRequest } from "./models.js"; // Import models
 import { runAutoBooking, getBookingOpenTime } from "../../auto/debeach_auto.js";
 import moment from "moment-timezone";
@@ -1222,6 +1224,35 @@ app.post("/api/submit-booking", authMiddleware, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// Create HTTP server and WebSocket server
+const httpServer = createServer(app);
+const wss = new WebSocketServer({ server: httpServer });
+
+// WebSocket connection handler
+wss.on("connection", (ws) => {
+  console.log("WebSocket client connected");
+
+  ws.on("error", (error) => {
+    console.error("WebSocket error:", error);
+  });
+
+  ws.on("close", () => {
+    console.log("WebSocket client disconnected");
+  });
+});
+
+// Broadcast function for Lambda results
+export function broadcastLambdaResult(data) {
+  const message = JSON.stringify(data);
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) {
+      // WebSocket.OPEN
+      client.send(message);
+    }
+  });
+}
+
+httpServer.listen(PORT, "localhost", () => {
   console.log(`Backend server is running on http://localhost:${PORT}`);
+  console.log(`WebSocket server is running on ws://localhost:${PORT}`);
 });

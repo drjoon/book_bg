@@ -31,6 +31,30 @@ console.warn = (...args) => {
 
 // --- Core Booking Logic (from debeach_auto.js) ---
 
+// 슬롯을 목표 시간에 가까운 순서로 정렬
+function sortSlotsByProximity(slots, targetTimeStr) {
+  if (!Array.isArray(slots) || slots.length === 0) return [];
+
+  const target = targetTimeStr.replace(":", "");
+  return slots.slice().sort((a, b) => {
+    const diffA = Math.abs(parseInt(a.bk_time, 10) - parseInt(target, 10));
+    const diffB = Math.abs(parseInt(b.bk_time, 10) - parseInt(target, 10));
+    return diffA - diffB;
+  });
+}
+
+// 계정별로 슬롯 우선순위를 회전시켜 첫 시도 슬롯이 겹치지 않도록 함
+function rotateSlotsForAccount(slots, config) {
+  if (!Array.isArray(slots) || slots.length === 0) return [];
+
+  const offset = config.PRIMARY_SLOT_OFFSET || 0;
+  if (offset === 0) return slots;
+
+  const rotated = slots.slice();
+  const actualOffset = offset % rotated.length;
+  return [...rotated.slice(actualOffset), ...rotated.slice(0, actualOffset)];
+}
+
 async function getLoginToken(client) {
   const res = await client.get("https://www.debeach.co.kr/auth/login", {
     headers: {
@@ -143,7 +167,7 @@ async function selectAndConfirmBooking(
   payload.append("booking_agree", "0");
   payload.append("booking_agree", "1");
 
-  const postDelayMs = Math.floor(Math.random() * 501) + 1000; // 1000~1500ms, Mumbai RTT 감안
+  const postDelayMs = Math.floor(Math.random() * 401) + 800; // 800~1200ms (수동 스크립트는 1000ms 고정)
   console.log(
     `${logPrefix} ⏱️ create completed for ${time} in ${createElapsedMs}ms. Waiting ${postDelayMs}ms before final booking POST.`,
   );
@@ -190,11 +214,11 @@ async function attemptBooking(
   const logPrefix = `[${config.NAME}]`;
 
   try {
-    const jitterDelayMs = Math.floor(Math.random() * 121) + 40; // 단일 람다 내 연속 시도 분산용 40~160ms
+    const jitterDelayMs = Math.floor(Math.random() * 51) + 20; // 20~70ms (수동 스크립트는 지터 없음)
     await sleep(jitterDelayMs);
 
     console.log(
-      `${logPrefix} ➡️ Trying to book time: ${targetSlot.bk_time} on course ${targetSlot.bk_cours} (intra-attempt jitter: ${jitterDelayMs}ms)`,
+      `${logPrefix} ➡️ Trying to book time: ${targetSlot.bk_time} on course ${targetSlot.bk_cours} (delay: ${jitterDelayMs}ms)`,
     );
     const bookingStartedAt = Date.now();
     await selectAndConfirmBooking(
@@ -363,7 +387,7 @@ export const handler = async (event) => {
       axios.create({
         jar,
         withCredentials: true,
-        timeout: 5000,
+        timeout: 10000,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
@@ -464,9 +488,8 @@ export const handler = async (event) => {
         }
       }
 
-      // 너무 빠른 부킹 시도로 인한 봇 차단을 피하기 위해
-      // 슬롯 조회 직후 최소 400ms 정도 대기 후 부킹을 시도한다 (400~450ms 랜덤)
-      const immediatePostFetchDelayMs = 250 + Math.floor(Math.random() * 151);
+      // 수동 스크립트는 250ms 대기 후 바로 시도
+      const immediatePostFetchDelayMs = 200 + Math.floor(Math.random() * 101); // 200~300ms
       console.log(
         `[${logName}] ⏱️ Waiting ${immediatePostFetchDelayMs}ms after initial slot fetch before booking attempts (immediate mode).`,
       );
@@ -588,9 +611,8 @@ export const handler = async (event) => {
         }
 
         const stats = computeTeeStats(availableTimes, s, e);
-        // 슬롯 응답을 받은 뒤 너무 빠르게 부킹을 시도하면 봇으로 인식될 수 있으므로
-        // 최소 250ms 정도는 쉬고(250~400ms 랜덤) 부킹 시도 시작
-        const postFetchDelayMs = 250 + Math.floor(Math.random() * 151); // 250~400ms, Mumbai RTT 감안
+        // 수동 스크립트는 250ms 대기 후 바로 시도
+        const postFetchDelayMs = 200 + Math.floor(Math.random() * 101); // 200~300ms
         console.log(
           `[${logName}] ⏱️ Waiting ${postFetchDelayMs}ms after slot fetch before booking attempts.`,
         );

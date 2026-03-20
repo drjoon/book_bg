@@ -332,14 +332,19 @@ async function runBookingGroup(group, options) {
 
       if (result.success) {
         const stats = result.stats || {};
-        await updateBookingStatus(config.NAME, date, "성공", {
-          successTime: moment().tz("Asia/Seoul").format(),
-          bookedSlot: result.slot,
-          teeTotal: stats.teeTotal,
-          teeFirstHalf: stats.teeFirstHalf,
-          teeSecondHalf: stats.teeSecondHalf,
-          teeInRange: stats.teeInRange,
-        });
+        const wasUpdated = await updateBookingStatus(
+          config.NAME,
+          date,
+          "성공",
+          {
+            successTime: moment().tz("Asia/Seoul").format(),
+            bookedSlot: result.slot,
+            teeTotal: stats.teeTotal,
+            teeFirstHalf: stats.teeFirstHalf,
+            teeSecondHalf: stats.teeSecondHalf,
+            teeInRange: stats.teeInRange,
+          },
+        );
 
         if (Array.isArray(result.slots) && result.slots.length > 0) {
           await saveTeeSnapshot(result.slots, {
@@ -348,48 +353,57 @@ async function runBookingGroup(group, options) {
         }
 
         // Broadcast success to WebSocket clients
-        try {
-          const { broadcastLambdaResult } =
-            await import("../web/backend/server.js");
-          broadcastLambdaResult({
-            type: "booking_success",
-            account: config.NAME,
-            date,
-            slot: result.slot,
-            stats,
-          });
-        } catch (wsError) {
-          console.warn(
-            `[${logName}] Failed to broadcast success via WebSocket:`,
-            wsError.message,
-          );
+        if (wasUpdated) {
+          try {
+            const { broadcastLambdaResult } =
+              await import("../web/backend/server.js");
+            broadcastLambdaResult({
+              type: "booking_success",
+              account: config.NAME,
+              date,
+              slot: result.slot,
+              stats,
+            });
+          } catch (wsError) {
+            console.warn(
+              `[${logName}] Failed to broadcast success via WebSocket:`,
+              wsError.message,
+            );
+          }
         }
       } else {
         const stats = result.stats || {};
-        await updateBookingStatus(config.NAME, date, "실패", {
-          reason: result.reason || "Lambda에서 예약 실패",
-          teeTotal: stats.teeTotal,
-          teeFirstHalf: stats.teeFirstHalf,
-          teeSecondHalf: stats.teeSecondHalf,
-          teeInRange: stats.teeInRange,
-        });
+        const wasUpdated = await updateBookingStatus(
+          config.NAME,
+          date,
+          "실패",
+          {
+            reason: result.reason || "Lambda에서 예약 실패",
+            teeTotal: stats.teeTotal,
+            teeFirstHalf: stats.teeFirstHalf,
+            teeSecondHalf: stats.teeSecondHalf,
+            teeInRange: stats.teeInRange,
+          },
+        );
 
         // Broadcast failure to WebSocket clients
-        try {
-          const { broadcastLambdaResult } =
-            await import("../web/backend/server.js");
-          broadcastLambdaResult({
-            type: "booking_failure",
-            account: config.NAME,
-            date,
-            reason: result.reason || "Lambda에서 예약 실패",
-            stats,
-          });
-        } catch (wsError) {
-          console.warn(
-            `[${logName}] Failed to broadcast failure via WebSocket:`,
-            wsError.message,
-          );
+        if (wasUpdated) {
+          try {
+            const { broadcastLambdaResult } =
+              await import("../web/backend/server.js");
+            broadcastLambdaResult({
+              type: "booking_failure",
+              account: config.NAME,
+              date,
+              reason: result.reason || "Lambda에서 예약 실패",
+              stats,
+            });
+          } catch (wsError) {
+            console.warn(
+              `[${logName}] Failed to broadcast failure via WebSocket:`,
+              wsError.message,
+            );
+          }
         }
       }
     } catch (error) {
@@ -397,25 +411,27 @@ async function runBookingGroup(group, options) {
         `[${logName}] 🚨 Failed to invoke or process Lambda response:`,
         error,
       );
-      await updateBookingStatus(config.NAME, date, "실패", {
+      const wasUpdated = await updateBookingStatus(config.NAME, date, "실패", {
         reason: `Lambda 호출 오류: ${error.message}`,
       });
 
       // Broadcast error to WebSocket clients
-      try {
-        const { broadcastLambdaResult } =
-          await import("../web/backend/server.js");
-        broadcastLambdaResult({
-          type: "booking_error",
-          account: config.NAME,
-          date,
-          reason: `Lambda 호출 오류: ${error.message}`,
-        });
-      } catch (wsError) {
-        console.warn(
-          `[${logName}] Failed to broadcast error via WebSocket:`,
-          wsError.message,
-        );
+      if (wasUpdated) {
+        try {
+          const { broadcastLambdaResult } =
+            await import("../web/backend/server.js");
+          broadcastLambdaResult({
+            type: "booking_error",
+            account: config.NAME,
+            date,
+            reason: `Lambda 호출 오류: ${error.message}`,
+          });
+        } catch (wsError) {
+          console.warn(
+            `[${logName}] Failed to broadcast error via WebSocket:`,
+            wsError.message,
+          );
+        }
       }
     }
   });
@@ -536,12 +552,17 @@ async function updateBookingStatus(name, date, status, bookingData = {}) {
           `[DB] MongoDB not fully connected (state: ${mongoose.connection.readyState}). Retrying...`,
         );
       }
-      await Booking.updateOne(
+      const result = await Booking.updateOne(
         { account: name, date: date },
         { $set: { status, ...bookingData } },
-        { upsert: true },
       );
-      return;
+      if (result.matchedCount === 0) {
+        console.log(
+          `[DB] Skip status update for ${name} ${date} because booking no longer exists.`,
+        );
+        return false;
+      }
+      return true;
     } catch (error) {
       const wait = 300 * attempt;
       console.warn(

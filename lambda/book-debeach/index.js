@@ -5,6 +5,9 @@ import moment from "moment-timezone";
 import * as cheerio from "cheerio";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const LOGIN_ATTEMPT_TIMEOUT_MS = 7500;
+const PRELOGIN_LEAD_MS = 20000;
+const PRELOGIN_DEADLINE_BEFORE_OPEN_MS = 5000;
 
 // Lambda(Node 18) 환경에서 undici가 기대하는 File 전역이 없어서 ReferenceError가 나므로 간단한 폴리필
 if (typeof File === "undefined") {
@@ -61,9 +64,13 @@ async function getLoginToken(client) {
       Referer: "https://www.debeach.co.kr/",
       Origin: "https://www.debeach.co.kr", // 필수는 아니지만 XHR 패턴과 맞추는 용도
     },
+    timeout: LOGIN_ATTEMPT_TIMEOUT_MS,
   });
   const $ = cheerio.load(res.data);
   const token = $('meta[name="csrf-token"]').attr("content");
+  if (!token) {
+    throw new Error("Login page did not provide csrf token");
+  }
   return token;
 }
 
@@ -85,10 +92,21 @@ async function doLogin(client, xsrfToken, loginId, loginPassword) {
         Origin: "https://www.debeach.co.kr",
         Referer: "https://www.debeach.co.kr/auth/login",
       },
+      timeout: LOGIN_ATTEMPT_TIMEOUT_MS,
     },
   );
   const isLoggedIn = res.request.path === "/";
-  return isLoggedIn;
+  const responseMessage =
+    typeof res.data === "string"
+      ? res.data.match(/아이디|비밀번호|로그인|오류|error/i)?.[0] || ""
+      : typeof res.data?.message === "string"
+        ? res.data.message
+        : "";
+  return {
+    isLoggedIn,
+    responseMessage,
+    finalPath: res.request.path,
+  };
 }
 
 async function refreshLogin(account) {
@@ -96,18 +114,138 @@ async function refreshLogin(account) {
   const logPrefix = `[${config.NAME}]`;
   console.warn(`${logPrefix} 🔐 Refreshing login session after 401 response.`);
   const token = await getLoginToken(client);
-  const isLoggedIn = await doLogin(
+  const loginResult = await doLogin(
     client,
     token,
     config.LOGIN_ID,
     config.LOGIN_PASSWORD,
   );
-  if (!isLoggedIn) {
-    throw new Error("Re-login failed");
+  if (!loginResult.isLoggedIn) {
+    throw new Error(
+      `Re-login failed${loginResult.responseMessage ? `: ${loginResult.responseMessage}` : ""}`,
+    );
   }
   account.token = token;
   console.log(`${logPrefix} 🔐 Re-login succeeded.`);
   return token;
+}
+
+function createCorrectedNow(offsetMs) {
+  const baseNow = () => moment().tz("Asia/Seoul");
+  return typeof offsetMs === "number" && !Number.isNaN(offsetMs)
+    ? () => baseNow().add(offsetMs, "ms")
+    : () => baseNow();
+}
+
+async function waitUntil(targetTime, logPrefix, offsetMs, label) {
+  const correctedNow = createCorrectedNow(offsetMs);
+  let waitTime = targetTime.diff(correctedNow());
+  if (waitTime <= 5) {
+    console.log(
+      `${logPrefix} ${label} has already passed. Proceeding immediately.`,
+    );
+    return;
+  }
+
+  console.log(
+    `${logPrefix} Waiting until ${label}: ${targetTime.format("YYYY-MM-DD HH:mm:ss.SSS")}`,
+  );
+
+  while (waitTime > 5) {
+    const sleepTime =
+      waitTime > 1000
+        ? Math.min(waitTime - 5, 500)
+        : Math.min(waitTime - 5, 100);
+    if (sleepTime <= 0) break;
+    await sleep(sleepTime);
+    waitTime = targetTime.diff(correctedNow());
+  }
+}
+
+async function runLoginAttempt(client, config) {
+  const token = await getLoginToken(client);
+  const loginResult = await doLogin(
+    client,
+    token,
+    config.LOGIN_ID,
+    config.LOGIN_PASSWORD,
+  );
+  if (!loginResult.isLoggedIn) {
+    throw new Error(
+      `Login rejected${loginResult.responseMessage ? `: ${loginResult.responseMessage}` : loginResult.finalPath ? ` (path: ${loginResult.finalPath})` : ""}`,
+    );
+  }
+  return token;
+}
+
+async function loginWithRetriesBeforeOpen(
+  client,
+  config,
+  bookingOpenTime,
+  logPrefix,
+  offsetMs,
+) {
+  const correctedNow = createCorrectedNow(offsetMs);
+  const preloginStart = bookingOpenTime
+    .clone()
+    .subtract(PRELOGIN_LEAD_MS, "milliseconds");
+  const preloginDeadline = bookingOpenTime
+    .clone()
+    .subtract(PRELOGIN_DEADLINE_BEFORE_OPEN_MS, "milliseconds");
+
+  await waitUntil(preloginStart, logPrefix, offsetMs, "pre-login start");
+
+  let attempt = 0;
+  let lastError = null;
+  while (correctedNow().isBefore(preloginDeadline)) {
+    attempt += 1;
+    const remainingMs = preloginDeadline.diff(correctedNow());
+    const attemptBudgetMs = Math.min(LOGIN_ATTEMPT_TIMEOUT_MS, remainingMs);
+    if (attemptBudgetMs <= 250) {
+      break;
+    }
+
+    console.log(
+      `${logPrefix} 🔐 Pre-login attempt ${attempt} starting with budget ${attemptBudgetMs}ms. Deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}`,
+    );
+
+    try {
+      const token = await Promise.race([
+        runLoginAttempt(client, config),
+        new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error(
+                `Pre-login attempt timed out after ${attemptBudgetMs}ms`,
+              ),
+            );
+          }, attemptBudgetMs);
+        }),
+      ]);
+      console.log(
+        `${logPrefix} 🔐 Pre-login succeeded on attempt ${attempt}. Completed at ${correctedNow().format("HH:mm:ss.SSS")}`,
+      );
+      return token;
+    } catch (error) {
+      lastError = error;
+      console.warn(
+        `${logPrefix} 🔐 Pre-login attempt ${attempt} failed: ${error.message}`,
+      );
+      await sleep(
+        Math.min(
+          700,
+          Math.max(
+            150,
+            preloginDeadline.diff(correctedNow(), "milliseconds") - 50,
+          ),
+        ),
+      );
+    }
+  }
+
+  throw new Error(
+    `Unable to complete login before booking window${lastError ? `: ${lastError.message}` : ""}`,
+  );
 }
 
 async function fetchBookingTimes(client, xsrfToken, dateStr) {
@@ -334,11 +472,7 @@ async function waitForBookingOpen(openTime, logPrefix, offsetMs) {
     `${logPrefix} Starting precision wait. Target time (window start or open): ${openTime.format()}`,
   );
 
-  const baseNow = () => moment().tz("Asia/Seoul");
-  const correctedTime =
-    typeof offsetMs === "number" && !Number.isNaN(offsetMs)
-      ? () => baseNow().add(offsetMs, "ms")
-      : () => baseNow();
+  const correctedTime = createCorrectedNow(offsetMs);
 
   if (typeof offsetMs === "number" && !Number.isNaN(offsetMs)) {
     console.log(
@@ -381,13 +515,13 @@ export const handler = async (event) => {
   const { config, immediate, offsetMs } = event;
   const logName = config.NAME || config.LOGIN_ID;
   try {
-    // 1. 로그인 (오픈 전 미리 세션 준비)
+    // 1. HTTP client 준비
     const jar = new CookieJar();
     const client = axiosCookieJarSupport(
       axios.create({
         jar,
         withCredentials: true,
-        timeout: 10000,
+        timeout: LOGIN_ATTEMPT_TIMEOUT_MS,
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
@@ -400,18 +534,6 @@ export const handler = async (event) => {
         },
       }),
     );
-    const token = await getLoginToken(client);
-    const isLoggedIn = await doLogin(
-      client,
-      token,
-      config.LOGIN_ID,
-      config.LOGIN_PASSWORD,
-    );
-    if (!isLoggedIn) {
-      throw new Error("Login failed");
-    }
-
-    const account = { client, token, config };
 
     // 2. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
     const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
@@ -421,6 +543,21 @@ export const handler = async (event) => {
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
     const windowEnd = bookingOpenTime.clone().add(20, "seconds");
+
+    let token;
+    if (!immediate) {
+      token = await loginWithRetriesBeforeOpen(
+        client,
+        config,
+        bookingOpenTime,
+        `[${logName}]`,
+        offsetMs,
+      );
+    } else {
+      token = await runLoginAttempt(client, config);
+    }
+
+    const account = { client, token, config };
 
     if (!immediate) {
       await waitForBookingOpen(windowStart, `[${logName}]`, offsetMs);

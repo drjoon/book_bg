@@ -1256,7 +1256,9 @@ export function broadcastLambdaResult(data) {
   });
 }
 
-httpServer.listen(PORT, "localhost", () => {
-  console.log(`Backend server is running on http://localhost:${PORT}`);
-  console.log(`WebSocket server is running on ws://localhost:${PORT}`);
-});
+if (process.argv[1] === __filename) {
+  httpServer.listen(PORT, "localhost", () => {
+    console.log(`Backend server is running on http://localhost:${PORT}`);
+    console.log(`WebSocket server is running on ws://localhost:${PORT}`);
+  });
+}

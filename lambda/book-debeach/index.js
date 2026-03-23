@@ -5,8 +5,8 @@ import moment from "moment-timezone";
 import * as cheerio from "cheerio";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const LOGIN_ATTEMPT_TIMEOUT_MS = 7500;
-const PRELOGIN_LEAD_MS = 20000;
+const LOGIN_ATTEMPT_TIMEOUT_MS = 5000;
+const PRELOGIN_LEAD_MS = 30000;
 const PRELOGIN_DEADLINE_BEFORE_OPEN_MS = 5000;
 
 // Lambda(Node 18) 환경에서 undici가 기대하는 File 전역이 없어서 ReferenceError가 나므로 간단한 폴리필
@@ -243,9 +243,15 @@ async function loginWithRetriesBeforeOpen(
     }
   }
 
-  throw new Error(
-    `Unable to complete login before booking window${lastError ? `: ${lastError.message}` : ""}`,
+  console.warn(
+    `${logPrefix} 🔐 Pre-login window missed (deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}, now: ${correctedNow().format("HH:mm:ss.SSS")}). Attempting fallback login without deadline...`,
   );
+  attempt += 1;
+  const token = await runLoginAttempt(client, config);
+  console.log(
+    `${logPrefix} 🔐 Fallback login succeeded on attempt ${attempt}. Completed at ${correctedNow().format("HH:mm:ss.SSS")}`,
+  );
+  return token;
 }
 
 async function fetchBookingTimes(client, xsrfToken, dateStr) {

@@ -129,20 +129,20 @@ async function runBookingGroup(group, options) {
   // 2. 예약 시간 10초 전까지 대기
   if (!options.immediate) {
     const bookingOpenTime = getBookingOpenTime(date);
-    const twentySecondsBefore = bookingOpenTime.clone().subtract(20, "seconds");
+    const invokeAt = bookingOpenTime.clone().subtract(35, "seconds");
     let now = moment().tz("Asia/Seoul");
 
-    if (now.isBefore(twentySecondsBefore)) {
-      const waitTime = twentySecondsBefore.diff(now);
+    if (now.isBefore(invokeAt)) {
+      const waitTime = invokeAt.diff(now);
       console.log(
         `${logPrefix} Waiting ${Math.round(
           waitTime / 1000,
-        )}s until 20 seconds before booking time...`,
+        )}s until 35 seconds before booking time...`,
       );
       await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
     console.log(
-      `${logPrefix} It's 20 seconds to booking. Invoking Lambda functions...`,
+      `${logPrefix} It's 35 seconds to booking. Invoking Lambda functions...`,
     );
 
     // 오픈 10초 전: NTP로 시스템 시간 오프셋 계산 (그룹당 1회)
@@ -552,14 +552,27 @@ async function updateBookingStatus(name, date, status, bookingData = {}) {
           `[DB] MongoDB not fully connected (state: ${mongoose.connection.readyState}). Retrying...`,
         );
       }
-      const result = await Booking.updateOne(
-        { account: name, date: date },
-        { $set: { status, ...bookingData } },
-      );
+      const filter = { account: name, date: date };
+      if (status === "실패") {
+        filter.status = { $ne: "성공" };
+      }
+      const result = await Booking.updateOne(filter, {
+        $set: { status, ...bookingData },
+      });
       if (result.matchedCount === 0) {
-        console.log(
-          `[DB] Skip status update for ${name} ${date} because booking no longer exists.`,
+        const existing = await Booking.findOne(
+          { account: name, date: date },
+          { status: 1 },
         );
+        if (!existing) {
+          console.log(
+            `[DB] Skip status update for ${name} ${date} because booking no longer exists.`,
+          );
+        } else {
+          console.log(
+            `[DB] Skip '${status}' update for ${name} ${date} because booking is already '${existing.status}'.`,
+          );
+        }
         return false;
       }
       return true;

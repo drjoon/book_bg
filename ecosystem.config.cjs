@@ -10,6 +10,7 @@ module.exports = {
       name: "booking-worker",
       script: "./auto/worker.js",
       watch: false,
+      env: { BOOKING_WORKER: "true" },
     },
   ],
 };

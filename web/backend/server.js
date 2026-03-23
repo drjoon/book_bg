@@ -1256,7 +1256,7 @@ export function broadcastLambdaResult(data) {
   });
 }
 
-if (process.argv[1] === __filename) {
+if (!process.env.BOOKING_WORKER) {
   httpServer.listen(PORT, "localhost", () => {
     console.log(`Backend server is running on http://localhost:${PORT}`);
     console.log(`WebSocket server is running on ws://localhost:${PORT}`);

@@ -268,14 +268,30 @@ async function runBookingGroup(group, options) {
       cfg.START_TIME = newStart;
       cfg.END_TIME = newEnd;
 
-      // 동일 시간대 그룹 내에서 계정마다 1순위 타겟 슬롯이 겹치지 않도록
-      // Lambda의 rotateSlotsForAccount 에서 사용할 PRIMARY_SLOT_OFFSET도 함께 설정한다.
-      // (0번 계정은 기본 순서, 이후 계정들은 index 기반으로 회전)
-      cfg.PRIMARY_SLOT_OFFSET = index;
-
       console.log(
         `${logPrefix} Adjusted time range for ${cfg.NAME}: ${cfg.START_TIME}~${cfg.END_TIME} (offset +${offsetMinutes}min)`,
       );
+    });
+  }
+
+  // 2-2. 전체 계정에 걸쳐 전역 슬롯 인덱스 부여
+  // 시간대가 달라도 가용 슬롯이 겹칠 경우 충돌을 방지하기 위해
+  // 이름 기준 전역 정렬로 계정마다 PRIMARY_SLOT_OFFSET을 고유하게 부여한다.
+  {
+    const globalSorted = [...finalConfigs].sort((a, b) => {
+      const aN = a.NAME || "";
+      const bN = b.NAME || "";
+      if (aN === "오수양") return -1;
+      if (bN === "오수양") return 1;
+      return aN.localeCompare(bN);
+    });
+    globalSorted.forEach((cfg, globalIdx) => {
+      cfg.PRIMARY_SLOT_OFFSET = globalIdx;
+      if (globalIdx > 0) {
+        console.log(
+          `${logPrefix} Global slot offset for ${cfg.NAME}: PRIMARY_SLOT_OFFSET=${globalIdx}`,
+        );
+      }
     });
   }
 

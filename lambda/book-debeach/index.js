@@ -390,10 +390,10 @@ async function attemptBooking(
 
     if (error.response && error.response.status === 422) {
       console.log(
-        `${logPrefix} ⚠️ Slot ${targetSlot.bk_time} was taken. Breaking to refetch slots.`,
+        `${logPrefix} ⚠️ Slot ${targetSlot.bk_time} (course ${targetSlot.bk_cours}) was taken. Continuing to next slot.`,
       );
       if (failedSlots && typeof failedSlots.add === "function") {
-        failedSlots.add(targetSlot.bk_time);
+        failedSlots.add(`${targetSlot.bk_time}_${targetSlot.bk_cours}`);
       }
       return { success: false, slot: targetSlot, wasTaken: true };
     } else if (error.response && error.response.status === 401) {
@@ -773,7 +773,7 @@ export const handler = async (event) => {
           (slot) =>
             slot.bk_time >= s &&
             slot.bk_time <= e &&
-            !failedSlotTimes.has(slot.bk_time),
+            !failedSlotTimes.has(`${slot.bk_time}_${slot.bk_cours}`),
         );
         targetTimes = sortSlotsByProximity(targetTimes, startStr);
 
@@ -806,10 +806,6 @@ export const handler = async (event) => {
               stats: baseStats || stats,
               slots: baseSlots || availableTimes,
             };
-          }
-          if (result.wasTaken) {
-            // 슬롯 목록이 낡았으니 다시 전체를 refetch 하기 위해 while 루프 재진입
-            break;
           }
         }
 

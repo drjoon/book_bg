@@ -31,7 +31,9 @@ body {
 
 /* Day Tiles */
 .react-calendar__tile {
-  @apply text-gray-700 h-36 rounded-lg;
+  @apply text-gray-700 h-auto rounded-lg;
+  min-height: 0;
+  padding: 0.15rem 0.15rem 0.25rem;
 }
 
 .react-calendar__tile:enabled:hover,

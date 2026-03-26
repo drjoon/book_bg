@@ -1148,57 +1148,85 @@ export default function MainPage() {
     }
   };
 
-  const getTileContent = ({ date, view }: { date: Date; view: string }) => {
-    if (view !== "month") return null;
-    const dateStr = moment(date).format("YYYYMMDD");
-    const dayBookings = bookings[dateStr] || [];
+  const createTileContent = (monthAnchor: Date) => {
+    const gridStart = moment(monthAnchor).startOf("month").startOf("week");
+    const gridEnd = moment(monthAnchor).endOf("month").endOf("week");
+    const weekMaxBookingCounts = new Map<number, number>();
 
-    const getTooltipText = (booking: Booking) => {
-      const requestedRange = `${booking.startTime} - ${booking.endTime}`;
-      const bookedTime =
-        booking.bookedSlot?.bk_time || booking.successTime || null;
-      const timeText =
-        booking.status === "성공" && bookedTime ? bookedTime : requestedRange;
-      const statusText = booking.status === "접수" ? "접수중" : booking.status;
-      if (user?.role === "admin") {
-        return `${booking.account} ${timeText} ${statusText}`;
-      }
-      return `${timeText} ${statusText}`;
+    const cursor = gridStart.clone();
+    while (cursor.isSameOrBefore(gridEnd, "day")) {
+      const dateStr = cursor.format("YYYYMMDD");
+      const bookingCount = bookings[dateStr]?.length || 0;
+      const weekIndex = Math.floor(cursor.diff(gridStart, "days") / 7);
+      const currentMax = weekMaxBookingCounts.get(weekIndex) || 0;
+      weekMaxBookingCounts.set(weekIndex, Math.max(currentMax, bookingCount));
+      cursor.add(1, "day");
+    }
+
+    return ({ date, view }: { date: Date; view: string }) => {
+      if (view !== "month") return null;
+      const dateStr = moment(date).format("YYYYMMDD");
+      const dayBookings = bookings[dateStr] || [];
+      const weekIndex = Math.floor(
+        moment(date).startOf("day").diff(gridStart, "days") / 7,
+      );
+      const weekMaxBookingCount =
+        weekMaxBookingCounts.get(weekIndex) ?? dayBookings.length;
+
+      const getTileHeight = (bookingCount: number) =>
+        `${Math.max(26, bookingCount * 22 + 22)}px`;
+
+      const getTooltipText = (booking: Booking) => {
+        const requestedRange = `${booking.startTime} - ${booking.endTime}`;
+        const bookedTime =
+          booking.bookedSlot?.bk_time || booking.successTime || null;
+        const timeText =
+          booking.status === "성공" && bookedTime ? bookedTime : requestedRange;
+        const statusText =
+          booking.status === "접수" ? "접수중" : booking.status;
+        if (user?.role === "admin") {
+          return `${booking.account} ${timeText} ${statusText}`;
+        }
+        return `${timeText} ${statusText}`;
+      };
+
+      return (
+        <div
+          className="mt-0.5 flex flex-col items-stretch gap-1 px-0.5 pb-1 text-xs"
+          style={{ height: getTileHeight(weekMaxBookingCount) }}
+        >
+          {dayBookings.map((booking, index) => (
+            <div
+              key={index}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleBookingClick(booking, date);
+              }}
+              onMouseEnter={(e) => {
+                setTooltip({
+                  content: getTooltipText(booking),
+                  x: e.clientX,
+                  y: e.clientY,
+                });
+              }}
+              onMouseLeave={() => setTooltip(null)}
+              onMouseMove={(e) => {
+                if (tooltip) {
+                  setTooltip((prev) =>
+                    prev ? { ...prev, x: e.clientX, y: e.clientY } : prev,
+                  );
+                }
+              }}
+              className={`w-full rounded-md py-1 text-center text-[10px] leading-tight text-white cursor-pointer ${getStatusColor(
+                booking.status,
+              )}`}
+            >
+              {user?.role === "admin" ? booking.account : booking.startTime}
+            </div>
+          ))}
+        </div>
+      );
     };
-
-    return (
-      <div className="mt-1 flex min-h-[96px] flex-col items-stretch gap-1.5 p-1 pb-2 text-xs">
-        {dayBookings.map((booking, index) => (
-          <div
-            key={index}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleBookingClick(booking, date);
-            }}
-            onMouseEnter={(e) => {
-              setTooltip({
-                content: getTooltipText(booking),
-                x: e.clientX,
-                y: e.clientY,
-              });
-            }}
-            onMouseLeave={() => setTooltip(null)}
-            onMouseMove={(e) => {
-              if (tooltip) {
-                setTooltip((prev) =>
-                  prev ? { ...prev, x: e.clientX, y: e.clientY } : prev,
-                );
-              }
-            }}
-            className={`w-full rounded-md py-1 text-center text-[10px] leading-tight text-white cursor-pointer ${getStatusColor(
-              booking.status,
-            )}`}
-          >
-            {user?.role === "admin" ? booking.account : booking.startTime}
-          </div>
-        ))}
-      </div>
-    );
   };
 
   return (
@@ -1210,7 +1238,7 @@ export default function MainPage() {
               <Calendar
                 onClickDay={handleDayClick}
                 value={activeMonth}
-                tileContent={getTileContent}
+                tileContent={createTileContent(activeMonth)}
                 onActiveStartDateChange={({ activeStartDate }) =>
                   setActiveMonth(activeStartDate || new Date())
                 }
@@ -1220,7 +1248,13 @@ export default function MainPage() {
             <div className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-xl border border-blue-100">
               <Calendar
                 onClickDay={handleDayClick}
-                tileContent={getTileContent}
+                tileContent={createTileContent(
+                  new Date(
+                    activeMonth.getFullYear(),
+                    activeMonth.getMonth() + 1,
+                    1,
+                  ),
+                )}
                 locale="en-US"
                 activeStartDate={
                   new Date(

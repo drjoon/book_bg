@@ -180,8 +180,43 @@ const cleanupLegacyAdminUser = async () => {
   }
 };
 
+const summarizeIndexes = (indexes) =>
+  indexes.map(({ name, key, unique, sparse, partialFilterExpression }) => ({
+    name,
+    key,
+    unique: Boolean(unique),
+    sparse: Boolean(sparse),
+    partialFilterExpression: partialFilterExpression || null,
+  }));
+
+const logUserIndexes = async (label) => {
+  try {
+    const indexes = await User.collection.listIndexes().toArray();
+    console.log(`[AUTH] User indexes ${label}:`, summarizeIndexes(indexes));
+  } catch (error) {
+    console.error(
+      `[AUTH] Failed to read User indexes ${label}:`,
+      error.message,
+    );
+  }
+};
+
+const syncUserIndexes = async () => {
+  try {
+    await logUserIndexes("before sync");
+    const syncResult = await User.syncIndexes();
+    console.log("[AUTH] User.syncIndexes() result:", syncResult);
+    await logUserIndexes("after sync");
+  } catch (error) {
+    console.error("[AUTH] Failed to sync User indexes:", error.message);
+  }
+};
+
 dbReady
-  .then(() => cleanupLegacyAdminUser())
+  .then(async () => {
+    await syncUserIndexes();
+    await cleanupLegacyAdminUser();
+  })
   .catch((error) => {
     console.error(
       "[AUTH] Failed to cleanup legacy admin account:",
@@ -199,10 +234,68 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 
   try {
+    const normalizedName = String(name).trim();
+    const normalizedDebeachLoginId = String(debeachLoginId).trim();
+    console.log("[AUTH][SIGNUP] Incoming request:", {
+      name: normalizedName,
+      debeachLoginId: normalizedDebeachLoginId,
+      hasPassword: Boolean(password),
+      hasDebeachLoginPassword: Boolean(debeachLoginPassword),
+    });
+
+    const exactMatch = await User.findOne({
+      name: normalizedName,
+      debeachLoginId: normalizedDebeachLoginId,
+    }).select("_id name debeachLoginId granted role");
+
+    const nameMatch = await User.findOne({ name: normalizedName }).select(
+      "_id name debeachLoginId granted role",
+    );
+
+    const debeachLoginIdMatch = await User.findOne({
+      debeachLoginId: normalizedDebeachLoginId,
+    }).select("_id name debeachLoginId granted role");
+
+    console.log("[AUTH][SIGNUP] Pre-check matches:", {
+      exactMatch: exactMatch
+        ? {
+            id: exactMatch._id,
+            name: exactMatch.name,
+            debeachLoginId: exactMatch.debeachLoginId,
+            granted: exactMatch.granted,
+            role: exactMatch.role,
+          }
+        : null,
+      nameMatch: nameMatch
+        ? {
+            id: nameMatch._id,
+            name: nameMatch.name,
+            debeachLoginId: nameMatch.debeachLoginId,
+            granted: nameMatch.granted,
+            role: nameMatch.role,
+          }
+        : null,
+      debeachLoginIdMatch: debeachLoginIdMatch
+        ? {
+            id: debeachLoginIdMatch._id,
+            name: debeachLoginIdMatch.name,
+            debeachLoginId: debeachLoginIdMatch.debeachLoginId,
+            granted: debeachLoginIdMatch.granted,
+            role: debeachLoginIdMatch.role,
+          }
+        : null,
+    });
+
+    if (exactMatch) {
+      return res.status(409).json({
+        message: "이미 사용 중인 이름 + 드비치 아이디 조합입니다.",
+      });
+    }
+
     const user = new User({
-      name: String(name).trim(),
+      name: normalizedName,
       password,
-      debeachLoginId: String(debeachLoginId).trim(),
+      debeachLoginId: normalizedDebeachLoginId,
       debeachLoginPassword: encryptCredential(debeachLoginPassword),
       role: "user",
       granted: false,
@@ -214,10 +307,18 @@ app.post("/api/auth/signup", async (req, res) => {
     });
   } catch (error) {
     if (error.code === 11000) {
+      console.error("[AUTH][SIGNUP] Duplicate key error:", {
+        message: error.message,
+        keyPattern: error.keyPattern || null,
+        keyValue: error.keyValue || null,
+        index: error.index || null,
+        code: error.code,
+      });
       return res
         .status(409)
         .json({ message: "이미 사용 중인 이름 + 드비치 아이디 조합입니다." });
     }
+    console.error("[AUTH][SIGNUP] Failed to create user:", error);
     res.status(500).json({ message: "Error creating user.", error });
   }
 });

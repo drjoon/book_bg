@@ -26,5 +26,12 @@
     "startTime": "1000",
     "endTime": "1200",
     "force": true
+  },
+  {
+    "account": "김노현",
+    "date": "20260502",
+    "startTime": "1230",
+    "endTime": "1400",
+    "force": true
   }
 ]

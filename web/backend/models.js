@@ -23,6 +23,8 @@ const bookingSchema = new mongoose.Schema({
   successTime: String,
   bookedSlot: availableSlotSchema, // Embed the slot schema
   memo: { type: String },
+  createdByName: { type: String, default: "" },
+  createdByRole: { type: String, default: "" },
   teeTotal: Number,
   teeFirstHalf: Number,
   teeSecondHalf: Number,

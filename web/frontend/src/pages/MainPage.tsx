@@ -36,6 +36,8 @@ interface Booking {
   startTime: string;
   endTime: string;
   memo?: string | null;
+  createdByName?: string | null;
+  createdByRole?: string | null;
   teeTotal?: number | null;
   teeFirstHalf?: number | null;
   teeSecondHalf?: number | null;
@@ -644,8 +646,20 @@ export default function MainPage() {
     재시도: "bg-gray-400",
   };
 
+  const statusRingLegend: Record<Booking["status"], string> = {
+    성공: "ring-green-500",
+    실패: "ring-red-500",
+    예약: "ring-blue-500",
+    접수: "ring-yellow-500",
+    재시도: "ring-gray-400",
+  };
+
   const getStatusColor = (status: Booking["status"]) => {
     return statusLegend[status] || "bg-gray-400";
+  };
+
+  const getStatusRingColor = (status: Booking["status"]) => {
+    return statusRingLegend[status] || "ring-gray-400";
   };
 
   const totalUnreadCount = contacts.reduce(
@@ -1174,7 +1188,10 @@ export default function MainPage() {
         weekMaxBookingCounts.get(weekIndex) ?? dayBookings.length;
 
       const getTileHeight = (bookingCount: number) =>
-        `${Math.max(26, bookingCount * 22 + 22)}px`;
+        `${Math.max(34, bookingCount * 26 + 28)}px`;
+
+      const isAdminCreatedBooking = (booking: Booking) =>
+        booking.createdByRole === "admin";
 
       const getTooltipText = (booking: Booking) => {
         const requestedRange = `${booking.startTime} - ${booking.endTime}`;
@@ -1217,9 +1234,15 @@ export default function MainPage() {
                   );
                 }
               }}
-              className={`w-full rounded-md py-1 text-center text-[10px] leading-tight text-white cursor-pointer ${getStatusColor(
+              className={`w-full rounded-md py-1.5 text-center text-[10px] leading-tight text-white cursor-pointer ${getStatusColor(
                 booking.status,
-              )}`}
+              )} ${
+                isAdminCreatedBooking(booking)
+                  ? `ring-2 ring-offset-1 ring-offset-white ${getStatusRingColor(
+                      booking.status,
+                    )}`
+                  : ""
+              }`}
             >
               {user?.role === "admin" ? booking.account : booking.startTime}
             </div>

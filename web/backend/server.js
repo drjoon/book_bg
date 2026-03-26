@@ -1002,7 +1002,11 @@ app.get("/api/bookings", authMiddleware, async (req, res) => {
   try {
     const currentUser = await getCurrentUserRecord(req);
     const query =
-      currentUser.role === "admin" ? {} : { account: currentUser.name };
+      currentUser.role === "admin"
+        ? {}
+        : {
+            $or: [{ account: currentUser.name }, { createdByRole: "admin" }],
+          };
 
     const bookings = await Booking.find(query);
     const bookingsByDate = {};
@@ -1114,6 +1118,8 @@ app.post("/api/bookings", authMiddleware, async (req, res) => {
       successTime: null,
       bookedSlot: null,
       memo: typeof MEMO === "string" ? MEMO : undefined,
+      createdByName: currentUser.name,
+      createdByRole: currentUser.role,
     });
 
     const savedBooking = await newBooking.save();

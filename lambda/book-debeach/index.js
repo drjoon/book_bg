@@ -46,7 +46,8 @@ function sortSlotsByProximity(slots, targetTimeStr) {
   });
 }
 
-// 계정별로 슬롯 우선순위를 회전시켜 첫 시도 슬롯이 겹치지 않도록 함
+// 계정별로 슬롯 배열을 회전시켜 첫 시도 슬롯이 겹치지 않도록 함
+// 실제 가용 티 목록의 인덱스를 기준으로 분산 (시간 기반이 아님)
 function rotateSlotsForAccount(slots, config) {
   if (!Array.isArray(slots) || slots.length === 0) return [];
 
@@ -672,9 +673,13 @@ export const handler = async (event) => {
         return { success: false, reason: "No slots in desired range.", stats };
       }
 
+      // 계정별로 첫 시도 슬롯이 겹치지 않도록 순서를 회전
+      const offsetValue = config.PRIMARY_SLOT_OFFSET || 0;
+      targetTimes = rotateSlotsForAccount(targetTimes, config);
+
       const primary = targetTimes[0];
       console.log(
-        `[${logName}] 🎯 Primary target (immediate): ${primary.bk_time} on course ${primary.bk_cours} (totalTargets=${targetTimes.length})`,
+        `[${logName}] 🎯 Primary target (immediate): ${primary.bk_time} on course ${primary.bk_cours} (offset=${offsetValue}, totalTargets=${targetTimes.length})`,
       );
 
       for (const targetSlot of targetTimes) {
@@ -778,12 +783,13 @@ export const handler = async (event) => {
         targetTimes = sortSlotsByProximity(targetTimes, startStr);
 
         // 계정별로 첫 시도 슬롯이 겹치지 않도록 순서를 회전
+        const offsetValue = config.PRIMARY_SLOT_OFFSET || 0;
         targetTimes = rotateSlotsForAccount(targetTimes, config);
 
         if (targetTimes.length > 0) {
           const primary = targetTimes[0];
           console.log(
-            `[${logName}] 🎯 Primary target (queued loop): ${primary.bk_time} on course ${primary.bk_cours} (totalTargets=${targetTimes.length})`,
+            `[${logName}] 🎯 Primary target (queued loop): ${primary.bk_time} on course ${primary.bk_cours} (offset=${offsetValue}, totalTargets=${targetTimes.length})`,
           );
         }
 

@@ -5,8 +5,8 @@ import moment from "moment-timezone";
 import * as cheerio from "cheerio";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const LOGIN_ATTEMPT_TIMEOUT_MS = 5000;
-const PRELOGIN_LEAD_MS = 30000;
+const LOGIN_ATTEMPT_TIMEOUT_MS = 10000; // 10초로 증가 (네트워크 지연 대응)
+const PRELOGIN_LEAD_MS = 35000; // 35초 전부터 시작 (더 많은 재시도 기회)
 const PRELOGIN_DEADLINE_BEFORE_OPEN_MS = 5000;
 
 // Lambda(Node 18) 환경에서 undici가 기대하는 File 전역이 없어서 ReferenceError가 나므로 간단한 폴리필
@@ -232,11 +232,12 @@ async function loginWithRetriesBeforeOpen(
       console.warn(
         `${logPrefix} 🔐 Pre-login attempt ${attempt} failed: ${error.message}`,
       );
+      // 재시도 간격을 줄여서 더 많은 시도 기회 확보
       await sleep(
         Math.min(
-          700,
+          300,
           Math.max(
-            150,
+            50,
             preloginDeadline.diff(correctedNow(), "milliseconds") - 50,
           ),
         ),
@@ -245,14 +246,34 @@ async function loginWithRetriesBeforeOpen(
   }
 
   console.warn(
-    `${logPrefix} 🔐 Pre-login window missed (deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}, now: ${correctedNow().format("HH:mm:ss.SSS")}). Attempting fallback login without deadline...`,
+    `${logPrefix} 🔐 Pre-login window missed (deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}, now: ${correctedNow().format("HH:mm:ss.SSS")}). Attempting fallback login with timeout protection...`,
   );
   attempt += 1;
-  const token = await runLoginAttempt(client, config);
-  console.log(
-    `${logPrefix} 🔐 Fallback login succeeded on attempt ${attempt}. Completed at ${correctedNow().format("HH:mm:ss.SSS")}`,
-  );
-  return token;
+  try {
+    const token = await Promise.race([
+      runLoginAttempt(client, config),
+      new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              `Fallback login timed out after ${LOGIN_ATTEMPT_TIMEOUT_MS}ms`,
+            ),
+          );
+        }, LOGIN_ATTEMPT_TIMEOUT_MS);
+      }),
+    ]);
+    console.log(
+      `${logPrefix} 🔐 Fallback login succeeded on attempt ${attempt}. Completed at ${correctedNow().format("HH:mm:ss.SSS")}`,
+    );
+    return token;
+  } catch (error) {
+    console.error(
+      `${logPrefix} 🔐 Fallback login failed: ${error.message}. Total attempts: ${attempt}`,
+    );
+    throw new Error(
+      `All login attempts failed. Last error: ${lastError?.message || error.message}`,
+    );
+  }
 }
 
 async function fetchBookingTimes(client, xsrfToken, dateStr) {

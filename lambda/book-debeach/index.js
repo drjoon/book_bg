@@ -5,8 +5,8 @@ import moment from "moment-timezone";
 import * as cheerio from "cheerio";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const LOGIN_ATTEMPT_TIMEOUT_MS = 10000; // 10초로 증가 (네트워크 지연 대응)
-const PRELOGIN_LEAD_MS = 35000; // 35초 전부터 시작 (더 많은 재시도 기회)
+const LOGIN_ATTEMPT_TIMEOUT_MS = 10000;
+const PRELOGIN_LEAD_MS = 35000;
 const PRELOGIN_DEADLINE_BEFORE_OPEN_MS = 5000;
 
 // Lambda(Node 18) 환경에서 undici가 기대하는 File 전역이 없어서 ReferenceError가 나므로 간단한 폴리필
@@ -46,8 +46,7 @@ function sortSlotsByProximity(slots, targetTimeStr) {
   });
 }
 
-// 계정별로 슬롯 배열을 회전시켜 첫 시도 슬롯이 겹치지 않도록 함
-// 실제 가용 티 목록의 인덱스를 기준으로 분산 (시간 기반이 아님)
+// 계정별로 슬롯 우선순위를 회전시켜 첫 시도 슬롯이 겹치지 않도록 함
 function rotateSlotsForAccount(slots, config) {
   if (!Array.isArray(slots) || slots.length === 0) return [];
 
@@ -232,12 +231,11 @@ async function loginWithRetriesBeforeOpen(
       console.warn(
         `${logPrefix} 🔐 Pre-login attempt ${attempt} failed: ${error.message}`,
       );
-      // 재시도 간격을 줄여서 더 많은 시도 기회 확보
       await sleep(
         Math.min(
-          300,
+          700,
           Math.max(
-            50,
+            150,
             preloginDeadline.diff(correctedNow(), "milliseconds") - 50,
           ),
         ),
@@ -246,34 +244,14 @@ async function loginWithRetriesBeforeOpen(
   }
 
   console.warn(
-    `${logPrefix} 🔐 Pre-login window missed (deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}, now: ${correctedNow().format("HH:mm:ss.SSS")}). Attempting fallback login with timeout protection...`,
+    `${logPrefix} 🔐 Pre-login window missed (deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}, now: ${correctedNow().format("HH:mm:ss.SSS")}). Attempting fallback login without deadline...`,
   );
   attempt += 1;
-  try {
-    const token = await Promise.race([
-      runLoginAttempt(client, config),
-      new Promise((_, reject) => {
-        setTimeout(() => {
-          reject(
-            new Error(
-              `Fallback login timed out after ${LOGIN_ATTEMPT_TIMEOUT_MS}ms`,
-            ),
-          );
-        }, LOGIN_ATTEMPT_TIMEOUT_MS);
-      }),
-    ]);
-    console.log(
-      `${logPrefix} 🔐 Fallback login succeeded on attempt ${attempt}. Completed at ${correctedNow().format("HH:mm:ss.SSS")}`,
-    );
-    return token;
-  } catch (error) {
-    console.error(
-      `${logPrefix} 🔐 Fallback login failed: ${error.message}. Total attempts: ${attempt}`,
-    );
-    throw new Error(
-      `All login attempts failed. Last error: ${lastError?.message || error.message}`,
-    );
-  }
+  const token = await runLoginAttempt(client, config);
+  console.log(
+    `${logPrefix} 🔐 Fallback login succeeded on attempt ${attempt}. Completed at ${correctedNow().format("HH:mm:ss.SSS")}`,
+  );
+  return token;
 }
 
 async function fetchBookingTimes(client, xsrfToken, dateStr) {
@@ -694,13 +672,9 @@ export const handler = async (event) => {
         return { success: false, reason: "No slots in desired range.", stats };
       }
 
-      // 계정별로 첫 시도 슬롯이 겹치지 않도록 순서를 회전
-      const offsetValue = config.PRIMARY_SLOT_OFFSET || 0;
-      targetTimes = rotateSlotsForAccount(targetTimes, config);
-
       const primary = targetTimes[0];
       console.log(
-        `[${logName}] 🎯 Primary target (immediate): ${primary.bk_time} on course ${primary.bk_cours} (offset=${offsetValue}, totalTargets=${targetTimes.length})`,
+        `[${logName}] 🎯 Primary target (immediate): ${primary.bk_time} on course ${primary.bk_cours} (totalTargets=${targetTimes.length})`,
       );
 
       for (const targetSlot of targetTimes) {
@@ -804,13 +778,12 @@ export const handler = async (event) => {
         targetTimes = sortSlotsByProximity(targetTimes, startStr);
 
         // 계정별로 첫 시도 슬롯이 겹치지 않도록 순서를 회전
-        const offsetValue = config.PRIMARY_SLOT_OFFSET || 0;
         targetTimes = rotateSlotsForAccount(targetTimes, config);
 
         if (targetTimes.length > 0) {
           const primary = targetTimes[0];
           console.log(
-            `[${logName}] 🎯 Primary target (queued loop): ${primary.bk_time} on course ${primary.bk_cours} (offset=${offsetValue}, totalTargets=${targetTimes.length})`,
+            `[${logName}] 🎯 Primary target (queued loop): ${primary.bk_time} on course ${primary.bk_cours} (totalTargets=${targetTimes.length})`,
           );
         }
 

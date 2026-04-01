@@ -654,7 +654,7 @@ app.post("/api/auth/login", async (req, res) => {
         name: matchedUser.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" },
+      { expiresIn: "30d" },
     );
 
     res.json({

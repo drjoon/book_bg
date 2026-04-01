@@ -215,10 +215,68 @@ async function runBookingGroup(group, options) {
     );
   }
 
-  // 2-1. 전체 계정에 걸쳐 전역 슬롯 인덱스 오프셋 부여
-  // 실제 가용 티 목록의 인덱스를 기준으로 첫 번째 타겟을 분산시키기 위해
+  // 2-1. 동일한 시간대(START_TIME/END_TIME 완전 일치) 계정들끼리는
+  // 티 간격 7분을 기준으로 계정별로 7분씩 START/END를 밀어서
+  // 첫 시도 시간대가 완전히 겹치지 않도록 보정
+  const groupByTimeKey = new Map();
+  for (const cfg of finalConfigs) {
+    const key = `${cfg.START_TIME}-${cfg.END_TIME}`;
+    if (!groupByTimeKey.has(key)) {
+      groupByTimeKey.set(key, []);
+    }
+    groupByTimeKey.get(key).push(cfg);
+  }
+
+  for (const cfgs of groupByTimeKey.values()) {
+    if (cfgs.length <= 1) continue;
+
+    // 이름 기준 정렬로 계정 순서를 결정 (deterministic)
+    cfgs.sort((a, b) => {
+      const an = a.NAME || "";
+      const bn = b.NAME || "";
+      return an.localeCompare(bn);
+    });
+
+    cfgs.forEach((cfg, index) => {
+      if (index === 0) return; // 첫 계정은 원래 시간 유지
+
+      const offsetMinutes = 7 * index;
+
+      const parseHHmm = (hhmm) => {
+        const h = parseInt(hhmm.slice(0, 2), 10);
+        const m = parseInt(hhmm.slice(2, 4), 10);
+        return { h, m };
+      };
+
+      const toHHmm = (h, m) => {
+        const mmTotal = h * 60 + m;
+        const clamped = Math.max(0, Math.min(23 * 60 + 59, mmTotal));
+        const nh = Math.floor(clamped / 60);
+        const nm = clamped % 60;
+        return `${String(nh).padStart(2, "0")}${String(nm).padStart(2, "0")}`;
+      };
+
+      const s = parseHHmm(cfg.START_TIME.replace(":", ""));
+      const e = parseHHmm(cfg.END_TIME.replace(":", ""));
+
+      const startTotal = s.h * 60 + s.m + offsetMinutes;
+      const endTotal = e.h * 60 + e.m + offsetMinutes;
+
+      const newStart = toHHmm(0, startTotal);
+      const newEnd = toHHmm(0, endTotal);
+
+      cfg.START_TIME = newStart;
+      cfg.END_TIME = newEnd;
+
+      console.log(
+        `${logPrefix} Adjusted time range for ${cfg.NAME}: ${cfg.START_TIME}~${cfg.END_TIME} (offset +${offsetMinutes}min)`,
+      );
+    });
+  }
+
+  // 2-2. 전체 계정에 걸쳐 전역 슬롯 인덱스 부여
+  // 시간대가 달라도 가용 슬롯이 겹칠 경우 충돌을 방지하기 위해
   // 이름 기준 전역 정렬로 계정마다 PRIMARY_SLOT_OFFSET을 고유하게 부여한다.
-  // Lambda에서 rotateSlotsForAccount()가 이 값을 사용하여 배열을 회전시킨다.
   {
     const globalSorted = [...finalConfigs].sort((a, b) => {
       const aN = a.NAME || "";

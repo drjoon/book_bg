@@ -3,11 +3,23 @@ import { CookieJar } from "tough-cookie";
 import { wrapper as axiosCookieJarSupport } from "axios-cookiejar-support";
 import moment from "moment-timezone";
 import * as cheerio from "cheerio";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const LOGIN_ATTEMPT_TIMEOUT_MS = 7000;
 const PRELOGIN_LEAD_MS = 90000;
 const PRELOGIN_DEADLINE_BEFORE_OPEN_MS = 5000;
+
+// DynamoDB 클라이언트 초기화
+const dynamoClient = DynamoDBDocumentClient.from(
+  new DynamoDBClient({ region: "ap-south-1" }),
+);
+const SLOT_CLAIMS_TABLE = "book-debeach-slot-claims";
 
 // Lambda(Node 18) 환경에서 undici가 기대하는 File 전역이 없어서 ReferenceError가 나므로 간단한 폴리필
 if (typeof File === "undefined") {
@@ -269,6 +281,54 @@ async function fetchBookingTimes(client, xsrfToken, dateStr) {
   );
 
   return res.data;
+}
+
+// DynamoDB 슬롯 예약 함수
+async function claimSlot(dateStr, slot, accountName) {
+  const slotKey = `${dateStr}#${slot.bk_time}#${slot.bk_cours}`;
+
+  try {
+    await dynamoClient.send(
+      new PutCommand({
+        TableName: SLOT_CLAIMS_TABLE,
+        Item: {
+          PK: slotKey,
+          accountName: accountName,
+          claimedAt: Date.now(),
+          TTL: Math.floor(Date.now() / 1000) + 10, // 10초 후 만료
+        },
+        ConditionExpression: "attribute_not_exists(PK)",
+      }),
+    );
+
+    return true;
+  } catch (error) {
+    if (error.name === "ConditionalCheckFailedException") {
+      return false;
+    }
+    console.warn(`[${accountName}] DynamoDB claim error: ${error.message}`);
+    return false;
+  }
+}
+
+// 이미 예약된 슬롯 조회
+async function getClaimedSlots(dateStr) {
+  try {
+    const result = await dynamoClient.send(
+      new QueryCommand({
+        TableName: SLOT_CLAIMS_TABLE,
+        KeyConditionExpression: "begins_with(PK, :datePrefix)",
+        ExpressionAttributeValues: {
+          ":datePrefix": dateStr,
+        },
+      }),
+    );
+
+    return new Set(result.Items?.map((item) => item.PK) || []);
+  } catch (error) {
+    console.warn(`DynamoDB query error: ${error.message}`);
+    return new Set();
+  }
 }
 
 async function selectAndConfirmBooking(
@@ -769,12 +829,23 @@ export const handler = async (event) => {
         }
         lastStats = stats;
 
-        let targetTimes = availableTimes.filter(
-          (slot) =>
+        // DynamoDB에서 이미 다른 Lambda가 예약한 슬롯 조회
+        const claimedSlots = await getClaimedSlots(config.TARGET_DATE);
+        if (claimedSlots.size > 0) {
+          console.log(
+            `[${logName}] 📋 Already claimed by other Lambdas: ${claimedSlots.size} slots`,
+          );
+        }
+
+        let targetTimes = availableTimes.filter((slot) => {
+          const slotKey = `${config.TARGET_DATE}#${slot.bk_time}#${slot.bk_cours}`;
+          return (
             slot.bk_time >= s &&
             slot.bk_time <= e &&
-            !failedSlotTimes.has(`${slot.bk_time}_${slot.bk_cours}`),
-        );
+            !failedSlotTimes.has(`${slot.bk_time}_${slot.bk_cours}`) &&
+            !claimedSlots.has(slotKey) // DynamoDB에 이미 예약된 슬롯 제외
+          );
+        });
         targetTimes = sortSlotsByProximity(targetTimes, startStr);
 
         // 계정별로 첫 시도 슬롯이 겹치지 않도록 순서를 회전
@@ -801,6 +872,23 @@ export const handler = async (event) => {
         }
 
         for (const targetSlot of targetTimes) {
+          // DynamoDB에 슬롯 예약 시도
+          const claimed = await claimSlot(
+            config.TARGET_DATE,
+            targetSlot,
+            logName,
+          );
+          if (!claimed) {
+            console.log(
+              `[${logName}] ⚠️ Slot ${targetSlot.bk_time} (${targetSlot.bk_cours}) already claimed by another Lambda. Skipping.`,
+            );
+            continue;
+          }
+
+          console.log(
+            `[${logName}] ✅ Claimed slot ${targetSlot.bk_time} (${targetSlot.bk_cours}) in DynamoDB`,
+          );
+
           const result = await attemptBooking(
             account,
             targetSlot,

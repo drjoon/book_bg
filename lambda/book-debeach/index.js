@@ -5,8 +5,8 @@ import moment from "moment-timezone";
 import * as cheerio from "cheerio";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const LOGIN_ATTEMPT_TIMEOUT_MS = 10000;
-const PRELOGIN_LEAD_MS = 35000;
+const LOGIN_ATTEMPT_TIMEOUT_MS = 7000;
+const PRELOGIN_LEAD_MS = 90000;
 const PRELOGIN_DEADLINE_BEFORE_OPEN_MS = 5000;
 
 // Lambda(Node 18) 환경에서 undici가 기대하는 File 전역이 없어서 ReferenceError가 나므로 간단한 폴리필
@@ -788,6 +788,14 @@ export const handler = async (event) => {
         }
 
         if (targetTimes.length === 0) {
+          console.log(
+            `[${logName}] ⚠️ No target slots available. Total slots: ${availableTimes.length}, Range: ${s}-${e}, Failed slots: ${failedSlotTimes.size}`,
+          );
+          if (failedSlotTimes.size > 0) {
+            console.log(
+              `[${logName}] 📋 Failed slot list: ${Array.from(failedSlotTimes).join(", ")}`,
+            );
+          }
           await sleep(600);
           continue;
         }

@@ -161,12 +161,12 @@ async function saveQueue(queue) {
 }
 
 function isBookingTimeNear(job) {
-  // 예약 오픈 1분 전 ~ 2분 후까지 실행 허용
+  // 예약 오픈 1분 30초 전 ~ 2분 후까지 실행 허용
   const now = moment().tz("Asia/Seoul");
   const date = job.date ?? job.TARGET_DATE;
   const openTime = getBookingOpenTime(date);
   return (
-    now.isAfter(openTime.clone().subtract(1, "minute")) &&
+    now.isAfter(openTime.clone().subtract(90, "seconds")) &&
     now.isBefore(openTime.clone().add(2, "minute"))
   );
 }

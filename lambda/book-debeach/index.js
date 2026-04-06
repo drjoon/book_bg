@@ -7,11 +7,11 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   PutCommand,
-  QueryCommand,
+  ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const LOGIN_ATTEMPT_TIMEOUT_MS = 7000;
+const LOGIN_ATTEMPT_TIMEOUT_MS = 10000;
 const PRELOGIN_LEAD_MS = 90000;
 const PRELOGIN_DEADLINE_BEFORE_OPEN_MS = 5000;
 
@@ -315,9 +315,9 @@ async function claimSlot(dateStr, slot, accountName) {
 async function getClaimedSlots(dateStr) {
   try {
     const result = await dynamoClient.send(
-      new QueryCommand({
+      new ScanCommand({
         TableName: SLOT_CLAIMS_TABLE,
-        KeyConditionExpression: "begins_with(PK, :datePrefix)",
+        FilterExpression: "begins_with(PK, :datePrefix)",
         ExpressionAttributeValues: {
           ":datePrefix": dateStr,
         },
@@ -326,7 +326,7 @@ async function getClaimedSlots(dateStr) {
 
     return new Set(result.Items?.map((item) => item.PK) || []);
   } catch (error) {
-    console.warn(`DynamoDB query error: ${error.message}`);
+    console.warn(`DynamoDB scan error: ${error.message}`);
     return new Set();
   }
 }

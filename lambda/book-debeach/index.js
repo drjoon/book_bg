@@ -738,6 +738,23 @@ export const handler = async (event) => {
       );
 
       for (const targetSlot of targetTimes) {
+        // DynamoDB에 슬롯 예약 시도 (immediate 모드에서도 충돌 방지)
+        const claimed = await claimSlot(
+          config.TARGET_DATE,
+          targetSlot,
+          logName,
+        );
+        if (!claimed) {
+          console.log(
+            `[${logName}] ⚠️ Slot ${targetSlot.bk_time} (${targetSlot.bk_cours}) already claimed by another Lambda (immediate). Skipping.`,
+          );
+          continue;
+        }
+
+        console.log(
+          `[${logName}] ✅ Claimed slot ${targetSlot.bk_time} (${targetSlot.bk_cours}) in DynamoDB (immediate)`,
+        );
+
         const result = await attemptBooking(account, targetSlot);
         if (result.success) {
           console.log(`[${logName}] Booking successful (immediate).`);

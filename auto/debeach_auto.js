@@ -110,7 +110,7 @@ async function runBookingGroup(group, options) {
           console.log(
             `[${config.NAME}][${date}] Skip initializing status as it's already '${existing.status}'.`,
           );
-          continue;
+          return null;
         }
       } catch (e) {
         console.warn(
@@ -234,13 +234,19 @@ async function runBookingGroup(group, options) {
     cfgs.sort((a, b) => {
       const an = a.NAME || "";
       const bn = b.NAME || "";
-      return an.localeCompare(bn);
+      // 오수양은 항상 첫 번째
+      if (an === "오수양") return -1;
+      if (bn === "오수양") return 1;
+      // 나머지는 START_TIME 순서로 정렬
+      const aTime = a.START_TIME || "";
+      const bTime = b.START_TIME || "";
+      return aTime.localeCompare(bTime);
     });
 
     cfgs.forEach((cfg, index) => {
       if (index === 0) return; // 첫 계정은 원래 시간 유지
 
-      const offsetMinutes = 7 * index;
+      const offsetMinutes = 7 * index; // 7분씩 증가 (슬롯 탐색 7분 간격)
 
       const parseHHmm = (hhmm) => {
         const h = parseInt(hhmm.slice(0, 2), 10);
@@ -259,8 +265,24 @@ async function runBookingGroup(group, options) {
       const s = parseHHmm(cfg.START_TIME.replace(":", ""));
       const e = parseHHmm(cfg.END_TIME.replace(":", ""));
 
-      const startTotal = s.h * 60 + s.m + offsetMinutes;
-      const endTotal = e.h * 60 + e.m + offsetMinutes;
+      // START_TIME이 END_TIME보다 늦으면 역순 탐색 (예: 1000 -> 0800)
+      const isReverseOrder = s.h * 60 + s.m > e.h * 60 + e.m;
+
+      let startTotal, endTotal;
+      if (isReverseOrder) {
+        // 역순: START_TIME에서 시작하여 END_TIME으로 (늦은 시간 → 이른 시간)
+        // 시작 시각을 벗어나지 않도록 START_TIME에서 offsetMinutes를 뺌
+        startTotal = s.h * 60 + s.m - offsetMinutes;
+        endTotal = e.h * 60 + e.m; // END_TIME은 고정
+        console.log(
+          `${logPrefix} ${cfg.NAME}: Reverse order mode (later → earlier): ${cfg.START_TIME} → ${cfg.END_TIME}`,
+        );
+      } else {
+        // 정순: START_TIME에서 시작하여 END_TIME으로 (이른 시간 → 늦은 시간)
+        // 시작 시각을 벗어나지 않도록 START_TIME에서 offsetMinutes를 더함
+        startTotal = s.h * 60 + s.m + offsetMinutes;
+        endTotal = e.h * 60 + e.m; // END_TIME은 고정
+      }
 
       const newStart = toHHmm(0, startTotal);
       const newEnd = toHHmm(0, endTotal);
@@ -276,31 +298,54 @@ async function runBookingGroup(group, options) {
 
   // 2-2. 전체 계정에 걸쳐 전역 슬롯 인덱스 부여
   // 시간대가 달라도 가용 슬롯이 겹칠 경우 충돌을 방지하기 위해
-  // 이름 기준 전역 정렬로 계정마다 PRIMARY_SLOT_OFFSET을 고유하게 부여한다.
+  // 오수양을 첫 번째로, 나머지는 예약 설정 시각(START_TIME) 순서로 정렬
   {
     const globalSorted = [...finalConfigs].sort((a, b) => {
       const aN = a.NAME || "";
       const bN = b.NAME || "";
+      // 오수양은 항상 첫 번째
       if (aN === "오수양") return -1;
       if (bN === "오수양") return 1;
-      return aN.localeCompare(bN);
+      // 나머지는 START_TIME 순서로 정렬
+      const aTime = a.START_TIME || "";
+      const bTime = b.START_TIME || "";
+      return aTime.localeCompare(bTime);
     });
     globalSorted.forEach((cfg, globalIdx) => {
       cfg.PRIMARY_SLOT_OFFSET = globalIdx;
       if (globalIdx > 0) {
         console.log(
-          `${logPrefix} Global slot offset for ${cfg.NAME}: PRIMARY_SLOT_OFFSET=${globalIdx}`,
+          `${logPrefix} Global slot offset for ${cfg.NAME}: PRIMARY_SLOT_OFFSET=${globalIdx}, START_TIME=${cfg.START_TIME}`,
         );
       }
     });
   }
 
-  // 3. 각 계정에 대해 병렬로 Lambda 함수 호출
+  // 3. 각 계정에 대해 순차적으로 Lambda 함수 호출 (staggered 방식)
   console.log(
-    `${logPrefix} Will invoke ${finalConfigs.length} Lambda function(s) for: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
+    `${logPrefix} Will invoke ${finalConfigs.length} Lambda function(s) sequentially with stagger delay for: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
   );
-  const invocationPromises = finalConfigs.map(async (config) => {
+
+  // 시간 오프셋: 계정당 7분씩 (오수양 0분, 2번째 7분, 3번째 14분...)
+  const TIME_OFFSET_MINUTES = 7;
+
+  // Lambda 순차 호출 (자연스러운 stagger로 로그인 시차 발생)
+  const LAMBDA_STAGGER_MS = 1000 + Math.floor(Math.random() * 1000);
+
+  for (let i = 0; i < finalConfigs.length; i++) {
+    const config = finalConfigs[i];
     const logName = config.NAME || config.LOGIN_ID;
+
+    // Lambda 호출 stagger 적용 (로그인 자동 stagger됨)
+    if (i > 0) {
+      const staggerDelay = i * LAMBDA_STAGGER_MS;
+      console.log(
+        `[${logName}] Waiting ${staggerDelay}ms before invoking (stagger order: ${i + 1}/${finalConfigs.length})...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, staggerDelay));
+    }
+
+    // 로그인 stagger 없음 - Lambda 뜨면 바로 로그인 시작
 
     // 실행 직전 DB 상태 재확인: 취소/삭제/종료 상태면 로그인(람다 호출) 자체를 스킵
     if (!force) {
@@ -310,13 +355,13 @@ async function runBookingGroup(group, options) {
           console.log(
             `[${logName}][${date}] Skip invoking Lambda because booking was deleted.`,
           );
-          return;
+          return null;
         }
         if (isTerminalStatus(existing.status)) {
           console.log(
             `[${logName}][${date}] Skip invoking Lambda because booking status is '${existing.status}'.`,
           );
-          return;
+          return null;
         }
       } catch (e) {
         console.warn(
@@ -333,6 +378,7 @@ async function runBookingGroup(group, options) {
       config,
       immediate: options.immediate || false,
       offsetMs,
+      // loginStaggerMs 없음 - Lambda 뜨면 바로 로그인
     };
 
     const command = new InvokeCommand({
@@ -450,11 +496,9 @@ async function runBookingGroup(group, options) {
         }
       }
     }
-  });
+  }
 
-  await Promise.all(invocationPromises);
-
-  console.log(`${logPrefix} --- All Lambda invocations are sent ---`);
+  console.log(`${logPrefix} --- All Lambda invocations completed ---`);
 }
 
 function getBookingOpenTime(targetDateStr) {

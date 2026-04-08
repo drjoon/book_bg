@@ -34,7 +34,7 @@ const __dirname = path.dirname(__filename);
 const queuePath = path.resolve(__dirname, "./queue.json");
 let processing = false;
 let lastEmptyRebuildAtMs = 0;
-const EMPTY_REBUILD_BACKOFF_MS = 60_000;
+const EMPTY_REBUILD_BACKOFF_MS = 30_000; // 큐 비었을 때 rebuild 간격 (30초)
 
 function isTerminalStatus(status) {
   if (!status) return false;
@@ -161,12 +161,12 @@ async function saveQueue(queue) {
 }
 
 function isBookingTimeNear(job) {
-  // 예약 오픈 1분 30초 전 ~ 2분 후까지 실행 허용
+  // 예약 오픈 2분 전 ~ 2분 후까지 실행 허용 (기존 90초에서 2분으로 확대)
   const now = moment().tz("Asia/Seoul");
   const date = job.date ?? job.TARGET_DATE;
   const openTime = getBookingOpenTime(date);
   return (
-    now.isAfter(openTime.clone().subtract(90, "seconds")) &&
+    now.isAfter(openTime.clone().subtract(2, "minutes")) &&
     now.isBefore(openTime.clone().add(2, "minute"))
   );
 }
@@ -276,7 +276,7 @@ async function processQueue() {
 async function startWorker() {
   try {
     await connectDB();
-    setInterval(processQueue, 5000);
+    setInterval(processQueue, 2000); // 2초마다 체크 (기존 5초에서 단축)
     console.log("Worker started. Watching queue.json...");
   } catch (e) {
     console.error("[WORKER] Failed to initialize worker:", e.message);

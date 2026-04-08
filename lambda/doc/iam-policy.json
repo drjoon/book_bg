@@ -6,7 +6,8 @@
       "Action": [
         "dynamodb:PutItem",
         "dynamodb:Query",
-        "dynamodb:GetItem"
+        "dynamodb:GetItem",
+        "dynamodb:Scan"
       ],
       "Resource": "arn:aws:dynamodb:ap-south-1:106055905364:table/book-debeach-slot-claims"
     }

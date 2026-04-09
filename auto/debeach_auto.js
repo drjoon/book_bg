@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 import { Booking, User } from "../web/backend/models.js";
-import { saveTeeSnapshot } from "../web/backend/s3.js";
+import { saveTeeSnapshot, saveBookingResult } from "../web/backend/s3.js";
 import connectDB from "../web/backend/db.js";
 import {
   decryptCredential,
@@ -110,7 +110,7 @@ async function runBookingGroup(group, options) {
           console.log(
             `[${config.NAME}][${date}] Skip initializing status as it's already '${existing.status}'.`,
           );
-          return null;
+          continue;
         }
       } catch (e) {
         console.warn(
@@ -321,182 +321,154 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // 3. 각 계정에 대해 순차적으로 Lambda 함수 호출 (staggered 방식)
+  // 3. Lambda 동시 발사 (Promise.all + RequestResponse)
+  // loginStaggerMs로 각 Lambda가 10초 이내 랜덤 시각에 로그인 시작 (첫 번째는 즉시)
   console.log(
-    `${logPrefix} Will invoke ${finalConfigs.length} Lambda function(s) sequentially with stagger delay for: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
+    `${logPrefix} Invoking ${finalConfigs.length} Lambda(s) simultaneously: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
   );
 
-  // 시간 오프셋: 계정당 7분씩 (오수양 0분, 2번째 7분, 3번째 14분...)
-  const TIME_OFFSET_MINUTES = 7;
-
-  // Lambda 순차 호출 (자연스러운 stagger로 로그인 시차 발생)
-  const LAMBDA_STAGGER_MS = 1000 + Math.floor(Math.random() * 1000);
-
-  for (let i = 0; i < finalConfigs.length; i++) {
-    const config = finalConfigs[i];
+  const invocationPromises = finalConfigs.map(async (config, i) => {
     const logName = config.NAME || config.LOGIN_ID;
 
-    // Lambda 호출 stagger 적용 (로그인 자동 stagger됨)
-    if (i > 0) {
-      const staggerDelay = i * LAMBDA_STAGGER_MS;
-      console.log(
-        `[${logName}] Waiting ${staggerDelay}ms before invoking (stagger order: ${i + 1}/${finalConfigs.length})...`,
-      );
-      await new Promise((resolve) => setTimeout(resolve, staggerDelay));
-    }
+    // 모든 Lambda가 10초 이내 랜덤 시각에 로그인 시작 (첫 번째는 즉시)
+    const loginStaggerMs = i === 0 ? 0 : Math.floor(Math.random() * 10000);
 
-    // 로그인 stagger 없음 - Lambda 뜨면 바로 로그인 시작
-
-    // 실행 직전 DB 상태 재확인: 취소/삭제/종료 상태면 로그인(람다 호출) 자체를 스킵
+    // 실행 직전 DB 상태 재확인
     if (!force) {
       try {
         const existing = await Booking.findOne({ account: config.NAME, date });
         if (!existing) {
-          console.log(
-            `[${logName}][${date}] Skip invoking Lambda because booking was deleted.`,
-          );
-          return null;
+          console.log(`[${logName}][${date}] Skip: booking deleted.`);
+          return;
         }
         if (isTerminalStatus(existing.status)) {
           console.log(
-            `[${logName}][${date}] Skip invoking Lambda because booking status is '${existing.status}'.`,
+            `[${logName}][${date}] Skip: status='${existing.status}'.`,
           );
-          return null;
+          return;
         }
       } catch (e) {
         console.warn(
-          `[${logName}][${date}] Failed to re-check booking status before invoke: ${e.message}`,
+          `[${logName}][${date}] Failed to re-check status: ${e.message}`,
         );
       }
     }
 
     console.log(
-      `[${logName}] Invoking Lambda function synchronously... (START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME}, PRIMARY_SLOT_OFFSET: ${config.PRIMARY_SLOT_OFFSET || 0})`,
+      `[${logName}] 🚀 Invoking Lambda (loginStaggerMs=${loginStaggerMs}, START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME})`,
     );
 
     const payload = {
       config,
       immediate: options.immediate || false,
       offsetMs,
-      // loginStaggerMs 없음 - Lambda 뜨면 바로 로그인
+      loginStaggerMs,
     };
 
     const command = new InvokeCommand({
       FunctionName: LAMBDA_FUNCTION_NAME,
-      InvocationType: "RequestResponse", // 동기 호출
+      InvocationType: "RequestResponse",
       Payload: JSON.stringify(payload),
     });
 
     try {
       const response = await lambda.send(command);
       const result = JSON.parse(new TextDecoder().decode(response.Payload));
-      console.log(`[${logName}] ✅ Lambda returned result:`, result);
+      console.log(
+        `[${logName}] ✅ Lambda returned: success=${result.success}, resultKey=${result.resultKey || "-"}`,
+      );
 
       if (result.success) {
         const stats = result.stats || {};
-        const wasUpdated = await updateBookingStatus(
-          config.NAME,
-          date,
-          "성공",
-          {
-            successTime: moment().tz("Asia/Seoul").format(),
-            bookedSlot: result.slot,
-            teeTotal: stats.teeTotal,
-            teeFirstHalf: stats.teeFirstHalf,
-            teeSecondHalf: stats.teeSecondHalf,
-            teeInRange: stats.teeInRange,
-          },
-        );
-
+        const wasUpdated = await updateBookingStatus(logName, date, "성공", {
+          successTime: moment().tz("Asia/Seoul").format(),
+          bookedSlot: result.slot,
+          teeTotal: stats.teeTotal,
+          teeFirstHalf: stats.teeFirstHalf,
+          teeSecondHalf: stats.teeSecondHalf,
+          teeInRange: stats.teeInRange,
+        });
         if (Array.isArray(result.slots) && result.slots.length > 0) {
-          await saveTeeSnapshot(result.slots, {
-            roundDate: date,
-          });
+          await saveTeeSnapshot(result.slots, { roundDate: date });
         }
-
-        // Broadcast success to WebSocket clients
+        await saveBookingResult(logName, date, result);
         if (wasUpdated) {
           try {
             const { broadcastLambdaResult } =
               await import("../web/backend/server.js");
             broadcastLambdaResult({
               type: "booking_success",
-              account: config.NAME,
+              account: logName,
               date,
               slot: result.slot,
               stats,
             });
           } catch (wsError) {
             console.warn(
-              `[${logName}] Failed to broadcast success via WebSocket:`,
+              `[${logName}] Failed to broadcast success:`,
               wsError.message,
             );
           }
         }
       } else {
         const stats = result.stats || {};
-        const wasUpdated = await updateBookingStatus(
-          config.NAME,
-          date,
-          "실패",
-          {
-            reason: result.reason || "Lambda에서 예약 실패",
-            teeTotal: stats.teeTotal,
-            teeFirstHalf: stats.teeFirstHalf,
-            teeSecondHalf: stats.teeSecondHalf,
-            teeInRange: stats.teeInRange,
-          },
-        );
-
-        // Broadcast failure to WebSocket clients
+        const wasUpdated = await updateBookingStatus(logName, date, "실패", {
+          reason: result.reason || "Lambda에서 예약 실패",
+          teeTotal: stats.teeTotal,
+          teeFirstHalf: stats.teeFirstHalf,
+          teeSecondHalf: stats.teeSecondHalf,
+          teeInRange: stats.teeInRange,
+        });
+        await saveBookingResult(logName, date, result);
         if (wasUpdated) {
           try {
             const { broadcastLambdaResult } =
               await import("../web/backend/server.js");
             broadcastLambdaResult({
               type: "booking_failure",
-              account: config.NAME,
+              account: logName,
               date,
-              reason: result.reason || "Lambda에서 예약 실패",
+              reason: result.reason,
               stats,
             });
           } catch (wsError) {
             console.warn(
-              `[${logName}] Failed to broadcast failure via WebSocket:`,
+              `[${logName}] Failed to broadcast failure:`,
               wsError.message,
             );
           }
         }
       }
     } catch (error) {
-      console.error(
-        `[${logName}] 🚨 Failed to invoke or process Lambda response:`,
-        error,
-      );
+      console.error(`[${logName}] 🚨 Failed to invoke Lambda:`, error.message);
       const wasUpdated = await updateBookingStatus(config.NAME, date, "실패", {
         reason: `Lambda 호출 오류: ${error.message}`,
       });
-
-      // Broadcast error to WebSocket clients
+      await saveBookingResult(logName, date, {
+        success: false,
+        reason: `Lambda 호출 오류: ${error.message}`,
+      });
       if (wasUpdated) {
         try {
           const { broadcastLambdaResult } =
             await import("../web/backend/server.js");
           broadcastLambdaResult({
             type: "booking_error",
-            account: config.NAME,
+            account: logName,
             date,
             reason: `Lambda 호출 오류: ${error.message}`,
           });
         } catch (wsError) {
           console.warn(
-            `[${logName}] Failed to broadcast error via WebSocket:`,
+            `[${logName}] Failed to broadcast error:`,
             wsError.message,
           );
         }
       }
     }
-  }
+  });
+
+  await Promise.all(invocationPromises);
 
   console.log(`${logPrefix} --- All Lambda invocations completed ---`);
 }

@@ -38,17 +38,17 @@ export async function ensureTeeBucket() {
           status,
           code,
           message: e?.message,
-        })
+        }),
       );
 
       if (status === 301) {
         console.warn(
-          "[TEE_S3] Possible region mismatch. Check bucket region vs env AWS_REGION/TEE_S3_REGION."
+          "[TEE_S3] Possible region mismatch. Check bucket region vs env AWS_REGION/TEE_S3_REGION.",
         );
       }
       if (status === 403) {
         console.warn(
-          "[TEE_S3] Possible permission issue. Check EC2/EBS instance role policy for s3:ListBucket/GetObject/PutObject."
+          "[TEE_S3] Possible permission issue. Check EC2/EBS instance role policy for s3:ListBucket/GetObject/PutObject.",
         );
       }
       return;
@@ -60,11 +60,50 @@ export async function ensureTeeBucket() {
       new CreateBucketCommand({
         Bucket: BUCKET_NAME,
         CreateBucketConfiguration: { LocationConstraint: REGION },
-      })
+      }),
     );
     console.log(`[TEE_S3] Bucket created: ${BUCKET_NAME} (${REGION})`);
   } catch (e) {
     console.error("[TEE_S3] Failed to create bucket:", e.message || e);
+  }
+}
+
+export async function saveBookingResult(accountName, dateStr, result) {
+  if (!BUCKET_NAME) return;
+
+  const key = `${COURSE_ID}/results/${dateStr}/${accountName}.json`;
+
+  try {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+        Body: JSON.stringify({
+          accountName,
+          dateStr,
+          success: result.success,
+          slot: result.slot || null,
+          reason: result.reason || null,
+          stats: result.stats || null,
+          savedAt: new Date().toISOString(),
+        }),
+        ContentType: "application/json; charset=utf-8",
+      }),
+    );
+    console.log(
+      `[TEE_S3] Booking result saved to S3: s3://${BUCKET_NAME}/${key}`,
+    );
+  } catch (e) {
+    console.warn(
+      "[TEE_S3] Failed to save booking result:",
+      JSON.stringify({
+        bucket: BUCKET_NAME,
+        region: REGION,
+        status: e?.$metadata?.httpStatusCode,
+        code: e?.name || e?.Code || e?.code,
+        message: e?.message,
+      }),
+    );
   }
 }
 
@@ -87,7 +126,7 @@ export async function saveTeeSnapshot(slots, { roundDate, bookingDate } = {}) {
     let merged = [];
     try {
       const existing = await s3.send(
-        new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key })
+        new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key }),
       );
       const body = await existing.Body?.transformToString();
       if (body) {
@@ -124,10 +163,10 @@ export async function saveTeeSnapshot(slots, { roundDate, bookingDate } = {}) {
         Key: key,
         Body: JSON.stringify(finalSlots),
         ContentType: "application/json; charset=utf-8",
-      })
+      }),
     );
     console.log(
-      `[TEE_S3] Saved tee snapshot to S3: s3://${BUCKET_NAME}/${key}`
+      `[TEE_S3] Saved tee snapshot to S3: s3://${BUCKET_NAME}/${key}`,
     );
   } catch (e) {
     console.warn(
@@ -138,7 +177,7 @@ export async function saveTeeSnapshot(slots, { roundDate, bookingDate } = {}) {
         status: e?.$metadata?.httpStatusCode,
         code: e?.name || e?.Code || e?.code,
         message: e?.message,
-      })
+      }),
     );
   }
 }

@@ -20,6 +20,7 @@ const dynamoClient = DynamoDBDocumentClient.from(
   new DynamoDBClient({ region: "ap-south-1" }),
 );
 const SLOT_CLAIMS_TABLE = "book-debeach-slot-claims";
+const BOOKING_RESULTS_TABLE = "book-debeach-results";
 
 // Lambda(Node 18) 환경에서 undici가 기대하는 File 전역이 없어서 ReferenceError가 나므로 간단한 폴리필
 if (typeof File === "undefined") {
@@ -208,7 +209,6 @@ async function loginWithRetriesBeforeOpen(
   await waitUntil(preloginStart, logPrefix, offsetMs, "pre-login start");
 
   let attempt = 0;
-  let lastError = null;
   while (correctedNow().isBefore(preloginDeadline)) {
     attempt += 1;
     const remainingMs = preloginDeadline.diff(correctedNow());
@@ -239,7 +239,6 @@ async function loginWithRetriesBeforeOpen(
       );
       return token;
     } catch (error) {
-      lastError = error;
       console.warn(
         `${logPrefix} 🔐 Pre-login attempt ${attempt} failed: ${error.message}`,
       );
@@ -281,6 +280,36 @@ async function fetchBookingTimes(client, xsrfToken, dateStr) {
   );
 
   return res.data;
+}
+
+// DynamoDB에 예약 결과 저장 (EBS 폴링용)
+async function saveBookingResult(accountName, dateStr, result) {
+  try {
+    await dynamoClient.send(
+      new PutCommand({
+        TableName: BOOKING_RESULTS_TABLE,
+        Item: {
+          pk: `${dateStr}#${accountName}`,
+          accountName,
+          dateStr,
+          success: result.success,
+          slot: result.slot || null,
+          reason: result.reason || null,
+          stats: result.stats || null,
+          slots: result.slots || null,
+          savedAt: Date.now(),
+          ttl: Math.floor(Date.now() / 1000) + 3600, // 1시간 TTL
+        },
+      }),
+    );
+    console.log(
+      `[${accountName}] 📝 Booking result saved to DynamoDB (success=${result.success})`,
+    );
+  } catch (e) {
+    console.warn(
+      `[${accountName}] Failed to save booking result to DynamoDB: ${e.message}`,
+    );
+  }
 }
 
 // DynamoDB 슬롯 예약 함수
@@ -578,7 +607,7 @@ async function waitForBookingOpen(openTime, logPrefix, offsetMs) {
 
 export const handler = async (event) => {
   console.log("Lambda invoked with event:", event);
-  const { config, immediate, offsetMs } = event;
+  const { config, immediate, offsetMs, loginStaggerMs } = event;
   const logName = config.NAME || config.LOGIN_ID;
   try {
     // 1. HTTP client 준비
@@ -610,6 +639,12 @@ export const handler = async (event) => {
       .add(firstFetchOffsetMs, "milliseconds");
     const windowEnd = bookingOpenTime.clone().add(20, "seconds");
 
+    // 로그인 stagger: loginStaggerMs만큼 대기 후 로그인 시작
+    if (loginStaggerMs && loginStaggerMs > 0) {
+      console.log(`[${logName}] ⏱️ Login stagger: waiting ${loginStaggerMs}ms`);
+      await sleep(loginStaggerMs);
+    }
+
     let token;
     if (!immediate) {
       token = await loginWithRetriesBeforeOpen(
@@ -635,7 +670,6 @@ export const handler = async (event) => {
     const endStr = config.END_TIME.replace(":", "");
     const s = startStr <= endStr ? startStr : endStr;
     const e = startStr <= endStr ? endStr : startStr;
-    const descending = startStr > endStr;
 
     // 첫 슬롯 조회 기준 통계를 저장하기 위한 변수
     let baseSlots = null;
@@ -680,14 +714,23 @@ export const handler = async (event) => {
             console.warn(
               `[${logName}] Slot fetch failed after re-login: ${retryError.message}`,
             );
-            return {
+            const r1 = {
               success: false,
               reason: `Slot fetch failed after re-login: ${retryError.message}`,
+              resultKey: `${config.TARGET_DATE}#${logName}`,
             };
+            await saveBookingResult(logName, config.TARGET_DATE, r1);
+            return r1;
           }
         } else {
           console.warn(`[${logName}] Slot fetch failed: ${e.message}`);
-          return { success: false, reason: `Slot fetch failed: ${e.message}` };
+          const r2 = {
+            success: false,
+            reason: `Slot fetch failed: ${e.message}`,
+            resultKey: `${config.TARGET_DATE}#${logName}`,
+          };
+          await saveBookingResult(logName, config.TARGET_DATE, r2);
+          return r2;
         }
       }
 
@@ -708,7 +751,14 @@ export const handler = async (event) => {
             `[${logName}] 📊 Initial tee stats - total: ${stats.teeTotal}, firstHalf: ${stats.teeFirstHalf}, secondHalf: ${stats.teeSecondHalf}, inRange: ${stats.teeInRange}`,
           );
         }
-        return { success: false, reason: "No available slots.", stats };
+        const r0 = {
+          success: false,
+          reason: "No available slots.",
+          stats,
+          resultKey: `${config.TARGET_DATE}#${logName}`,
+        };
+        await saveBookingResult(logName, config.TARGET_DATE, r0);
+        return r0;
       }
 
       const stats = computeTeeStats(availableTimes, s, e);
@@ -729,7 +779,14 @@ export const handler = async (event) => {
         console.log(
           `[${logName}] No slots in desired range: ${s}~${e}. Total slots: ${availableTimes.length}`,
         );
-        return { success: false, reason: "No slots in desired range.", stats };
+        const r = {
+          success: false,
+          reason: "No slots in desired range.",
+          stats,
+          resultKey: `${config.TARGET_DATE}#${logName}`,
+        };
+        await saveBookingResult(logName, config.TARGET_DATE, r);
+        return r;
       }
 
       const primary = targetTimes[0];
@@ -758,29 +815,36 @@ export const handler = async (event) => {
         const result = await attemptBooking(account, targetSlot);
         if (result.success) {
           console.log(`[${logName}] Booking successful (immediate).`);
-          return {
+          const r = {
             success: true,
             slot: result.slot,
             stats: baseStats || stats,
             slots: baseSlots || availableTimes,
+            resultKey: `${config.TARGET_DATE}#${logName}`,
           };
+          await saveBookingResult(logName, config.TARGET_DATE, r);
+          return r;
         }
         // 즉시 실행에서는 wasTaken 이어도 refetch 하지 않고 바로 실패
       }
 
-      return {
+      const failedImmediate = {
         success: false,
         reason: "All target slots failed in immediate mode.",
         stats: baseStats || stats,
         slots: baseSlots || availableTimes,
+        resultKey: `${config.TARGET_DATE}#${logName}`,
       };
+      await saveBookingResult(logName, config.TARGET_DATE, failedImmediate);
+      return failedImmediate;
     } else {
       // ✅ 예약 실행 모드: 예약 윈도우 내에서 반복 시도
       const windowEndTs = windowEnd.valueOf();
+      const correctedNow = createCorrectedNow(offsetMs);
       const failedSlotTimes = new Set();
       let lastStats = null;
 
-      while (Date.now() < windowEndTs) {
+      while (correctedNow().valueOf() < windowEndTs) {
         let availableTimes = [];
         try {
           const fetchStartedAt = Date.now();
@@ -913,27 +977,39 @@ export const handler = async (event) => {
           );
           if (result.success) {
             console.log(`[${logName}] Booking successful (queued mode).`);
-            return {
+            const r = {
               success: true,
               slot: result.slot,
               stats: baseStats || stats,
               slots: baseSlots || availableTimes,
+              resultKey: `${config.TARGET_DATE}#${logName}`,
             };
+            await saveBookingResult(logName, config.TARGET_DATE, r);
+            return r;
           }
         }
 
         await sleep(500);
       }
 
-      return {
+      const failedQueued = {
         success: false,
         reason: "Booking failed within allowed window.",
         stats: baseStats || lastStats,
         slots: baseSlots,
+        resultKey: `${config.TARGET_DATE}#${logName}`,
       };
+      await saveBookingResult(logName, config.TARGET_DATE, failedQueued);
+      return failedQueued;
     }
   } catch (error) {
     console.error(`[${logName}] An error occurred in Lambda:`, error.message);
-    return { success: false, reason: error.message };
+    const errorResult = {
+      success: false,
+      reason: error.message,
+      resultKey: `${config.TARGET_DATE}#${logName}`,
+    };
+    await saveBookingResult(logName, config.TARGET_DATE, errorResult);
+    return errorResult;
   }
 };

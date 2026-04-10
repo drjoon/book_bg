@@ -8,6 +8,7 @@ import {
   DynamoDBDocumentClient,
   PutCommand,
   ScanCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -47,14 +48,20 @@ console.warn = (...args) => {
 
 // --- Core Booking Logic (from debeach_auto.js) ---
 
+// HHMM 문자열을 분 단위 정수로 변환 (예: "1254" → 774)
+function hhmmToMinutes(hhmm) {
+  const s = hhmm.replace(":", "");
+  return parseInt(s.slice(0, 2), 10) * 60 + parseInt(s.slice(2, 4), 10);
+}
+
 // 슬롯을 목표 시간에 가까운 순서로 정렬
 function sortSlotsByProximity(slots, targetTimeStr) {
   if (!Array.isArray(slots) || slots.length === 0) return [];
 
-  const target = targetTimeStr.replace(":", "");
+  const targetMin = hhmmToMinutes(targetTimeStr);
   return slots.slice().sort((a, b) => {
-    const diffA = Math.abs(parseInt(a.bk_time, 10) - parseInt(target, 10));
-    const diffB = Math.abs(parseInt(b.bk_time, 10) - parseInt(target, 10));
+    const diffA = Math.abs(hhmmToMinutes(a.bk_time) - targetMin);
+    const diffB = Math.abs(hhmmToMinutes(b.bk_time) - targetMin);
     return diffA - diffB;
   });
 }
@@ -206,7 +213,9 @@ async function loginWithRetriesBeforeOpen(
     .clone()
     .subtract(PRELOGIN_DEADLINE_BEFORE_OPEN_MS, "milliseconds");
 
-  await waitUntil(preloginStart, logPrefix, offsetMs, "pre-login start");
+  console.log(
+    `${logPrefix} 🔐 Pre-login start: ${preloginStart.format("HH:mm:ss.SSS")}, deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}. Starting login immediately.`,
+  );
 
   let attempt = 0;
   while (correctedNow().isBefore(preloginDeadline)) {
@@ -255,10 +264,24 @@ async function loginWithRetriesBeforeOpen(
   }
 
   console.warn(
-    `${logPrefix} 🔐 Pre-login window missed (deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}, now: ${correctedNow().format("HH:mm:ss.SSS")}). Attempting fallback login without deadline...`,
+    `${logPrefix} 🔐 Pre-login window missed (deadline: ${preloginDeadline.format("HH:mm:ss.SSS")}, now: ${correctedNow().format("HH:mm:ss.SSS")}). Attempting fallback login (20s timeout)...`,
   );
   attempt += 1;
-  const token = await runLoginAttempt(client, config);
+  const FALLBACK_TIMEOUT_MS = 20000;
+  const token = await Promise.race([
+    runLoginAttempt(client, config),
+    new Promise((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              `Fallback login timed out after ${FALLBACK_TIMEOUT_MS}ms`,
+            ),
+          ),
+        FALLBACK_TIMEOUT_MS,
+      ),
+    ),
+  ]);
   console.log(
     `${logPrefix} 🔐 Fallback login succeeded on attempt ${attempt}. Completed at ${correctedNow().format("HH:mm:ss.SSS")}`,
   );
@@ -315,6 +338,7 @@ async function saveBookingResult(accountName, dateStr, result) {
 // DynamoDB 슬롯 예약 함수
 async function claimSlot(dateStr, slot, accountName) {
   const slotKey = `${dateStr}#${slot.bk_time}#${slot.bk_cours}`;
+  const nowSec = Math.floor(Date.now() / 1000);
 
   try {
     await dynamoClient.send(
@@ -324,9 +348,12 @@ async function claimSlot(dateStr, slot, accountName) {
           PK: slotKey,
           accountName: accountName,
           claimedAt: Date.now(),
-          TTL: Math.floor(Date.now() / 1000) + 10, // 10초 후 만료
+          TTL: nowSec + 60, // 60초 후 만료
         },
-        ConditionExpression: "attribute_not_exists(PK)",
+        // 레코드가 없거나, TTL이 만료된 경우에만 claim 허용
+        ConditionExpression: "attribute_not_exists(PK) OR #ttl <= :now",
+        ExpressionAttributeNames: { "#ttl": "TTL" },
+        ExpressionAttributeValues: { ":now": nowSec },
       }),
     );
 
@@ -340,15 +367,42 @@ async function claimSlot(dateStr, slot, accountName) {
   }
 }
 
-// 이미 예약된 슬롯 조회
+// DynamoDB 슬롯 claim TTL 연장 (서버 422: 실제 마감된 슬롯을 모든 Lambda가 5분간 건너뜀)
+async function markSlotTaken(dateStr, slot, accountName) {
+  const slotKey = `${dateStr}#${slot.bk_time}#${slot.bk_cours}`;
+  try {
+    await dynamoClient.send(
+      new UpdateCommand({
+        TableName: SLOT_CLAIMS_TABLE,
+        Key: { PK: slotKey },
+        UpdateExpression: "SET #ttl = :ttl, serverTaken = :taken",
+        ExpressionAttributeNames: { "#ttl": "TTL" },
+        ExpressionAttributeValues: {
+          ":ttl": Math.floor(Date.now() / 1000) + 20, // 20초간 유지
+          ":taken": true,
+        },
+      }),
+    );
+    console.log(
+      `[${accountName}] 🚫 Marked slot ${slot.bk_time} (${slot.bk_cours}) as server-taken (TTL +20s)`,
+    );
+  } catch (e) {
+    console.warn(`[${accountName}] Failed to mark slot as taken: ${e.message}`);
+  }
+}
+
+// 이미 예약된 슬롯 조회 (TTL 미만료 항목만)
 async function getClaimedSlots(dateStr) {
   try {
+    const nowSec = Math.floor(Date.now() / 1000);
     const result = await dynamoClient.send(
       new ScanCommand({
         TableName: SLOT_CLAIMS_TABLE,
-        FilterExpression: "begins_with(PK, :datePrefix)",
+        FilterExpression: "begins_with(PK, :datePrefix) AND #ttl > :now",
+        ExpressionAttributeNames: { "#ttl": "TTL" },
         ExpressionAttributeValues: {
           ":datePrefix": dateStr,
+          ":now": nowSec,
         },
       }),
     );
@@ -484,7 +538,15 @@ async function attemptBooking(
       if (failedSlots && typeof failedSlots.add === "function") {
         failedSlots.add(`${targetSlot.bk_time}_${targetSlot.bk_cours}`);
       }
+      // 서버에서 이미 마감된 슬롯 → TTL 20초 연장해 모든 Lambda가 재시도하지 않도록
+      await markSlotTaken(config.TARGET_DATE, targetSlot, config.NAME);
       return { success: false, slot: targetSlot, wasTaken: true };
+    } else if (!error.response) {
+      // axios error가 아닌 경우 (파싱 실패 등) → failedSlots에 추가해 동일 Lambda가 재시도하지 않도록
+      if (failedSlots && typeof failedSlots.add === "function") {
+        failedSlots.add(`${targetSlot.bk_time}_${targetSlot.bk_cours}`);
+      }
+      return { success: false, slot: targetSlot };
     } else if (error.response && error.response.status === 401) {
       if (hasRetried401) {
         console.warn(
@@ -505,7 +567,12 @@ async function attemptBooking(
         )}ms...`,
       );
       await sleep(retryAfter);
-      return await attemptBooking(account, targetSlot, failedSlots);
+      return await attemptBooking(
+        account,
+        targetSlot,
+        failedSlots,
+        hasRetried401,
+      );
     } else {
       console.error(
         `${logPrefix} ❌ Unexpected error for ${targetSlot.bk_time}:`,
@@ -607,7 +674,7 @@ async function waitForBookingOpen(openTime, logPrefix, offsetMs) {
 
 export const handler = async (event) => {
   console.log("Lambda invoked with event:", event);
-  const { config, immediate, offsetMs, loginStaggerMs } = event;
+  const { config, immediate, offsetMs } = event;
   const logName = config.NAME || config.LOGIN_ID;
   try {
     // 1. HTTP client 준비
@@ -637,13 +704,7 @@ export const handler = async (event) => {
     const windowStart = bookingOpenTime
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
-    const windowEnd = bookingOpenTime.clone().add(20, "seconds");
-
-    // 로그인 stagger: loginStaggerMs만큼 대기 후 로그인 시작
-    if (loginStaggerMs && loginStaggerMs > 0) {
-      console.log(`[${logName}] ⏱️ Login stagger: waiting ${loginStaggerMs}ms`);
-      await sleep(loginStaggerMs);
-    }
+    const windowEnd = bookingOpenTime.clone().add(40, "seconds");
 
     let token;
     if (!immediate) {
@@ -886,6 +947,14 @@ export const handler = async (event) => {
             await sleep(400);
           }
 
+          continue;
+        }
+
+        if (!Array.isArray(availableTimes)) {
+          console.warn(
+            `[${logName}] Slot fetch returned non-array (type=${typeof availableTimes}). Treating as empty and retrying.`,
+          );
+          await sleep(400);
           continue;
         }
 

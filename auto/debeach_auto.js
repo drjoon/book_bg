@@ -126,32 +126,38 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // 2. 예약 시간 10초 전까지 대기
+  // 2. 예약 오픈 91초 전에 NTP sync + DB snapshot 준비, 이후 각 Lambda를 90~80초 전 사이 랜덤 시각에 개별 발사
   if (!options.immediate) {
     const bookingOpenTime = getBookingOpenTime(date);
-    const invokeAt = bookingOpenTime.clone().subtract(35, "seconds");
+    const prepareAt = bookingOpenTime.clone().subtract(91, "seconds");
     let now = moment().tz("Asia/Seoul");
 
-    if (now.isBefore(invokeAt)) {
-      const waitTime = invokeAt.diff(now);
+    if (now.isBefore(prepareAt)) {
+      const waitTime = prepareAt.diff(now);
       console.log(
         `${logPrefix} Waiting ${Math.round(
           waitTime / 1000,
-        )}s until 35 seconds before booking time...`,
+        )}s until 91 seconds before booking time (NTP + DB prep)...`,
       );
       await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
-    console.log(
-      `${logPrefix} It's 35 seconds to booking. Invoking Lambda functions...`,
-    );
 
-    // 오픈 10초 전: NTP로 시스템 시간 오프셋 계산 (그룹당 1회)
+    // NTP로 시스템 시간 오프셋 계산 (그룹당 1회)
     try {
       const ntpTime = await getNtpTime();
-      offsetMs = moment(ntpTime).diff(moment().tz("Asia/Seoul"));
-      console.log(
-        `${logPrefix} Using NTP offset for Lambda payload: ${offsetMs}ms`,
-      );
+      const rawOffset = moment(ntpTime).diff(moment().tz("Asia/Seoul"));
+      // 비정상 응답 방지: ±5초 이내만 허용, 초과 시 시스템 시간 사용
+      if (Math.abs(rawOffset) <= 5000) {
+        offsetMs = rawOffset;
+        console.log(
+          `${logPrefix} Using NTP offset for Lambda payload: ${offsetMs}ms`,
+        );
+      } else {
+        console.warn(
+          `${logPrefix} NTP offset out of plausible range (${rawOffset}ms). Using null offset.`,
+        );
+        offsetMs = null;
+      }
     } catch (e) {
       console.warn(
         `${logPrefix} Failed to get NTP time for offset. Proceeding without offset: ${e.message}`,
@@ -159,7 +165,7 @@ async function runBookingGroup(group, options) {
       offsetMs = null;
     }
 
-    // 오픈 10초 전: MongoDB에서 최신 예약 정보를 다시 읽어와 실행 대상 계정을 재계산
+    // 오픈 91초 전: MongoDB에서 최신 예약 정보를 다시 읽어와 실행 대상 계정을 재계산
     const activeUsers = await User.find({ granted: true }).select(
       "name debeachLoginId debeachLoginPassword",
     );
@@ -321,17 +327,29 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // 3. Lambda 동시 발사 (Promise.all + RequestResponse)
-  // loginStaggerMs로 각 Lambda가 10초 이내 랜덤 시각에 로그인 시작 (첫 번째는 즉시)
+  // 3. Lambda 발사: 각 Lambda를 90~80초 전 사이 랜덤 시각에 개별 invoke (Promise.all)
   console.log(
-    `${logPrefix} Invoking ${finalConfigs.length} Lambda(s) simultaneously: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
+    `${logPrefix} Scheduling ${finalConfigs.length} Lambda(s) to fire between -90s and -80s: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
   );
 
   const invocationPromises = finalConfigs.map(async (config, i) => {
     const logName = config.NAME || config.LOGIN_ID;
 
-    // 모든 Lambda가 10초 이내 랜덤 시각에 로그인 시작 (첫 번째는 즉시)
-    const loginStaggerMs = i === 0 ? 0 : Math.floor(Math.random() * 10000);
+    // 각 Lambda를 90~80초 전 사이 랜덤 시각에 발사 (발사 즉시 로그인 시도)
+    if (!options.immediate) {
+      const bookingOpenTime = getBookingOpenTime(date);
+      const invokeAt = bookingOpenTime
+        .clone()
+        .subtract(90000 - Math.floor(Math.random() * 10000), "milliseconds"); // 90~80초 전 랜덤
+      const now = moment().tz("Asia/Seoul");
+      const waitMs = invokeAt.diff(now);
+      if (waitMs > 0) {
+        console.log(
+          `[${logName}] ⏱️ Waiting ${Math.round(waitMs / 1000)}s until invoke at ${invokeAt.format("HH:mm:ss.SSS")}`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
+    }
 
     // 실행 직전 DB 상태 재확인
     if (!force) {
@@ -355,14 +373,13 @@ async function runBookingGroup(group, options) {
     }
 
     console.log(
-      `[${logName}] 🚀 Invoking Lambda (loginStaggerMs=${loginStaggerMs}, START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME})`,
+      `[${logName}] 🚀 Invoking Lambda (START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME})`,
     );
 
     const payload = {
       config,
       immediate: options.immediate || false,
       offsetMs,
-      loginStaggerMs,
     };
 
     const command = new InvokeCommand({

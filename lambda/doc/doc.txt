@@ -97,15 +97,15 @@ aws lambda invoke \
   test/output.json
 
 * 람다 로그
-aws logs tail /aws/lambda/book-debeach \
+aws logs filter-log-events \
+  --log-group-name /aws/lambda/book-debeach \
+  --start-time $(python3 -c "import datetime,pytz; t=pytz.timezone('Asia/Seoul'); d=datetime.datetime.now(t).replace(hour=8,minute=30,second=0,microsecond=0); print(int(d.timestamp()*1000))") \
   --region ap-south-1 \
-  --since 24h
-
-
+  --query 'events[*].message' \
+  --output text > /Users/joonholee/Joon/1-Project/dev/book/lambda/doc/lambda_today.log && less /Users/joonholee/Joon/1-Project/dev/book/lambda/doc/lambda_today.log
 
 * CLI 타임아웃 세팅하기
 aws configure set cli_read_timeout 180
-
 
 * 노드 버전 업
 aws lambda update-function-configuration \

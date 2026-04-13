@@ -327,7 +327,12 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // 3. Lambda 발사: 각 Lambda를 90~80초 전 사이 랜덤 시각에 개별 invoke (Promise.all)
+  // 순차 pre-login을 위해 PRIMARY_SLOT_OFFSET 오름차순 정렬 (인덱스 순서대로 6초씩 stagger)
+  finalConfigs.sort(
+    (a, b) => (a.PRIMARY_SLOT_OFFSET || 0) - (b.PRIMARY_SLOT_OFFSET || 0),
+  );
+
+  // 3. Lambda 발사: 각 Lambda를 순차 stagger로 개별 invoke (Promise.all)
   console.log(
     `${logPrefix} Scheduling ${finalConfigs.length} Lambda(s) to fire between -90s and -80s: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
   );
@@ -338,14 +343,15 @@ async function runBookingGroup(group, options) {
     // 각 Lambda를 90~80초 전 사이 랜덤 시각에 발사 (발사 즉시 로그인 시도)
     if (!options.immediate) {
       const bookingOpenTime = getBookingOpenTime(date);
+      const staggerMs = i * 6000; // 계정별 6초씩 순차 stagger (pre-login ~4s + 2s 버퍼)
       const invokeAt = bookingOpenTime
         .clone()
-        .subtract(90000 - Math.floor(Math.random() * 10000), "milliseconds"); // 90~80초 전 랜덤
+        .subtract(90000 - staggerMs, "milliseconds"); // i=0: T-90s, i=1: T-84s, i=2: T-78s, ...
       const now = moment().tz("Asia/Seoul");
       const waitMs = invokeAt.diff(now);
       if (waitMs > 0) {
         console.log(
-          `[${logName}] ⏱️ Waiting ${Math.round(waitMs / 1000)}s until invoke at ${invokeAt.format("HH:mm:ss.SSS")}`,
+          `[${logName}] ⏱️ Waiting ${Math.round(waitMs / 1000)}s until invoke at ${invokeAt.format("HH:mm:ss.SSS")} (stagger #${i}: +${staggerMs / 1000}s)`,
         );
         await new Promise((resolve) => setTimeout(resolve, waitMs));
       }

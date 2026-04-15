@@ -65,13 +65,24 @@ const getNtpTime = async () => {
   return new Date(); // 모든 시도 실패 시 시스템 시간 사용
 };
 
-// Lambda 클라이언트 초기화 (리전은 실제 환경에 맞게 설정)
-const LAMBDA_REGION =
-  process.env.LAMBDA_REGION || process.env.AWS_REGION || "ap-south-1";
+// Lambda 클라이언트 초기화 — 계정 인덱스별 리전 분산으로 IP 분리
+// i=0: 서울(가장 빠름), i=1: 도쿄, i=2: 싱가포르, i=3+: 뭄바이
 const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME || "book-debeach";
-const lambda = new LambdaClient({ region: LAMBDA_REGION });
+const LAMBDA_REGIONS = [
+  "ap-northeast-2", // 서울   (i=0, PRIMARY)
+  "ap-northeast-1", // 도쿄   (i=1)
+  "ap-southeast-1", // 싱가포르 (i=2)
+  "ap-south-1", // 뭄바이  (i=3+)
+];
+const lambdaClients = LAMBDA_REGIONS.map(
+  (r) => new LambdaClient({ region: r }),
+);
+const getLambdaClient = (i) =>
+  lambdaClients[Math.min(i, lambdaClients.length - 1)];
+const getLambdaRegion = (i) =>
+  LAMBDA_REGIONS[Math.min(i, LAMBDA_REGIONS.length - 1)];
 console.log(
-  `[LAMBDA] Using region=${LAMBDA_REGION}, function=${LAMBDA_FUNCTION_NAME}`,
+  `[LAMBDA] Multi-region mode: ${LAMBDA_REGIONS.join(", ")}, function=${LAMBDA_FUNCTION_NAME}`,
 );
 
 const isTerminalStatus = (status) => {
@@ -327,26 +338,28 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // 순차 pre-login을 위해 PRIMARY_SLOT_OFFSET 오름차순 정렬 (인덱스 순서대로 6초씩 stagger)
+  // 순차 pre-login을 위해 PRIMARY_SLOT_OFFSET 오름차순 정렬 (인덱스 순서대로 15초씩 stagger)
   finalConfigs.sort(
     (a, b) => (a.PRIMARY_SLOT_OFFSET || 0) - (b.PRIMARY_SLOT_OFFSET || 0),
   );
 
   // 3. Lambda 발사: 각 Lambda를 순차 stagger로 개별 invoke (Promise.all)
+  const LOGIN_STAGGER_MS = 15000; // timeout 1회(10s) + 재시도 텀(~0.7s) = 10.7s → 15s면 1회 실패해도 겹치지 않음
+  const lastInvokeOffsetMs = (finalConfigs.length - 1) * LOGIN_STAGGER_MS;
   console.log(
-    `${logPrefix} Scheduling ${finalConfigs.length} Lambda(s) to fire between -90s and -80s: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
+    `${logPrefix} Scheduling ${finalConfigs.length} Lambda(s) with ${LOGIN_STAGGER_MS / 1000}s stagger (T-90s ~ T-${Math.round((90000 - lastInvokeOffsetMs) / 1000)}s): ${finalConfigs.map((c) => c.NAME).join(", ")}`,
   );
 
   const invocationPromises = finalConfigs.map(async (config, i) => {
     const logName = config.NAME || config.LOGIN_ID;
 
-    // 각 Lambda를 90~80초 전 사이 랜덤 시각에 발사 (발사 즉시 로그인 시도)
+    // 각 Lambda를 15초씩 순차 stagger로 발사 (발사 즉시 로그인 시도)
     if (!options.immediate) {
       const bookingOpenTime = getBookingOpenTime(date);
-      const staggerMs = i * 6000; // 계정별 6초씩 순차 stagger (pre-login ~4s + 2s 버퍼)
+      const staggerMs = i * LOGIN_STAGGER_MS; // 계정별 15초씩 순차 stagger
       const invokeAt = bookingOpenTime
         .clone()
-        .subtract(90000 - staggerMs, "milliseconds"); // i=0: T-90s, i=1: T-84s, i=2: T-78s, ...
+        .subtract(90000 - staggerMs, "milliseconds"); // i=0: T-90s, i=1: T-80s, i=2: T-70s, ...
       const now = moment().tz("Asia/Seoul");
       const waitMs = invokeAt.diff(now);
       if (waitMs > 0) {
@@ -378,8 +391,9 @@ async function runBookingGroup(group, options) {
       }
     }
 
+    const lambdaRegion = getLambdaRegion(i);
     console.log(
-      `[${logName}] 🚀 Invoking Lambda (START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME})`,
+      `[${logName}] 🚀 Invoking Lambda (region=${lambdaRegion}, START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME})`,
     );
 
     const payload = {
@@ -395,7 +409,7 @@ async function runBookingGroup(group, options) {
     });
 
     try {
-      const response = await lambda.send(command);
+      const response = await getLambdaClient(i).send(command);
       const result = JSON.parse(new TextDecoder().decode(response.Payload));
       console.log(
         `[${logName}] ✅ Lambda returned: success=${result.success}, resultKey=${result.resultKey || "-"}`,

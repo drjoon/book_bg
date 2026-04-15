@@ -8,7 +8,6 @@ import {
   DynamoDBDocumentClient,
   PutCommand,
   ScanCommand,
-  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -78,13 +77,13 @@ function rotateSlotsForAccount(slots, config) {
   return [...rotated.slice(actualOffset), ...rotated.slice(0, actualOffset)];
 }
 
-async function getLoginToken(client) {
+async function getLoginToken(client, timeoutMs = LOGIN_ATTEMPT_TIMEOUT_MS) {
   const res = await client.get("https://www.debeach.co.kr/auth/login", {
     headers: {
       Referer: "https://www.debeach.co.kr/",
       Origin: "https://www.debeach.co.kr", // 필수는 아니지만 XHR 패턴과 맞추는 용도
     },
-    timeout: LOGIN_ATTEMPT_TIMEOUT_MS,
+    timeout: timeoutMs,
   });
   const $ = cheerio.load(res.data);
   const token = $('meta[name="csrf-token"]').attr("content");
@@ -94,7 +93,13 @@ async function getLoginToken(client) {
   return token;
 }
 
-async function doLogin(client, xsrfToken, loginId, loginPassword) {
+async function doLogin(
+  client,
+  xsrfToken,
+  loginId,
+  loginPassword,
+  timeoutMs = LOGIN_ATTEMPT_TIMEOUT_MS,
+) {
   const payload = new URLSearchParams({
     username: loginId,
     password: loginPassword,
@@ -112,7 +117,7 @@ async function doLogin(client, xsrfToken, loginId, loginPassword) {
         Origin: "https://www.debeach.co.kr",
         Referer: "https://www.debeach.co.kr/auth/login",
       },
-      timeout: LOGIN_ATTEMPT_TIMEOUT_MS,
+      timeout: timeoutMs,
     },
   );
   const isLoggedIn = res.request.path === "/";
@@ -182,13 +187,18 @@ async function waitUntil(targetTime, logPrefix, offsetMs, label) {
   }
 }
 
-async function runLoginAttempt(client, config) {
-  const token = await getLoginToken(client);
+async function runLoginAttempt(
+  client,
+  config,
+  timeoutMs = LOGIN_ATTEMPT_TIMEOUT_MS,
+) {
+  const token = await getLoginToken(client, timeoutMs);
   const loginResult = await doLogin(
     client,
     token,
     config.LOGIN_ID,
     config.LOGIN_PASSWORD,
+    timeoutMs,
   );
   if (!loginResult.isLoggedIn) {
     throw new Error(
@@ -232,7 +242,7 @@ async function loginWithRetriesBeforeOpen(
 
     try {
       const token = await Promise.race([
-        runLoginAttempt(client, config),
+        runLoginAttempt(client, config, attemptBudgetMs),
         new Promise((_, reject) => {
           setTimeout(() => {
             reject(
@@ -269,7 +279,7 @@ async function loginWithRetriesBeforeOpen(
   attempt += 1;
   const FALLBACK_TIMEOUT_MS = 20000;
   const token = await Promise.race([
-    runLoginAttempt(client, config),
+    runLoginAttempt(client, config, FALLBACK_TIMEOUT_MS),
     new Promise((_, reject) =>
       setTimeout(
         () =>
@@ -370,16 +380,17 @@ async function claimSlot(dateStr, slot, accountName) {
 // DynamoDB 슬롯 claim TTL 연장 (서버 422: 실제 마감된 슬롯을 모든 Lambda가 5분간 건너뜀)
 async function markSlotTaken(dateStr, slot, accountName) {
   const slotKey = `${dateStr}#${slot.bk_time}#${slot.bk_cours}`;
+  const nowSec = Math.floor(Date.now() / 1000);
   try {
     await dynamoClient.send(
-      new UpdateCommand({
+      new PutCommand({
         TableName: SLOT_CLAIMS_TABLE,
-        Key: { PK: slotKey },
-        UpdateExpression: "SET #ttl = :ttl, serverTaken = :taken",
-        ExpressionAttributeNames: { "#ttl": "TTL" },
-        ExpressionAttributeValues: {
-          ":ttl": Math.floor(Date.now() / 1000) + 20, // 20초간 유지
-          ":taken": true,
+        Item: {
+          PK: slotKey,
+          accountName: accountName,
+          claimedAt: Date.now(),
+          TTL: nowSec + 20, // 20초간 유지
+          serverTaken: true,
         },
       }),
     );

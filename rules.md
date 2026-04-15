@@ -20,8 +20,8 @@ EBS    : MongoDB 상태 업데이트 + S3 영구 저장 + WebSocket broadcast
 ### Lambda 발사 타이밍
 
 - `91초 전`: NTP sync + DB snapshot 수행 (1회)
-- `90~80초 전`: 계정별로 랜덤 시각에 개별 invoke (`Promise.all`)
-- `loginStaggerMs` 파라미터 없음 — 발사 시각 자체가 stagger 역할
+- `90~45초 전`: 계정별로 15초씩 순차 invoke (`Promise.all`)
+- `LOGIN_STAGGER_MS = 15000` — i=0: T-90s, i=1: T-75s, i=2: T-60s, i=3: T-45s
 
 ### NTP offset
 
@@ -59,11 +59,11 @@ EBS    : MongoDB 상태 업데이트 + S3 영구 저장 + WebSocket broadcast
 
 ### 인프라
 
-- **함수명**: `book-debeach`
-- **리전**: `ap-south-1`
+- **함수명**: `book-debeach` (4개 리전 동일 이름)
+- **리전**: i=0 서울(`ap-northeast-2`), i=1 도쿄(`ap-northeast-1`), i=2 싱가포르(`ap-southeast-1`), i=3 뭄바이(`ap-south-1`)
 - **타임아웃**: 180초
-- **IAM 역할**: `book-debeach-lambda-role`
-  - DynamoDB: `PutItem`, `UpdateItem`, `Scan`, `DeleteItem` — 두 테이블 모두
+- **IAM 역할**: `book-debeach-lambda-role` (각 리전에 동일 역할 적용)
+  - DynamoDB: `PutItem`, `Scan`, `DeleteItem` — 두 테이블 모두 (`UpdateItem` 미사용)
 
 ### DynamoDB 테이블
 

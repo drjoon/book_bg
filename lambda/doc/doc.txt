@@ -79,14 +79,48 @@ Lambda invoked with event: ...
 에러 발생 시 스택 트레이스
 
 
-* 다시 빌드 & * 업데이트
+* 다시 빌드 & 업데이트 (멀티 리전 — 4개 리전 모두 배포)
 cd /Users/joonholee/Joon/1-Project/dev/book/lambda/book-debeach
 npm run build
 
+# i=0: 서울 (PRIMARY)
+aws lambda update-function-code \
+  --function-name book-debeach \
+  --zip-file fileb://deployment_package.zip \
+  --region ap-northeast-2
+
+# i=1: 도쿄
+aws lambda update-function-code \
+  --function-name book-debeach \
+  --zip-file fileb://deployment_package.zip \
+  --region ap-northeast-1
+
+# i=2: 싱가포르
+aws lambda update-function-code \
+  --function-name book-debeach \
+  --zip-file fileb://deployment_package.zip \
+  --region ap-southeast-1
+
+# i=3: 뭄바이 (기존)
 aws lambda update-function-code \
   --function-name book-debeach \
   --zip-file fileb://deployment_package.zip \
   --region ap-south-1
+
+
+* 신규 리전에 함수 최초 생성 (ap-northeast-2, ap-northeast-1, ap-southeast-1)
+ROLE_ARN="arn:aws:iam::106055905364:role/book-debeach-lambda-role"
+for REGION in ap-northeast-2 ap-northeast-1 ap-southeast-1; do
+  aws lambda create-function \
+    --function-name book-debeach \
+    --runtime nodejs22.x \
+    --role $ROLE_ARN \
+    --handler index.handler \
+    --zip-file fileb://deployment_package.zip \
+    --region $REGION \
+    --timeout 180 \
+    --memory-size 256
+done
 
 * 테스트 실행
 aws lambda invoke \

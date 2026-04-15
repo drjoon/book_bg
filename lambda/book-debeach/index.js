@@ -507,6 +507,7 @@ async function attemptBooking(
   targetSlot,
   failedSlots,
   hasRetried401 = false,
+  retry429Count = 0,
 ) {
   const { client, config } = account;
   const logPrefix = `[${config.NAME}]`;
@@ -571,11 +572,17 @@ async function attemptBooking(
       await refreshLogin(account);
       return await attemptBooking(account, targetSlot, failedSlots, true);
     } else if (error.response && error.response.status === 429) {
+      if (retry429Count >= 3) {
+        console.warn(
+          `${logPrefix} ⏳ 429 Too Many Requests. Max retries (3) reached for ${targetSlot.bk_time}. Giving up.`,
+        );
+        return { success: false, slot: targetSlot };
+      }
       const retryAfter = Math.random() * 800 + 1200; // 1200~2000ms로 backoff 단축
       console.log(
         `${logPrefix} ⏳ 429 Too Many Requests. Retrying after ${Math.round(
           retryAfter,
-        )}ms...`,
+        )}ms... (attempt ${retry429Count + 1}/3)`,
       );
       await sleep(retryAfter);
       return await attemptBooking(
@@ -583,6 +590,7 @@ async function attemptBooking(
         targetSlot,
         failedSlots,
         hasRetried401,
+        retry429Count + 1,
       );
     } else {
       console.error(

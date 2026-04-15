@@ -70,6 +70,10 @@ const createSystemChatMessage = async ({
     readBy: [adminUsername],
   });
   await message.save();
+  broadcastToUser(userUsername, {
+    type: "new_message",
+    message: serializeMessage(message),
+  });
   return message;
 };
 

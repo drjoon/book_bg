@@ -989,7 +989,12 @@ app.post("/api/messages", authMiddleware, async (req, res) => {
           : undefined,
     });
     await message.save();
-    return res.status(201).json({ message: serializeMessage(message) });
+    const serialized = serializeMessage(message);
+
+    // 수신자에게 실시간 push
+    broadcastToUser(toUsername, { type: "new_message", message: serialized });
+
+    return res.status(201).json({ message: serialized });
   } catch (error) {
     return res
       .status(error.statusCode || 500)
@@ -1340,24 +1345,44 @@ const httpServer = createServer(app);
 const wss = new WebSocketServer({ server: httpServer });
 
 // WebSocket connection handler
+// 클라이언트는 연결 직후 {type:"auth", username} 을 전송해 자신의 username을 등록
 wss.on("connection", (ws) => {
   console.log("WebSocket client connected");
+
+  ws.on("message", (raw) => {
+    try {
+      const data = JSON.parse(raw);
+      if (data.type === "auth" && data.username) {
+        ws._username = data.username;
+        console.log(`WebSocket authenticated: ${data.username}`);
+      }
+    } catch (_) {}
+  });
 
   ws.on("error", (error) => {
     console.error("WebSocket error:", error);
   });
 
   ws.on("close", () => {
-    console.log("WebSocket client disconnected");
+    console.log(`WebSocket disconnected: ${ws._username || "(anonymous)"}`);
   });
 });
 
-// Broadcast function for Lambda results
+// 특정 사용자에게만 push
+function broadcastToUser(username, data) {
+  const message = JSON.stringify(data);
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1 && client._username === username) {
+      client.send(message);
+    }
+  });
+}
+
+// Broadcast function for Lambda results (모든 클라이언트)
 export function broadcastLambdaResult(data) {
   const message = JSON.stringify(data);
   wss.clients.forEach((client) => {
     if (client.readyState === 1) {
-      // WebSocket.OPEN
       client.send(message);
     }
   });

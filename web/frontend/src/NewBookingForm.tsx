@@ -170,46 +170,6 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       })
     : "";
 
-  // 예약 성공 상태를 감지하기 위한 간단한 폴링 함수
-  const pollUntilSuccess = async (
-    account: string,
-    dateStr: string,
-    timeoutMs = 60000,
-    intervalMs = 1500,
-  ) => {
-    const start = Date.now();
-    return new Promise<void>((resolve, reject) => {
-      const timer = setInterval(async () => {
-        try {
-          const res = await axios.get<Record<string, Booking[]>>(
-            `${API_BASE_URL}/api/bookings`,
-          );
-          const data = res.data;
-          const day = data[dateStr] || [];
-          const match = day.find((b: any) => b.account === account);
-          if (match && match.status === "성공") {
-            clearInterval(timer);
-            resolve();
-          } else if (Date.now() - start > timeoutMs) {
-            clearInterval(timer);
-            reject(new Error("예약 성공 확인 시간 초과"));
-          }
-        } catch (e) {
-          if (axios.isAxiosError(e) && e.response?.status === 401) {
-            clearInterval(timer);
-            logout();
-            reject(new Error("세션이 만료되었습니다."));
-            return;
-          }
-          if (Date.now() - start > timeoutMs) {
-            clearInterval(timer);
-            reject(new Error("예약 성공 확인 시간 초과"));
-          }
-        }
-      }, intervalMs);
-    });
-  };
-
   const showToast = (
     message: string,
     type: "success" | "error" | "info" = "info",
@@ -363,21 +323,9 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       });
 
       const submitMessage = response.data.message || "예약이 등록되었습니다.";
-      setSuccess(submitMessage);
       showToast(submitMessage, "success");
-
-      const shouldPoll = !submitMessage.includes("큐");
-      if (shouldPoll) {
-        try {
-          await pollUntilSuccess(bookingData.account, bookingData.TARGET_DATE);
-          showToast("예약이 성공 처리되었습니다.", "success");
-        } catch (_) {
-          // 타임아웃 시에도 조용히 무시
-        }
-      }
-
       onBookingAdded();
-      setTimeout(() => onClose(), 2000);
+      onClose();
     } catch (err: any) {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
         const message =
@@ -428,22 +376,9 @@ const NewBookingForm: React.FC<NewBookingFormProps> = ({
       });
 
       const submitMessage = response.data.message || "예약이 변경되었습니다.";
-      setSuccess(submitMessage);
       showToast(submitMessage, "success");
       onBookingAdded();
-
-      const shouldPoll = !submitMessage.includes("큐");
-      if (shouldPoll) {
-        try {
-          await pollUntilSuccess(
-            (editingBooking as Booking).account,
-            moment(selectedDate).format("YYYYMMDD"),
-          );
-          showToast("예약이 성공 처리되었습니다.", "success");
-          onBookingAdded();
-        } catch (_) {}
-      }
-      setTimeout(() => onClose(), 2000);
+      onClose();
     } catch (err: any) {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
         const message =

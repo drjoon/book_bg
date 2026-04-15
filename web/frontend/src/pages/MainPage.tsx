@@ -685,26 +685,27 @@ export default function MainPage() {
   useEffect(() => {
     fetchBookings();
 
-    // WebSocket connection for real-time Lambda results
+    // WebSocket: 예약 결과 + 실시간 채팅 통합
     const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${wsProtocol}//${window.location.hostname}:8081`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log("WebSocket connected for real-time booking updates");
+      console.log("WebSocket connected");
+      if (user?.name) {
+        ws.send(JSON.stringify({ type: "auth", username: user.name }));
+      }
     };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log("Received WebSocket message:", data);
 
         if (
           data.type === "booking_success" ||
           data.type === "booking_failure" ||
           data.type === "booking_error"
         ) {
-          // Update bookings state directly without API call
           const dateStr = data.date;
           const status = data.type === "booking_success" ? "성공" : "실패";
 
@@ -730,7 +731,6 @@ export default function MainPage() {
             return updated;
           });
 
-          // Show toast notification
           if (data.type === "booking_success") {
             showToast(
               `${data.account} 예약 성공! (${data.slot?.bk_time || "시간 미상"})`,
@@ -742,6 +742,21 @@ export default function MainPage() {
               "error",
             );
           }
+        }
+
+        if (data.type === "new_message" && data.message) {
+          const msg = data.message as ChatMessage;
+          setMessages((prev) => {
+            const merged = [...prev, msg];
+            return Array.from(new Map(merged.map((m) => [m.id, m])).values());
+          });
+          setContacts((prev) =>
+            prev.map((c) =>
+              c.name === msg.senderUsername && msg.senderUsername !== user?.name
+                ? { ...c, unreadCount: (c.unreadCount ?? 0) + 1 }
+                : c,
+            ),
+          );
         }
       } catch (error) {
         console.error("Failed to parse WebSocket message:", error);
@@ -759,7 +774,7 @@ export default function MainPage() {
     return () => {
       ws.close();
     };
-  }, []);
+  }, [user?.name]);
 
   const fetchContacts = async () => {
     try {
@@ -819,16 +834,6 @@ export default function MainPage() {
     if (selectedChatUsername) {
       fetchMessages(selectedChatUsername);
     }
-  }, [selectedChatUsername]);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      fetchContacts();
-      if (selectedChatUsername) {
-        fetchMessages(selectedChatUsername, { silent: true });
-      }
-    }, 10000);
-    return () => window.clearInterval(interval);
   }, [selectedChatUsername]);
 
   useEffect(() => {
@@ -973,8 +978,6 @@ export default function MainPage() {
         );
       });
       setMessageBody("");
-      void fetchMessages(selectedChatUsername, { silent: true });
-      void fetchContacts();
     } catch (error) {
       console.error("Failed to send message:", error);
       showToast("메시지 전송에 실패했습니다.", "error");
@@ -1082,26 +1085,6 @@ export default function MainPage() {
     }
   };
 
-  // Wait for WebSocket push only (no polling)
-  const waitForBookingResult = async (
-    account: string,
-    dateStr: string,
-    timeoutMs = 60_000,
-  ): Promise<"성공" | "실패"> => {
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < timeoutMs) {
-      const booking = bookings[dateStr]?.find((b) => b.account === account);
-      if (booking && (booking.status === "성공" || booking.status === "실패")) {
-        return booking.status;
-      }
-      // Wait 100ms before checking again (WebSocket will update bookings state)
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    throw new Error("결과 확인 시간 초과");
-  };
-
   const handleRetryBookingImmediately = async () => {
     if (!selectedBooking || !selectedDate) return;
 
@@ -1121,32 +1104,10 @@ export default function MainPage() {
       const message =
         (res.data as { message?: string } | undefined)?.message ||
         "재시도 요청이 접수되었습니다.";
-      const isQueued = message.includes("큐");
-      showToast(message, isQueued ? "info" : "success");
+      showToast(message, message.includes("큐") ? "info" : "success");
 
       fetchBookings();
       setIsHistoryModalOpen(false);
-
-      const shouldPoll = !isQueued && message.includes("즉시");
-      if (shouldPoll) {
-        try {
-          const status = await waitForBookingResult(
-            selectedBooking.account,
-            dateStr,
-          );
-          if (status === "성공") {
-            showToast("재시도 결과: 성공", "success");
-          } else {
-            showToast("재시도 결과: 실패", "error");
-          }
-        } catch (e) {
-          if (e instanceof Error) {
-            showToast(`재시도 결과 확인 실패: ${e.message}`, "error");
-          } else {
-            showToast("재시도 결과 확인 실패", "error");
-          }
-        }
-      }
     } catch (error) {
       console.error("Error retrying booking:", error);
       if (axios.isAxiosError(error) && error.response?.status === 401) {

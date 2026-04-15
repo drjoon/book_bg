@@ -134,16 +134,17 @@ async function doLogin(
   };
 }
 
-async function refreshLogin(account) {
+async function refreshLogin(account, timeoutMs = LOGIN_ATTEMPT_TIMEOUT_MS) {
   const { client, config } = account;
   const logPrefix = `[${config.NAME}]`;
   console.warn(`${logPrefix} 🔐 Refreshing login session after 401 response.`);
-  const token = await getLoginToken(client);
+  const token = await getLoginToken(client, timeoutMs);
   const loginResult = await doLogin(
     client,
     token,
     config.LOGIN_ID,
     config.LOGIN_PASSWORD,
+    timeoutMs,
   );
   if (!loginResult.isLoggedIn) {
     throw new Error(
@@ -415,6 +416,7 @@ async function getClaimedSlots(dateStr) {
           ":datePrefix": dateStr,
           ":now": nowSec,
         },
+        ProjectionExpression: "PK",
       }),
     );
 
@@ -483,7 +485,6 @@ async function selectAndConfirmBooking(
         "X-XSRF-TOKEN": xsrfToken,
         Referer: "https://www.debeach.co.kr/booking",
       },
-      validateStatus: (status) => status >= 200 && status < 400,
       timeout: 3000,
     },
   );

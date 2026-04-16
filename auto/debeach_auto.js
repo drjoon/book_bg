@@ -65,22 +65,20 @@ const getNtpTime = async () => {
   return new Date(); // 모든 시도 실패 시 시스템 시간 사용
 };
 
-// Lambda 클라이언트 초기화 — 계정 인덱스별 리전 분산으로 IP 분리
-// i=0: 서울(가장 빠름), i=1: 도쿄, i=2: 싱가포르, i=3+: 뭄바이
+// Lambda 클라이언트 초기화 — 계정 인덱스별 리전 순환으로 IP 분리
+// i%4=0: 서울, i%4=1: 도쿄, i%4=2: 싱가포르, i%4=3: 뭄바이 (5번째부터 서울로 재순환)
 const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME || "book-debeach";
 const LAMBDA_REGIONS = [
   "ap-northeast-2", // 서울   (i=0, PRIMARY)
   "ap-northeast-1", // 도쿄   (i=1)
   "ap-southeast-1", // 싱가포르 (i=2)
-  "ap-south-1", // 뭄바이  (i=3+)
+  "ap-south-1", // 뭄바이  (i%4=3)
 ];
 const lambdaClients = LAMBDA_REGIONS.map(
   (r) => new LambdaClient({ region: r }),
 );
-const getLambdaClient = (i) =>
-  lambdaClients[Math.min(i, lambdaClients.length - 1)];
-const getLambdaRegion = (i) =>
-  LAMBDA_REGIONS[Math.min(i, LAMBDA_REGIONS.length - 1)];
+const getLambdaClient = (i) => lambdaClients[i % lambdaClients.length];
+const getLambdaRegion = (i) => LAMBDA_REGIONS[i % LAMBDA_REGIONS.length];
 console.log(
   `[LAMBDA] Multi-region mode: ${LAMBDA_REGIONS.join(", ")}, function=${LAMBDA_FUNCTION_NAME}`,
 );

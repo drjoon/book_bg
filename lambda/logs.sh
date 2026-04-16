@@ -32,20 +32,30 @@ for i in "${!REGIONS[@]}"; do
   TMP=$(mktemp)
   tmpfiles+=("$TMP")
   (
-    aws logs filter-log-events \
-      --log-group-name "/aws/lambda/$FUNCTION_NAME" \
-      --start-time "$START_MS" \
-      --region "$REGION" \
-      --query 'events[*].message' \
-      --output text > "$TMP" 2>&1
-    COUNT=$(wc -l < "$TMP" | tr -d ' ')
-    echo "  ✅ [$LABEL/$REGION] $COUNT lines"
+    ERRTMP=$(mktemp)
+    if aws logs filter-log-events \
+        --log-group-name "/aws/lambda/$FUNCTION_NAME" \
+        --start-time "$START_MS" \
+        --region "$REGION" \
+        --query 'events[*].message' \
+        --output text > "$TMP" 2>"$ERRTMP"; then
+      COUNT=$(wc -l < "$TMP" | tr -d ' ')
+      echo "  ✅ [$LABEL/$REGION] $COUNT lines"
+    else
+      if grep -q "ResourceNotFoundException" "$ERRTMP"; then
+        echo "  ⚠️  [$LABEL/$REGION] 로그 그룹 없음 (Lambda 미호출)"
+      else
+        echo "  ❌ [$LABEL/$REGION] 오류: $(cat "$ERRTMP")"
+      fi
+      > "$TMP"
+    fi
+    rm -f "$ERRTMP"
   ) &
   pids+=($!)
 done
 
 for pid in "${pids[@]}"; do
-  wait "$pid"
+  wait "$pid" || true
 done
 
 echo ""

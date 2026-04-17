@@ -719,8 +719,8 @@ export const handler = async (event) => {
 
     // 2. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
     const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
-    // 슬롯 첫 조회를 오픈 시각(예: 09:00:00) 이후 약 200ms 시점에 맞추기 위한 오프셋
-    const firstFetchOffsetMs = 200;
+    // 오픈 시각 + 250~550ms에 fetch 시작 → fetch 완료(~250ms) 후 바로 booking 시도 → booking 시작 ≈ open + 500~800ms
+    const firstFetchOffsetMs = 250 + Math.floor(Math.random() * 301); // 250~550ms
     const windowStart = bookingOpenTime
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
@@ -984,12 +984,6 @@ export const handler = async (event) => {
         }
 
         const stats = computeTeeStats(availableTimes, s, e);
-        // 수동 스크립트는 250ms 대기 후 바로 시도
-        const postFetchDelayMs = 200 + Math.floor(Math.random() * 101); // 200~300ms
-        console.log(
-          `[${logName}] ⏱️ Waiting ${postFetchDelayMs}ms after slot fetch before booking attempts.`,
-        );
-        await sleep(postFetchDelayMs);
         if (!baseStats) {
           baseStats = stats;
           baseSlots = availableTimes;
@@ -1041,8 +1035,9 @@ export const handler = async (event) => {
           continue;
         }
 
+        let bookedThisRound = false;
         for (const targetSlot of targetTimes) {
-          // DynamoDB에 슬롯 예약 시도
+          // DynamoDB에 슬롯 예약 시도 — 1개만 claim하고 즉시 break (다음 round에서 재시도)
           const claimed = await claimSlot(
             config.TARGET_DATE,
             targetSlot,
@@ -1076,9 +1071,14 @@ export const handler = async (event) => {
             await saveBookingResult(logName, config.TARGET_DATE, r);
             return r;
           }
+          // claim 후 시도 1회 — 성공·실패 무관하게 이번 round 종료, 다음 fetch에서 재시도
+          bookedThisRound = true;
+          break;
         }
 
-        await sleep(500);
+        if (!bookedThisRound) {
+          await sleep(500);
+        }
       }
 
       const failedQueued = {

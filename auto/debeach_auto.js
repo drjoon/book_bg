@@ -345,40 +345,26 @@ async function runBookingGroup(group, options) {
   const LOGIN_STAGGER_MS = 5000; // 5초 간격 stagger
   // 마지막 Lambda가 T-70s보다 늦게 invoke되지 않도록 stagger 총합을 20s로 상한
   const MAX_TOTAL_STAGGER_MS = 20000;
-  const PRIMARY_REGION = LAMBDA_REGIONS[0]; // ap-northeast-2 (서울)
-  const lastInvokeOffsetMs = Math.min(
-    (finalConfigs.length - 1) * LOGIN_STAGGER_MS,
-    MAX_TOTAL_STAGGER_MS,
-  );
   console.log(
-    `${logPrefix} Scheduling ${finalConfigs.length} Lambda(s): same-region(${PRIMARY_REGION})=stagger, other-region=T-90s±2~3s: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
+    `${logPrefix} Scheduling ${finalConfigs.length} Lambda(s) in batches of ${LAMBDA_REGIONS.length}: batch0=T-90s±2s, batch1=T-85s±2s, ...: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
   );
 
   const invocationPromises = finalConfigs.map(async (config, i) => {
     const logName = config.NAME || config.LOGIN_ID;
 
-    // 같은 리전(서울)이면 staggered invoke, 다른 리전이면 T-90초 전후 2~3초 랜덤 invoke
+    // 4개 리전 묶음(batch) 단위로 5초씩 stagger, batch 내에서는 ±2초 랜덤
+    // batch 0 (i=0~3): T-90s ± 2s, batch 1 (i=4~7): T-85s ± 2s, ...
     if (!options.immediate) {
       const bookingOpenTime = getBookingOpenTime(date);
-      const lambdaRegionForTiming = getLambdaRegion(i);
-      let invokeAt;
-      let timingLabel;
-      if (lambdaRegionForTiming === PRIMARY_REGION) {
-        // 같은 리전: 5초씩 stagger (i=0: T-90s, i=1: T-85s, i=2: T-80s, i≥4: T-70s)
-        const staggerMs = Math.min(i * LOGIN_STAGGER_MS, MAX_TOTAL_STAGGER_MS);
-        invokeAt = bookingOpenTime
-          .clone()
-          .subtract(90000 - staggerMs, "milliseconds");
-        timingLabel = `stagger #${i}: T-${(90000 - staggerMs) / 1000}s (${lambdaRegionForTiming})`;
-      } else {
-        // 다른 리전: T-90초 전후 ±2~3초 랜덤 (정확히 -90s는 서버에서 튕기므로 여유 부여)
-        // 범위: T-87s ~ T-92s (87000 ~ 92000ms before open)
-        const crossRegionLeadMs = (Math.floor(Math.random() * 6) + 87) * 1000; // 87000~92000ms
-        invokeAt = bookingOpenTime
-          .clone()
-          .subtract(crossRegionLeadMs, "milliseconds");
-        timingLabel = `cross-region T-${crossRegionLeadMs / 1000}s (${lambdaRegionForTiming})`;
-      }
+      const batchIndex = Math.floor(i / LAMBDA_REGIONS.length);
+      const batchStaggerMs = Math.min(
+        batchIndex * LOGIN_STAGGER_MS,
+        MAX_TOTAL_STAGGER_MS,
+      );
+      const jitterMs = (Math.floor(Math.random() * 5) - 2) * 1000; // -2000 ~ +2000ms
+      const leadMs = 90000 - batchStaggerMs - jitterMs; // e.g. batch0: 88000~92000ms before open
+      const invokeAt = bookingOpenTime.clone().subtract(leadMs, "milliseconds");
+      const timingLabel = `batch ${batchIndex}: T-${(90000 - batchStaggerMs) / 1000}s±2s jitter=${jitterMs / 1000}s (${getLambdaRegion(i)})`;
       const now = moment().tz("Asia/Seoul");
       const waitMs = invokeAt.diff(now);
       if (waitMs > 0) {

@@ -343,26 +343,47 @@ async function runBookingGroup(group, options) {
 
   // 3. Lambda 발사: 각 Lambda를 순차 stagger로 개별 invoke (Promise.all)
   const LOGIN_STAGGER_MS = 15000; // timeout 1회(10s) + 재시도 텀(~0.7s) = 10.7s → 15s면 1회 실패해도 겹치지 않음
-  const lastInvokeOffsetMs = (finalConfigs.length - 1) * LOGIN_STAGGER_MS;
+  // 마지막 Lambda가 T-30s보다 늦게 invoke되지 않도록 stagger 총합을 60s로 상한
+  const MAX_TOTAL_STAGGER_MS = 60000;
+  const PRIMARY_REGION = LAMBDA_REGIONS[0]; // ap-northeast-2 (서울)
+  const lastInvokeOffsetMs = Math.min(
+    (finalConfigs.length - 1) * LOGIN_STAGGER_MS,
+    MAX_TOTAL_STAGGER_MS,
+  );
   console.log(
-    `${logPrefix} Scheduling ${finalConfigs.length} Lambda(s) with ${LOGIN_STAGGER_MS / 1000}s stagger (T-90s ~ T-${Math.round((90000 - lastInvokeOffsetMs) / 1000)}s): ${finalConfigs.map((c) => c.NAME).join(", ")}`,
+    `${logPrefix} Scheduling ${finalConfigs.length} Lambda(s): same-region(${PRIMARY_REGION})=stagger, other-region=T-90s±2~3s: ${finalConfigs.map((c) => c.NAME).join(", ")}`,
   );
 
   const invocationPromises = finalConfigs.map(async (config, i) => {
     const logName = config.NAME || config.LOGIN_ID;
 
-    // 각 Lambda를 15초씩 순차 stagger로 발사 (발사 즉시 로그인 시도)
+    // 같은 리전(서울)이면 staggered invoke, 다른 리전이면 T-90초 전후 2~3초 랜덤 invoke
     if (!options.immediate) {
       const bookingOpenTime = getBookingOpenTime(date);
-      const staggerMs = i * LOGIN_STAGGER_MS; // 계정별 15초씩 순차 stagger
-      const invokeAt = bookingOpenTime
-        .clone()
-        .subtract(90000 - staggerMs, "milliseconds"); // i=0: T-90s, i=1: T-80s, i=2: T-70s, ...
+      const lambdaRegionForTiming = getLambdaRegion(i);
+      let invokeAt;
+      let timingLabel;
+      if (lambdaRegionForTiming === PRIMARY_REGION) {
+        // 같은 리전: 15초씩 stagger (i=0: T-90s, i=1: T-75s, ..., i≥4: T-30s)
+        const staggerMs = Math.min(i * LOGIN_STAGGER_MS, MAX_TOTAL_STAGGER_MS);
+        invokeAt = bookingOpenTime
+          .clone()
+          .subtract(90000 - staggerMs, "milliseconds");
+        timingLabel = `stagger #${i}: T-${(90000 - staggerMs) / 1000}s`;
+      } else {
+        // 다른 리전: T-90초 전후 ±2~3초 랜덤 (정확히 -90s는 서버에서 튕기므로 여유 부여)
+        // 범위: T-87s ~ T-92s (87000 ~ 92000ms before open)
+        const crossRegionLeadMs = (Math.floor(Math.random() * 6) + 87) * 1000; // 87000~92000ms
+        invokeAt = bookingOpenTime
+          .clone()
+          .subtract(crossRegionLeadMs, "milliseconds");
+        timingLabel = `cross-region T-${crossRegionLeadMs / 1000}s (${lambdaRegionForTiming})`;
+      }
       const now = moment().tz("Asia/Seoul");
       const waitMs = invokeAt.diff(now);
       if (waitMs > 0) {
         console.log(
-          `[${logName}] ⏱️ Waiting ${Math.round(waitMs / 1000)}s until invoke at ${invokeAt.format("HH:mm:ss.SSS")} (stagger #${i}: +${staggerMs / 1000}s)`,
+          `[${logName}] ⏱️ Waiting ${Math.round(waitMs / 1000)}s until invoke at ${invokeAt.format("HH:mm:ss.SSS")} (${timingLabel})`,
         );
         await new Promise((resolve) => setTimeout(resolve, waitMs));
       }

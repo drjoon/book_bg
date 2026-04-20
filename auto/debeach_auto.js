@@ -336,15 +336,15 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // 순차 pre-login을 위해 PRIMARY_SLOT_OFFSET 오름차순 정렬 (인덱스 순서대로 15초씩 stagger)
+  // 순차 pre-login을 위해 PRIMARY_SLOT_OFFSET 오름차순 정렬 (인덱스 순서대로 5초씩 stagger)
   finalConfigs.sort(
     (a, b) => (a.PRIMARY_SLOT_OFFSET || 0) - (b.PRIMARY_SLOT_OFFSET || 0),
   );
 
   // 3. Lambda 발사: 각 Lambda를 순차 stagger로 개별 invoke (Promise.all)
-  const LOGIN_STAGGER_MS = 15000; // timeout 1회(10s) + 재시도 텀(~0.7s) = 10.7s → 15s면 1회 실패해도 겹치지 않음
-  // 마지막 Lambda가 T-30s보다 늦게 invoke되지 않도록 stagger 총합을 60s로 상한
-  const MAX_TOTAL_STAGGER_MS = 60000;
+  const LOGIN_STAGGER_MS = 5000; // 5초 간격 stagger
+  // 마지막 Lambda가 T-70s보다 늦게 invoke되지 않도록 stagger 총합을 20s로 상한
+  const MAX_TOTAL_STAGGER_MS = 20000;
   const PRIMARY_REGION = LAMBDA_REGIONS[0]; // ap-northeast-2 (서울)
   const lastInvokeOffsetMs = Math.min(
     (finalConfigs.length - 1) * LOGIN_STAGGER_MS,
@@ -364,12 +364,12 @@ async function runBookingGroup(group, options) {
       let invokeAt;
       let timingLabel;
       if (lambdaRegionForTiming === PRIMARY_REGION) {
-        // 같은 리전: 15초씩 stagger (i=0: T-90s, i=1: T-75s, ..., i≥4: T-30s)
+        // 같은 리전: 5초씩 stagger (i=0: T-90s, i=1: T-85s, i=2: T-80s, i≥4: T-70s)
         const staggerMs = Math.min(i * LOGIN_STAGGER_MS, MAX_TOTAL_STAGGER_MS);
         invokeAt = bookingOpenTime
           .clone()
           .subtract(90000 - staggerMs, "milliseconds");
-        timingLabel = `stagger #${i}: T-${(90000 - staggerMs) / 1000}s`;
+        timingLabel = `stagger #${i}: T-${(90000 - staggerMs) / 1000}s (${lambdaRegionForTiming})`;
       } else {
         // 다른 리전: T-90초 전후 ±2~3초 랜덤 (정확히 -90s는 서버에서 튕기므로 여유 부여)
         // 범위: T-87s ~ T-92s (87000 ~ 92000ms before open)

@@ -692,7 +692,19 @@ async function waitForBookingOpen(openTime, logPrefix, offsetMs) {
 
 // --- Lambda Handler ---
 
+async function getOutboundIp() {
+  try {
+    const res = await axios.get("https://checkip.amazonaws.com", {
+      timeout: 3000,
+    });
+    return String(res.data).trim();
+  } catch {
+    return "unknown";
+  }
+}
+
 export const handler = async (event) => {
+  const invokeReceivedAt = moment().tz("Asia/Seoul").format("HH:mm:ss.SSS");
   console.log("Lambda invoked with event:", event);
   const { config, immediate, offsetMs } = event;
   const logName = config.NAME || config.LOGIN_ID;
@@ -724,7 +736,7 @@ export const handler = async (event) => {
     const windowStart = bookingOpenTime
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
-    const windowEnd = bookingOpenTime.clone().add(40, "seconds");
+    let windowEnd = bookingOpenTime.clone().add(40, "seconds");
 
     let token;
     if (!immediate) {
@@ -739,7 +751,22 @@ export const handler = async (event) => {
       token = await runLoginAttempt(client, config);
     }
 
+    const outboundIp = await getOutboundIp();
+    console.log(
+      `[${logName}] 🌐 Outbound IP: ${outboundIp}, invoke received at: ${invokeReceivedAt}`,
+    );
+
     const account = { client, token, config };
+
+    // login 완료 후 현재 시각 기준 최소 30초를 보장 (늦게 invoke된 Lambda 대응)
+    const MIN_WINDOW_AFTER_LOGIN_MS = 30000;
+    const loginDoneTime = createCorrectedNow(offsetMs)();
+    const windowEndFromLogin = loginDoneTime
+      .clone()
+      .add(MIN_WINDOW_AFTER_LOGIN_MS, "milliseconds");
+    if (windowEnd.isBefore(windowEndFromLogin)) {
+      windowEnd = windowEndFromLogin;
+    }
 
     if (!immediate) {
       await waitForBookingOpen(windowStart, `[${logName}]`, offsetMs);

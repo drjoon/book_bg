@@ -336,13 +336,13 @@ async function runBookingGroup(group, options) {
     });
   }
 
-  // 순차 pre-login을 위해 PRIMARY_SLOT_OFFSET 오름차순 정렬 (인덱스 순서대로 5초씩 stagger)
+  // 순차 pre-login을 위해 PRIMARY_SLOT_OFFSET 오름차순 정렬 (인덱스 순서대로 10초씩 stagger)
   finalConfigs.sort(
     (a, b) => (a.PRIMARY_SLOT_OFFSET || 0) - (b.PRIMARY_SLOT_OFFSET || 0),
   );
 
   // 3. Lambda 발사: 각 Lambda를 순차 stagger로 개별 invoke (Promise.all)
-  const LOGIN_STAGGER_MS = 5000; // 5초 간격 stagger
+  const LOGIN_STAGGER_MS = 10000; // 10초 간격 stagger
   // 마지막 Lambda가 T-70s보다 늦게 invoke되지 않도록 stagger 총합을 20s로 상한
   const MAX_TOTAL_STAGGER_MS = 20000;
   console.log(
@@ -352,8 +352,8 @@ async function runBookingGroup(group, options) {
   const invocationPromises = finalConfigs.map(async (config, i) => {
     const logName = config.NAME || config.LOGIN_ID;
 
-    // 4개 리전 묶음(batch) 단위로 5초씩 stagger, batch 내에서는 ±2초 랜덤
-    // batch 0 (i=0~3): T-90s ± 2s, batch 1 (i=4~7): T-85s ± 2s, ...
+    // 4개 리전 묶음(batch) 단위로 10초씩 stagger, batch 내에서는 ±2초 랜덤
+    // batch 0 (i=0~3): T-90s ± 2s, batch 1 (i=4~7): T-80s ± 2s, ...
     if (!options.immediate) {
       const bookingOpenTime = getBookingOpenTime(date);
       const batchIndex = Math.floor(i / LAMBDA_REGIONS.length);
@@ -364,7 +364,7 @@ async function runBookingGroup(group, options) {
       const jitterMs = (Math.floor(Math.random() * 5) - 2) * 1000; // -2000 ~ +2000ms
       const leadMs = 90000 - batchStaggerMs - jitterMs; // e.g. batch0: 88000~92000ms before open
       const invokeAt = bookingOpenTime.clone().subtract(leadMs, "milliseconds");
-      const timingLabel = `batch ${batchIndex}: T-${(90000 - batchStaggerMs) / 1000}s±2s jitter=${jitterMs / 1000}s (${getLambdaRegion(i)})`;
+      const timingLabel = `batch${batchIndex}: T-${(90000 - batchStaggerMs) / 1000}s±2s jitter=${jitterMs / 1000}s (${getLambdaRegion(i)})`;
       const now = moment().tz("Asia/Seoul");
       const waitMs = invokeAt.diff(now);
       if (waitMs > 0) {

@@ -731,8 +731,8 @@ export const handler = async (event) => {
 
     // 2. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
     const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
-    // 오픈 시각 + 250~550ms에 fetch 시작 → fetch 완료(~250ms) 후 바로 booking 시도 → booking 시작 ≈ open + 500~800ms
-    const firstFetchOffsetMs = 250 + Math.floor(Math.random() * 301); // 250~550ms
+    // 오픈 시각 + 50~350ms에 fetch 시작 → fetch 완료(~250ms) 후 바로 booking 시도 → booking 시작 ≈ open + 300~600ms
+    const firstFetchOffsetMs = 50 + Math.floor(Math.random() * 301); // 50~350ms
     const windowStart = bookingOpenTime
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
@@ -1058,8 +1058,24 @@ export const handler = async (event) => {
               `[${logName}] 📋 Failed slot list: ${Array.from(failedSlotTimes).join(", ")}`,
             );
           }
-          await sleep(600);
-          continue;
+          // Fallback: try any available slot not already failed or claimed (outside preferred range)
+          let fallbackTimes = availableTimes.filter((slot) => {
+            const slotKey = `${config.TARGET_DATE}#${slot.bk_time}#${slot.bk_cours}`;
+            return (
+              !failedSlotTimes.has(`${slot.bk_time}_${slot.bk_cours}`) &&
+              !claimedSlots.has(slotKey)
+            );
+          });
+          fallbackTimes = sortSlotsByProximity(fallbackTimes, startStr);
+          fallbackTimes = rotateSlotsForAccount(fallbackTimes, config);
+          if (fallbackTimes.length === 0) {
+            await sleep(600);
+            continue;
+          }
+          console.log(
+            `[${logName}] 🔄 Fallback: trying ${fallbackTimes[0].bk_time} (${fallbackTimes[0].bk_cours}) — ${fallbackTimes.length} slots available outside preferred range`,
+          );
+          targetTimes = fallbackTimes;
         }
 
         let bookedThisRound = false;

@@ -390,13 +390,13 @@ async function markSlotTaken(dateStr, slot, accountName) {
           PK: slotKey,
           accountName: accountName,
           claimedAt: Date.now(),
-          TTL: nowSec + 20, // 20초간 유지
+          TTL: nowSec + 5, // 5초간 유지
           serverTaken: true,
         },
       }),
     );
     console.log(
-      `[${accountName}] 🚫 Marked slot ${slot.bk_time} (${slot.bk_cours}) as server-taken (TTL +20s)`,
+      `[${accountName}] 🚫 Marked slot ${slot.bk_time} (${slot.bk_cours}) as server-taken (TTL +5s)`,
     );
   } catch (e) {
     console.warn(`[${accountName}] Failed to mark slot as taken: ${e.message}`);
@@ -548,10 +548,7 @@ async function attemptBooking(
       console.log(
         `${logPrefix} ⚠️ Slot ${targetSlot.bk_time} (course ${targetSlot.bk_cours}) was taken. Continuing to next slot.`,
       );
-      if (failedSlots && typeof failedSlots.add === "function") {
-        failedSlots.add(`${targetSlot.bk_time}_${targetSlot.bk_cours}`);
-      }
-      // 서버에서 이미 마감된 슬롯 → TTL 20초 연장해 모든 Lambda가 재시도하지 않도록
+      // 서버에서 이미 마감된 슬롯 → TTL 5초 연장 (5초 후 다시 available이면 재시도)
       await markSlotTaken(config.TARGET_DATE, targetSlot, config.NAME);
       return { success: false, slot: targetSlot, wasTaken: true };
     } else if (!error.response) {
@@ -736,7 +733,7 @@ export const handler = async (event) => {
     const windowStart = bookingOpenTime
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
-    let windowEnd = bookingOpenTime.clone().add(40, "seconds");
+    let windowEnd = bookingOpenTime.clone().add(60, "seconds");
 
     let token;
     if (!immediate) {
@@ -758,8 +755,8 @@ export const handler = async (event) => {
 
     const account = { client, token, config };
 
-    // login 완료 후 현재 시각 기준 최소 30초를 보장 (늦게 invoke된 Lambda 대응)
-    const MIN_WINDOW_AFTER_LOGIN_MS = 30000;
+    // login 완료 후 현재 시각 기준 최소 60초를 보장 (늦게 invoke된 Lambda 대응)
+    const MIN_WINDOW_AFTER_LOGIN_MS = 60000;
     const loginDoneTime = createCorrectedNow(offsetMs)();
     const windowEndFromLogin = loginDoneTime
       .clone()
@@ -1058,24 +1055,9 @@ export const handler = async (event) => {
               `[${logName}] 📋 Failed slot list: ${Array.from(failedSlotTimes).join(", ")}`,
             );
           }
-          // Fallback: try any available slot not already failed or claimed (outside preferred range)
-          let fallbackTimes = availableTimes.filter((slot) => {
-            const slotKey = `${config.TARGET_DATE}#${slot.bk_time}#${slot.bk_cours}`;
-            return (
-              !failedSlotTimes.has(`${slot.bk_time}_${slot.bk_cours}`) &&
-              !claimedSlots.has(slotKey)
-            );
-          });
-          fallbackTimes = sortSlotsByProximity(fallbackTimes, startStr);
-          fallbackTimes = rotateSlotsForAccount(fallbackTimes, config);
-          if (fallbackTimes.length === 0) {
-            await sleep(600);
-            continue;
-          }
-          console.log(
-            `[${logName}] 🔄 Fallback: trying ${fallbackTimes[0].bk_time} (${fallbackTimes[0].bk_cours}) — ${fallbackTimes.length} slots available outside preferred range`,
-          );
-          targetTimes = fallbackTimes;
+          // 범위 내 슬롯 없음 → 재fetch 대기 (범위 밖 fallback 없음)
+          await sleep(600);
+          continue;
         }
 
         let bookedThisRound = false;

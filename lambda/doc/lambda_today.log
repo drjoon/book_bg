@@ -1,864 +1,605 @@
 
-
-
-
-	2026-04-20T23:58:31.351Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[08:58:31.351] Lambda invoked with event: {
-	2026-04-20T23:58:31.392Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[08:58:31.392] [김노현] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:31.393Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[08:58:31.393] [김노현] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:31.681Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[08:58:31.681] Lambda invoked with event: {
-	2026-04-20T23:58:31.707Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[08:58:31.707] [박신일] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:31.740Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[08:58:31.740] [박신일] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:31.802Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[08:58:31.801] Lambda invoked with event: {
-	2026-04-20T23:58:31.827Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[08:58:31.827] [손앙현] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:31.827Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[08:58:31.827] [손앙현] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:32.767Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[08:58:32.767] Lambda invoked with event: {
-	2026-04-20T23:58:32.793Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[08:58:32.793] [오수양] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:32.793Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[08:58:32.793] [오수양] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:33.842Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[08:58:33.842] [손앙현] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:33.755
-	2026-04-20T23:58:34.075Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[08:58:34.075] [손앙현] 🌐 Outbound IP: 18.179.2.84, invoke received at: 08:58:31.786
-	2026-04-20T23:58:34.075Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[08:58:34.075] [손앙현] Starting precision wait. Target time (window start or open): 2026-04-21T09:00:00+09:00
-	2026-04-20T23:58:34.076Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[08:58:34.075] [손앙현] Using precomputed NTP offset from payload: -86ms
-	2026-04-20T23:58:34.201Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[08:58:34.201] [박신일] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:34.114
-	2026-04-20T23:58:34.246Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[08:58:34.246] [박신일] 🌐 Outbound IP: 18.141.156.177, invoke received at: 08:58:31.670
-	2026-04-20T23:58:34.246Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[08:58:34.246] [박신일] Starting precision wait. Target time (window start or open): 2026-04-21T09:00:00+09:00
-	2026-04-20T23:58:34.247Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[08:58:34.246] [박신일] Using precomputed NTP offset from payload: -86ms
-	2026-04-20T23:58:34.461Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[08:58:34.461] [오수양] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:34.375
-	2026-04-20T23:58:34.692Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[08:58:34.692] [오수양] 🌐 Outbound IP: 3.38.146.245, invoke received at: 08:58:32.760
-	2026-04-20T23:58:34.693Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[08:58:34.693] [오수양] Starting precision wait. Target time (window start or open): 2026-04-21T09:00:00+09:00
-	2026-04-20T23:58:34.693Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[08:58:34.693] [오수양] Using precomputed NTP offset from payload: -86ms
-	2026-04-20T23:58:34.948Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[08:58:34.948] [김노현] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:34.862
-	2026-04-20T23:58:35.159Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[08:58:35.159] [김노현] 🌐 Outbound IP: 15.207.236.104, invoke received at: 08:58:31.344
-	2026-04-20T23:58:35.160Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[08:58:35.160] [김노현] Starting precision wait. Target time (window start or open): 2026-04-21T09:00:00+09:00
-	2026-04-20T23:58:35.160Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[08:58:35.160] [김노현] Using precomputed NTP offset from payload: -86ms
-	2026-04-20T23:58:39.412Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:58:39.411] Lambda invoked with event: {
-	2026-04-20T23:58:39.436Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:58:39.436] [이형필] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:39.436Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:58:39.436] [이형필] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:41.664Z	04a50611-405f-4095-843f-f1531c187772	INFO	[08:58:41.664] Lambda invoked with event: {
-	2026-04-20T23:58:41.695Z	04a50611-405f-4095-843f-f1531c187772	INFO	[08:58:41.695] [손덕일] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:41.696Z	04a50611-405f-4095-843f-f1531c187772	INFO	[08:58:41.696] [손덕일] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:43.249Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[08:58:43.249] Lambda invoked with event: {
-	2026-04-20T23:58:43.285Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[08:58:43.285] [권택현] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:43.290Z	04a50611-405f-4095-843f-f1531c187772	INFO	[08:58:43.290] [손덕일] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:43.204
-	2026-04-20T23:58:43.299Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[08:58:43.299] [권택현] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:43.511Z	04a50611-405f-4095-843f-f1531c187772	INFO	[08:58:43.511] [손덕일] 🌐 Outbound IP: 52.79.242.245, invoke received at: 08:58:41.661
-	2026-04-20T23:58:43.512Z	04a50611-405f-4095-843f-f1531c187772	INFO	[08:58:43.512] [손덕일] Starting precision wait. Target time (window start or open): 2026-04-21T09:00:00+09:00
-	2026-04-20T23:58:43.512Z	04a50611-405f-4095-843f-f1531c187772	INFO	[08:58:43.512] [손덕일] Using precomputed NTP offset from payload: -86ms
-	2026-04-20T23:58:43.614Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[08:58:43.605] Lambda invoked with event: {
-	2026-04-20T23:58:43.641Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[08:58:43.641] [오대출] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:43.674Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[08:58:43.641] [오대출] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:45.695Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[08:58:45.695] [오대출] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:45.609
-	2026-04-20T23:58:45.926Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[08:58:45.926] [오대출] 🌐 Outbound IP: 13.230.38.200, invoke received at: 08:58:43.603
-	2026-04-20T23:58:45.927Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[08:58:45.926] [오대출] Starting precision wait. Target time (window start or open): 2026-04-21T09:00:00+09:00
-	2026-04-20T23:58:45.927Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[08:58:45.927] [오대출] Using precomputed NTP offset from payload: -86ms
-	2026-04-20T23:58:46.760Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[08:58:46.760] [권택현] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:46.674
-	2026-04-20T23:58:46.966Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[08:58:46.966] [권택현] 🌐 Outbound IP: 15.206.146.182, invoke received at: 08:58:43.246
-	2026-04-20T23:58:46.967Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[08:58:46.967] [권택현] Starting precision wait. Target time (window start or open): 2026-04-21T09:00:00+09:00
-	2026-04-20T23:58:46.967Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[08:58:46.967] [권택현] Using precomputed NTP offset from payload: -86ms
-	2026-04-20T23:58:49.473Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:58:49.473] [이형필] 🔐 Pre-login attempt 1 failed: Pre-login attempt timed out after 10000ms
-	2026-04-20T23:58:50.174Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:58:50.174] [이형필] 🔐 Pre-login attempt 2 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:52.629Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[08:58:52.628] Lambda invoked with event: {
-	2026-04-20T23:58:52.660Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[08:58:52.660] [정광호] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-20T23:58:52.661Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[08:58:52.661] [정광호] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:58:54.215Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[08:58:54.215] [정광호] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:54.129
-	2026-04-20T23:58:54.440Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[08:58:54.440] [정광호] 🌐 Outbound IP: 43.203.132.66, invoke received at: 08:58:52.626
-	2026-04-20T23:58:54.440Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[08:58:54.440] [정광호] Starting precision wait. Target time (window start or open): 2026-04-21T09:00:00+09:00
-	2026-04-20T23:58:54.440Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[08:58:54.440] [정광호] Using precomputed NTP offset from payload: -86ms
-	2026-04-20T23:59:00.180Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:59:00.180] [이형필] 🔐 Pre-login attempt 2 failed: Pre-login attempt timed out after 10000ms
-	2026-04-20T23:59:00.882Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:59:00.882] [이형필] 🔐 Pre-login attempt 3 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:59:10.889Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:59:10.889] [이형필] 🔐 Pre-login attempt 3 failed: Pre-login attempt timed out after 10000ms
-	2026-04-20T23:59:11.591Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:59:11.591] [이형필] 🔐 Pre-login attempt 4 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:59:21.593Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:59:21.593] [이형필] 🔐 Pre-login attempt 4 failed: Pre-login attempt timed out after 10000ms
-	2026-04-20T23:59:22.294Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:59:22.294] [이형필] 🔐 Pre-login attempt 5 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:59:32.297Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:59:32.297] [이형필] 🔐 Pre-login attempt 5 failed: Pre-login attempt timed out after 10000ms
-	2026-04-20T23:59:32.999Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:59:32.999] [이형필] 🔐 Pre-login attempt 6 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:59:43.012Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:59:43.012] [이형필] 🔐 Pre-login attempt 6 failed: Pre-login attempt timed out after 10000ms
-	2026-04-20T23:59:43.713Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:59:43.713] [이형필] 🔐 Pre-login attempt 7 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-20T23:59:53.721Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:59:53.721] [이형필] 🔐 Pre-login attempt 7 failed: Pre-login attempt timed out after 10000ms
-	2026-04-20T23:59:54.422Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	INFO	[08:59:54.422] [이형필] 🔐 Pre-login attempt 8 starting with budget 664ms. Deadline: 08:59:55.000
-	2026-04-20T23:59:55.088Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:59:55.088] [이형필] 🔐 Pre-login attempt 8 failed: Pre-login attempt timed out after 664ms
-	2026-04-20T23:59:55.238Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[08:59:55.238] [이형필] 🔐 Pre-login window missed (deadline: 08:59:55.000, now: 08:59:55.152). Attempting fallback login (20s timeout)...
-	2026-04-21T00:00:00.342Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:00.342] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:00.342Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:00.342] [김노현] Precision wait finished. Corrected time: 09:00:00.256
-	2026-04-21T00:00:00.479Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:00.479] [권택현] Precision wait finished. Corrected time: 09:00:00.393
-	2026-04-21T00:00:00.480Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:00.480] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:00.480Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:00.480] [정광호] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:00.480Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:00.480] [정광호] Precision wait finished. Corrected time: 09:00:00.394
-	2026-04-21T00:00:00.480Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:00.480] [박신일] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:00.480Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:00.480] [박신일] Precision wait finished. Corrected time: 09:00:00.394
-	2026-04-21T00:00:00.496Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:00.495] [오수양] Precision wait finished. Corrected time: 09:00:00.409
-	2026-04-21T00:00:00.496Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:00.496] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:00.505Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:00.505] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:00.505Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:00.505] [오대출] Precision wait finished. Corrected time: 09:00:00.419
-	2026-04-21T00:00:00.560Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:00.560] [손앙현] Precision wait finished. Corrected time: 09:00:00.474
-	2026-04-21T00:00:00.561Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:00.561] [손앙현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:00.616Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:00.616] [정광호] 📊 Initial tee stats - total: 54, firstHalf: 30, secondHalf: 24, inRange: 18
-	2026-04-21T00:00:00.616Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:00.616] [정광호] ✅ Slot fetch completed (queued). Count: 54, elapsed: 136ms
-	2026-04-21T00:00:00.624Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:00.624] [손덕일] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:00.624Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:00.624] [손덕일] Precision wait finished. Corrected time: 09:00:00.538
-	2026-04-21T00:00:00.624Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:00.624] [오수양] 📊 Initial tee stats - total: 54, firstHalf: 30, secondHalf: 24, inRange: 4
-	2026-04-21T00:00:00.624Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:00.624] [오수양] ✅ Slot fetch completed (queued). Count: 54, elapsed: 128ms
-	2026-04-21T00:00:00.748Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:00.748] [손덕일] ✅ Slot fetch completed (queued). Count: 54, elapsed: 124ms
-	2026-04-21T00:00:00.749Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:00.749] [손덕일] 📊 Initial tee stats - total: 54, firstHalf: 30, secondHalf: 24, inRange: 4
-	2026-04-21T00:00:00.749Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:00.749] [오대출] ✅ Slot fetch completed (queued). Count: 54, elapsed: 244ms
-	2026-04-21T00:00:00.754Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:00.754] [오대출] 📊 Initial tee stats - total: 54, firstHalf: 30, secondHalf: 24, inRange: 14
-	2026-04-21T00:00:00.823Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:00.823] [손앙현] ✅ Slot fetch completed (queued). Count: 54, elapsed: 262ms
-	2026-04-21T00:00:00.824Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:00.824] [손앙현] 📊 Initial tee stats - total: 54, firstHalf: 30, secondHalf: 24, inRange: 4
-	2026-04-21T00:00:00.860Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:00.860] [박신일] ✅ Slot fetch completed (queued). Count: 54, elapsed: 380ms
-	2026-04-21T00:00:00.879Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:00.879] [박신일] 📊 Initial tee stats - total: 54, firstHalf: 30, secondHalf: 24, inRange: 11
-	2026-04-21T00:00:00.964Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:00.964] [김노현] 📊 Initial tee stats - total: 54, firstHalf: 30, secondHalf: 24, inRange: 11
-	2026-04-21T00:00:00.964Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:00.964] [김노현] ✅ Slot fetch completed (queued). Count: 54, elapsed: 622ms
-	2026-04-21T00:00:01.103Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:01.103] [권택현] ✅ Slot fetch completed (queued). Count: 54, elapsed: 623ms
-	2026-04-21T00:00:01.104Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:01.104] [권택현] 📊 Initial tee stats - total: 54, firstHalf: 30, secondHalf: 24, inRange: 6
-	2026-04-21T00:00:01.172Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:01.172] [김노현] 🎯 Primary target (queued loop): 0724 on course B (totalTargets=11)
-	2026-04-21T00:00:01.214Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:01.214] [오수양] 🎯 Primary target (queued loop): 0820 on course A (totalTargets=4)
-	2026-04-21T00:00:01.217Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:01.217] [김노현] ✅ Claimed slot 0724 (B) in DynamoDB
-	2026-04-21T00:00:01.231Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:01.231] [정광호] 🎯 Primary target (queued loop): 1311 on course A (totalTargets=18)
-	2026-04-21T00:00:01.247Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:01.247] [박신일] 🎯 Primary target (queued loop): 0724 on course A (totalTargets=11)
-	2026-04-21T00:00:01.285Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:01.285] [김노현] ➡️ Trying to book time: 0724 on course B (delay: 68ms)
-	2026-04-21T00:00:01.318Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:01.318] [권택현] 📋 Already claimed by other Lambdas: 3 slots
-	2026-04-21T00:00:01.318Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:01.318] [권택현] 🎯 Primary target (queued loop): 1215 on course B (totalTargets=6)
-	2026-04-21T00:00:01.326Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:01.326] [손덕일] 📋 Already claimed by other Lambdas: 1 slots
-	2026-04-21T00:00:01.327Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:01.327] [손덕일] 🎯 Primary target (queued loop): 0820 on course A (totalTargets=4)
-	2026-04-21T00:00:01.327Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:01.327] [오대출] 📋 Already claimed by other Lambdas: 1 slots
-	2026-04-21T00:00:01.328Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:01.328] [오대출] 🎯 Primary target (queued loop): 1215 on course B (totalTargets=14)
-	2026-04-21T00:00:01.328Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:01.328] [박신일] ✅ Claimed slot 0724 (A) in DynamoDB
-	2026-04-21T00:00:01.360Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:01.360] [권택현] ✅ Claimed slot 1215 (B) in DynamoDB
-	2026-04-21T00:00:01.362Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:01.362] [오수양] ✅ Claimed slot 0820 (A) in DynamoDB
-	2026-04-21T00:00:01.388Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:01.388] [정광호] ✅ Claimed slot 1311 (A) in DynamoDB
-	2026-04-21T00:00:01.389Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:01.389] [박신일] ➡️ Trying to book time: 0724 on course A (delay: 60ms)
-	2026-04-21T00:00:01.411Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:01.411] [손앙현] 📋 Already claimed by other Lambdas: 4 slots
-	2026-04-21T00:00:01.411Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:01.411] [손앙현] 🎯 Primary target (queued loop): 0752 on course B (totalTargets=3)
-	2026-04-21T00:00:01.419Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:01.419] [권택현] ➡️ Trying to book time: 1215 on course B (delay: 58ms)
-	2026-04-21T00:00:01.430Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:01.429] [오수양] ➡️ Trying to book time: 0820 on course A (delay: 67ms)
-	2026-04-21T00:00:01.449Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:01.449] [정광호] ➡️ Trying to book time: 1311 on course A (delay: 60ms)
-	2026-04-21T00:00:01.481Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:01.481] [손덕일] ⚠️ Slot 0820 (A) already claimed by another Lambda. Skipping.
-	2026-04-21T00:00:01.491Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:01.491] [오대출] ⚠️ Slot 1215 (B) already claimed by another Lambda. Skipping.
-	2026-04-21T00:00:01.555Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:01.555] [손앙현] ✅ Claimed slot 0752 (B) in DynamoDB
-	2026-04-21T00:00:01.592Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	ERROR	[09:00:01.592] [오수양] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=A&time=0820&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:01.592Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:01.592] [오수양] ⚠️ Slot 0820 (course A) was taken. Continuing to next slot.
-	2026-04-21T00:00:01.606Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:01.606] [손앙현] ➡️ Trying to book time: 0752 on course B (delay: 50ms)
-	2026-04-21T00:00:01.614Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:01.614] [손덕일] ✅ Claimed slot 0759 (A) in DynamoDB
-	2026-04-21T00:00:01.631Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:01.631] [오대출] ✅ Claimed slot 1229 (A) in DynamoDB
-	2026-04-21T00:00:01.636Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:01.636] [정광호] ⏱️ create completed for 1311 in 148ms. Waiting 940ms before final booking POST.
-	2026-04-21T00:00:01.666Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:01.666] [손덕일] ➡️ Trying to book time: 0759 on course A (delay: 52ms)
-	2026-04-21T00:00:01.698Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:01.698] [오대출] ➡️ Trying to book time: 1229 on course A (delay: 66ms)
-	2026-04-21T00:00:01.739Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:01.739] [오수양] 🚫 Marked slot 0820 (A) as server-taken (TTL +20s)
-	2026-04-21T00:00:01.739Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:01.739] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:01.929Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:01.892] [손덕일] ⏱️ create completed for 0759 in 153ms. Waiting 860ms before final booking POST.
-	2026-04-21T00:00:01.937Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:01.937] [오수양] ✅ Slot fetch completed (queued). Count: 54, elapsed: 198ms
-	2026-04-21T00:00:01.939Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:01.883] [박신일] ⏱️ create completed for 0724 in 459ms. Waiting 961ms before final booking POST.
-	2026-04-21T00:00:01.983Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:01.983] [손앙현] ⏱️ create completed for 0752 in 328ms. Waiting 1112ms before final booking POST.
-	2026-04-21T00:00:02.041Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	ERROR	[09:00:02.041] [오대출] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=A&time=1229&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:02.041Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.041] [오대출] ⚠️ Slot 1229 (course A) was taken. Continuing to next slot.
-	2026-04-21T00:00:02.054Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:02.054] [김노현] ⏱️ create completed for 0724 in 694ms. Waiting 975ms before final booking POST.
-	2026-04-21T00:00:02.081Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	ERROR	[09:00:02.081] [권택현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=B&time=1215&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:02.081Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:02.081] [권택현] ⚠️ Slot 1215 (course B) was taken. Continuing to next slot.
-	2026-04-21T00:00:02.085Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.085] [오수양] 📋 Already claimed by other Lambdas: 8 slots
-	2026-04-21T00:00:02.085Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.085] [오수양] 🎯 Primary target (queued loop): 0752 on course A (totalTargets=1)
-	2026-04-21T00:00:02.104Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:02.104] [권택현] 🚫 Marked slot 1215 (B) as server-taken (TTL +20s)
-	2026-04-21T00:00:02.104Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:02.104] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:02.177Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.177] [오대출] 🚫 Marked slot 1229 (A) as server-taken (TTL +20s)
-	2026-04-21T00:00:02.177Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.177] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:02.220Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.220] [오수양] ✅ Claimed slot 0752 (A) in DynamoDB
-	2026-04-21T00:00:02.281Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.281] [오수양] ➡️ Trying to book time: 0752 on course A (delay: 60ms)
-	2026-04-21T00:00:02.387Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	ERROR	[09:00:02.387] [오수양] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=A&time=0752&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:02.387Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.387] [오수양] ⚠️ Slot 0752 (course A) was taken. Continuing to next slot.
-	2026-04-21T00:00:02.412Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.412] [오대출] ✅ Slot fetch completed (queued). Count: 54, elapsed: 235ms
-	2026-04-21T00:00:02.522Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.522] [오수양] 🚫 Marked slot 0752 (A) as server-taken (TTL +20s)
-	2026-04-21T00:00:02.523Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.522] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:02.569Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.569] [오대출] 📋 Already claimed by other Lambdas: 9 slots
-	2026-04-21T00:00:02.569Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.569] [오대출] 🎯 Primary target (queued loop): 1229 on course B (totalTargets=12)
-	2026-04-21T00:00:02.648Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.647] [오수양] ✅ Slot fetch completed (queued). Count: 53, elapsed: 125ms
-	2026-04-21T00:00:02.705Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.705] [오대출] ✅ Claimed slot 1229 (B) in DynamoDB
-	2026-04-21T00:00:02.729Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:02.729] [정광호] ⏱️ final booking POST completed for 1311 in 152ms.
-	2026-04-21T00:00:02.729Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:02.729] [정광호] 🎉 Successfully booked time: 1311 (total booking sequence: 1280ms)
-	2026-04-21T00:00:02.729Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	INFO	[09:00:02.729] [정광호] Booking successful (queued mode).
-	2026-04-21T00:00:02.761Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:02.761] [권택현] ✅ Slot fetch completed (queued). Count: 52, elapsed: 657ms
-	2026-04-21T00:00:02.765Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.765] [오대출] ➡️ Trying to book time: 1229 on course B (delay: 60ms)
-	2026-04-21T00:00:02.784Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.784] [오수양] 📋 Already claimed by other Lambdas: 10 slots
-	2026-04-21T00:00:02.784Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.784] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:02.784Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:02.784] [오수양] ⚠️ No target slots available. Total slots: 53, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:02.785Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:02.785] [권택현] 📋 Already claimed by other Lambdas: 10 slots
-	2026-04-21T00:00:02.785Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:02.785] [권택현] 🎯 Primary target (queued loop): 1147 on course A (totalTargets=4)
-	2026-04-21T00:00:02.820Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:02.820] [권택현] ✅ Claimed slot 1147 (A) in DynamoDB
-	2026-04-21T00:00:02.883Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:02.883] [권택현] ➡️ Trying to book time: 1147 on course A (delay: 63ms)
-	2026-04-21T00:00:02.935Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:02.935] [손덕일] ⏱️ final booking POST completed for 0759 in 145ms.
-	2026-04-21T00:00:02.935Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:02.935] [손덕일] 🎉 Successfully booked time: 0759 (total booking sequence: 1269ms)
-	2026-04-21T00:00:02.935Z	04a50611-405f-4095-843f-f1531c187772	INFO	[09:00:02.935] [손덕일] Booking successful (queued mode).
-	2026-04-21T00:00:02.993Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	ERROR	[09:00:02.993] [오대출] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=B&time=1229&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:02.993Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:02.993] [오대출] ⚠️ Slot 1229 (course B) was taken. Continuing to next slot.
-	2026-04-21T00:00:03.021Z	bfaa1679-70fd-494c-a95d-f88c3be3bd51	WARN	[09:00:03.021] [정광호] Failed to save booking result to DynamoDB: Requested resource not found
-	2026-04-21T00:00:03.128Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:03.128] [오대출] 🚫 Marked slot 1229 (B) as server-taken (TTL +20s)
-	2026-04-21T00:00:03.128Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:03.128] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:03.246Z	04a50611-405f-4095-843f-f1531c187772	WARN	[09:00:03.246] [손덕일] Failed to save booking result to DynamoDB: Requested resource not found
-	2026-04-21T00:00:03.298Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:03.298] [박신일] ⏱️ final booking POST completed for 0724 in 396ms.
-	2026-04-21T00:00:03.299Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:03.299] [박신일] 🎉 Successfully booked time: 0724 (total booking sequence: 1910ms)
-	2026-04-21T00:00:03.299Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	INFO	[09:00:03.299] [박신일] Booking successful (queued mode).
-	2026-04-21T00:00:03.360Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:03.360] [손앙현] ⏱️ final booking POST completed for 0752 in 263ms.
-	2026-04-21T00:00:03.360Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:03.360] [손앙현] 🎉 Successfully booked time: 0752 (total booking sequence: 1754ms)
-	2026-04-21T00:00:03.361Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	INFO	[09:00:03.361] [손앙현] Booking successful (queued mode).
-	2026-04-21T00:00:03.375Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:03.375] [오대출] ✅ Slot fetch completed (queued). Count: 46, elapsed: 247ms
-	2026-04-21T00:00:03.385Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:03.385] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:03.471Z	c2ad0a86-ecc0-4157-806a-5c8e7122526f	WARN	[09:00:03.471] [박신일] Failed to save booking result to DynamoDB: Requested resource not found
-	2026-04-21T00:00:03.479Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	ERROR	[09:00:03.479] [권택현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=A&time=1147&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:03.479Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:03.479] [권택현] ⚠️ Slot 1147 (course A) was taken. Continuing to next slot.
-	2026-04-21T00:00:03.500Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:03.499] [권택현] 🚫 Marked slot 1147 (A) as server-taken (TTL +20s)
-	2026-04-21T00:00:03.500Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:03.500] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:03.504Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:03.504] [오수양] ✅ Slot fetch completed (queued). Count: 45, elapsed: 119ms
-	2026-04-21T00:00:03.513Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:03.513] [오대출] 📋 Already claimed by other Lambdas: 11 slots
-	2026-04-21T00:00:03.513Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:03.513] [오대출] 🎯 Primary target (queued loop): 1250 on course B (totalTargets=7)
-	2026-04-21T00:00:03.639Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:03.639] [오수양] 📋 Already claimed by other Lambdas: 11 slots
-	2026-04-21T00:00:03.639Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:03.639] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:03.639Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:03.639] [오수양] ⚠️ No target slots available. Total slots: 45, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:03.648Z	65d89e92-ca1d-445c-9f06-8615f210f9d0	WARN	[09:00:03.647] [손앙현] Failed to save booking result to DynamoDB: Requested resource not found
-	2026-04-21T00:00:03.649Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:03.649] [오대출] ✅ Claimed slot 1250 (B) in DynamoDB
-	2026-04-21T00:00:03.673Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:03.673] [김노현] ⏱️ final booking POST completed for 0724 in 626ms.
-	2026-04-21T00:00:03.673Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:03.673] [김노현] 🎉 Successfully booked time: 0724 (total booking sequence: 2387ms)
-	2026-04-21T00:00:03.673Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	INFO	[09:00:03.673] [김노현] Booking successful (queued mode).
-	2026-04-21T00:00:03.682Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:03.682] [오대출] ➡️ Trying to book time: 1250 on course B (delay: 32ms)
-	2026-04-21T00:00:03.734Z	dd50a5e3-2f63-4792-8f55-a4931e3c6e12	WARN	[09:00:03.734] [김노현] Failed to save booking result to DynamoDB: Requested resource not found
-	2026-04-21T00:00:03.937Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	ERROR	[09:00:03.937] [오대출] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=B&time=1250&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:03.937Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:03.937] [오대출] ⚠️ Slot 1250 (course B) was taken. Continuing to next slot.
-	2026-04-21T00:00:04.072Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:04.072] [오대출] 🚫 Marked slot 1250 (B) as server-taken (TTL +20s)
-	2026-04-21T00:00:04.072Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:04.072] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:04.122Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:04.121] [권택현] ✅ Slot fetch completed (queued). Count: 40, elapsed: 621ms
-	2026-04-21T00:00:04.140Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:04.140] [권택현] 📋 Already claimed by other Lambdas: 12 slots
-	2026-04-21T00:00:04.140Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:04.140] [권택현] 🎯 Primary target (queued loop): 1215 on course A (totalTargets=1)
-	2026-04-21T00:00:04.165Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:04.165] [권택현] ✅ Claimed slot 1215 (A) in DynamoDB
-	2026-04-21T00:00:04.234Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:04.233] [권택현] ➡️ Trying to book time: 1215 on course A (delay: 68ms)
-	2026-04-21T00:00:04.240Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:04.240] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:04.326Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:04.326] [오대출] ✅ Slot fetch completed (queued). Count: 40, elapsed: 254ms
-	2026-04-21T00:00:04.345Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:04.345] [오수양] ✅ Slot fetch completed (queued). Count: 40, elapsed: 105ms
-	2026-04-21T00:00:04.462Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:04.462] [오대출] 📋 Already claimed by other Lambdas: 13 slots
-	2026-04-21T00:00:04.462Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:04.462] [오대출] 🎯 Primary target (queued loop): 1257 on course B (totalTargets=3)
-	2026-04-21T00:00:04.483Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:04.483] [오수양] 📋 Already claimed by other Lambdas: 13 slots
-	2026-04-21T00:00:04.483Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:04.483] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:04.483Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:04.483] [오수양] ⚠️ No target slots available. Total slots: 40, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:04.596Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:04.596] [오대출] ✅ Claimed slot 1257 (B) in DynamoDB
-	2026-04-21T00:00:04.642Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:04.642] [오대출] ➡️ Trying to book time: 1257 on course B (delay: 45ms)
-	2026-04-21T00:00:04.825Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	ERROR	[09:00:04.825] [권택현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=A&time=1215&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:04.826Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:04.826] [권택현] ⚠️ Slot 1215 (course A) was taken. Continuing to next slot.
-	2026-04-21T00:00:04.840Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:04.840] [권택현] 🚫 Marked slot 1215 (A) as server-taken (TTL +20s)
-	2026-04-21T00:00:04.840Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:04.840] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:04.870Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	ERROR	[09:00:04.870] [오대출] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=B&time=1257&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:04.871Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:04.871] [오대출] ⚠️ Slot 1257 (course B) was taken. Continuing to next slot.
-	2026-04-21T00:00:05.005Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.005] [오대출] 🚫 Marked slot 1257 (B) as server-taken (TTL +20s)
-	2026-04-21T00:00:05.005Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.005] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:05.084Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:05.084] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:05.186Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:05.186] [오수양] ✅ Slot fetch completed (queued). Count: 39, elapsed: 102ms
-	2026-04-21T00:00:05.240Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.239] [오대출] ✅ Slot fetch completed (queued). Count: 39, elapsed: 234ms
-	2026-04-21T00:00:05.323Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:05.323] [오수양] 📋 Already claimed by other Lambdas: 14 slots
-	2026-04-21T00:00:05.323Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:05.323] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:05.323Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:05.323] [오수양] ⚠️ No target slots available. Total slots: 39, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:05.376Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.376] [오대출] 📋 Already claimed by other Lambdas: 14 slots
-	2026-04-21T00:00:05.376Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.376] [오대출] 🎯 Primary target (queued loop): 1243 on course B (totalTargets=2)
-	2026-04-21T00:00:05.436Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:05.436] [권택현] ✅ Slot fetch completed (queued). Count: 39, elapsed: 596ms
-	2026-04-21T00:00:05.443Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:05.443] [권택현] 📋 Already claimed by other Lambdas: 14 slots
-	2026-04-21T00:00:05.444Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:05.444] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:05.444Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:05.444] [권택현] ⚠️ No target slots available. Total slots: 39, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:05.510Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.510] [오대출] ✅ Claimed slot 1243 (B) in DynamoDB
-	2026-04-21T00:00:05.577Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.577] [오대출] ➡️ Trying to book time: 1243 on course B (delay: 67ms)
-	2026-04-21T00:00:05.808Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	ERROR	[09:00:05.808] [오대출] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260505&cours=B&time=1243&hole=18 (timeout: 3000ms): Request failed with status code 422
-	2026-04-21T00:00:05.808Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.808] [오대출] ⚠️ Slot 1243 (course B) was taken. Continuing to next slot.
-	2026-04-21T00:00:05.924Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:05.924] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:05.942Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.942] [오대출] 🚫 Marked slot 1243 (B) as server-taken (TTL +20s)
-	2026-04-21T00:00:05.943Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:05.943] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:06.032Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:06.032] [오수양] ✅ Slot fetch completed (queued). Count: 37, elapsed: 108ms
-	2026-04-21T00:00:06.045Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:06.045] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:06.166Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:06.166] [오대출] ✅ Slot fetch completed (queued). Count: 37, elapsed: 223ms
-	2026-04-21T00:00:06.167Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:06.167] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:06.168Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:06.168] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:06.168Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:06.168] [오수양] ⚠️ No target slots available. Total slots: 37, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:06.302Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:06.302] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:06.302Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:06.302] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:06.302Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:06.302] [오대출] ⚠️ No target slots available. Total slots: 37, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:06.636Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:06.636] [권택현] ✅ Slot fetch completed (queued). Count: 36, elapsed: 591ms
-	2026-04-21T00:00:06.643Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:06.643] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:06.643Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:06.643] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:06.643Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:06.643] [권택현] ⚠️ No target slots available. Total slots: 36, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:06.768Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:06.768] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:06.872Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:06.872] [오수양] ✅ Slot fetch completed (queued). Count: 33, elapsed: 104ms
-	2026-04-21T00:00:06.903Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:06.903] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:07.007Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:07.007] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:07.008Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:07.008] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:07.008Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:07.008] [오수양] ⚠️ No target slots available. Total slots: 33, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:07.130Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:07.130] [오대출] ✅ Slot fetch completed (queued). Count: 33, elapsed: 227ms
-	2026-04-21T00:00:07.244Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:07.244] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:07.267Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:07.267] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:07.267Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:07.267] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:07.267Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:07.267] [오대출] ⚠️ No target slots available. Total slots: 33, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:07.609Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:07.609] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:07.708Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:07.708] [오수양] ✅ Slot fetch completed (queued). Count: 32, elapsed: 99ms
-	2026-04-21T00:00:07.843Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:07.843] [권택현] ✅ Slot fetch completed (queued). Count: 32, elapsed: 599ms
-	2026-04-21T00:00:07.844Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:07.844] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:07.844Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:07.844] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:07.844Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:07.844] [오수양] ⚠️ No target slots available. Total slots: 32, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:07.860Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:07.860] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:07.860Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:07.860] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:07.860Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:07.860] [권택현] ⚠️ No target slots available. Total slots: 32, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:07.868Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:07.868] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:08.099Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:08.099] [오대출] ✅ Slot fetch completed (queued). Count: 32, elapsed: 231ms
-	2026-04-21T00:00:08.235Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:08.235] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:08.236Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:08.236] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:08.236Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:08.236] [오대출] ⚠️ No target slots available. Total slots: 32, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:08.445Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:08.445] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:08.461Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:08.461] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:08.549Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:08.549] [오수양] ✅ Slot fetch completed (queued). Count: 30, elapsed: 104ms
-	2026-04-21T00:00:08.701Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:08.701] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:08.701Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:08.701] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:08.701Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:08.701] [오수양] ⚠️ No target slots available. Total slots: 30, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:08.837Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:08.837] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:09.060Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:09.060] [권택현] ✅ Slot fetch completed (queued). Count: 28, elapsed: 599ms
-	2026-04-21T00:00:09.061Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:09.060] [오대출] ✅ Slot fetch completed (queued). Count: 28, elapsed: 223ms
-	2026-04-21T00:00:09.080Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:09.080] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:09.080Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:09.080] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:09.080Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:09.080] [권택현] ⚠️ No target slots available. Total slots: 28, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:09.196Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:09.196] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:09.196Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:09.196] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:09.196Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:09.196] [오대출] ⚠️ No target slots available. Total slots: 28, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:09.302Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:09.302] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:09.402Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:09.401] [오수양] ✅ Slot fetch completed (queued). Count: 27, elapsed: 99ms
-	2026-04-21T00:00:09.536Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:09.536] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:09.536Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:09.536] [오수양] ⚠️ No target slots available. Total slots: 27, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:09.537Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:09.537] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:09.681Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:09.681] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:09.798Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:09.798] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:10.015Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:10.015] [오대출] ✅ Slot fetch completed (queued). Count: 27, elapsed: 217ms
-	2026-04-21T00:00:10.138Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:10.137] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:10.152Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:10.152] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:10.152Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:10.152] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:10.152Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:10.152] [오대출] ⚠️ No target slots available. Total slots: 27, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:10.237Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:10.237] [오수양] ✅ Slot fetch completed (queued). Count: 27, elapsed: 100ms
-	2026-04-21T00:00:10.277Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:10.277] [권택현] ✅ Slot fetch completed (queued). Count: 27, elapsed: 596ms
-	2026-04-21T00:00:10.284Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:10.284] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:10.284Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:10.284] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:10.284Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:10.284] [권택현] ⚠️ No target slots available. Total slots: 27, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:10.373Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:10.373] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:10.373Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:10.373] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:10.373Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:10.373] [오수양] ⚠️ No target slots available. Total slots: 27, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:10.535Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	ERROR	[09:00:10.534] [이형필] An error occurred in Lambda: connect ETIMEDOUT 61.76.72.26:443
-	2026-04-21T00:00:10.752Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:10.752] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:10.885Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:10.884] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:10.970Z	531f0703-f7ab-4fc8-822f-5beef5b1248f	WARN	[09:00:10.970] [이형필] Failed to save booking result to DynamoDB: Requested resource not found
-	2026-04-21T00:00:10.974Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:10.974] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:10.983Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:10.983] [오대출] ✅ Slot fetch completed (queued). Count: 24, elapsed: 231ms
-	2026-04-21T00:00:11.079Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:11.078] [오수양] ✅ Slot fetch completed (queued). Count: 24, elapsed: 104ms
-	2026-04-21T00:00:11.119Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:11.119] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:11.119Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:11.119] [오대출] ⚠️ No target slots available. Total slots: 24, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:11.120Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:11.120] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:11.213Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:11.213] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:11.214Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:11.214] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:11.214Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:11.214] [오수양] ⚠️ No target slots available. Total slots: 24, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:11.474Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:11.474] [권택현] ✅ Slot fetch completed (queued). Count: 24, elapsed: 590ms
-	2026-04-21T00:00:11.482Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:11.482] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:11.482Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:11.482] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:11.482Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:11.482] [권택현] ⚠️ No target slots available. Total slots: 24, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:11.721Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:11.721] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:11.815Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:11.815] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:11.918Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:11.918] [오수양] ✅ Slot fetch completed (queued). Count: 24, elapsed: 102ms
-	2026-04-21T00:00:11.953Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:11.952] [오대출] ✅ Slot fetch completed (queued). Count: 24, elapsed: 231ms
-	2026-04-21T00:00:12.053Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:12.053] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:12.053Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:12.053] [오수양] ⚠️ No target slots available. Total slots: 24, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:12.054Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:12.054] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:12.083Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:12.083] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:12.090Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:12.089] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:12.090Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:12.090] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:12.090Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:12.090] [오대출] ⚠️ No target slots available. Total slots: 24, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:12.655Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:12.655] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:12.688Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:12.688] [권택현] ✅ Slot fetch completed (queued). Count: 24, elapsed: 605ms
-	2026-04-21T00:00:12.691Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:12.691] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:12.699Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:12.699] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:12.699Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:12.699] [권택현] ⚠️ No target slots available. Total slots: 24, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:12.700Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:12.699] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:12.755Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:12.755] [오수양] ✅ Slot fetch completed (queued). Count: 24, elapsed: 100ms
-	2026-04-21T00:00:12.866Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	WARN	[09:00:12.866] [오대출] Slot fetch failed with 429. Backing off for 1580ms: Request failed with status code 429
-	2026-04-21T00:00:12.888Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:12.888] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:12.889Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:12.889] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:12.889Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:12.889] [오수양] ⚠️ No target slots available. Total slots: 24, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:13.301Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:13.301] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:13.490Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:13.490] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:13.593Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:13.593] [오수양] ✅ Slot fetch completed (queued). Count: 24, elapsed: 103ms
-	2026-04-21T00:00:13.740Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:13.740] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:13.740Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:13.740] [오수양] ⚠️ No target slots available. Total slots: 24, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:13.741Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:13.740] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:13.892Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:13.892] [권택현] ✅ Slot fetch completed (queued). Count: 24, elapsed: 591ms
-	2026-04-21T00:00:13.899Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:13.899] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:13.900Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:13.900] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:13.900Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:13.900] [권택현] ⚠️ No target slots available. Total slots: 24, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:14.342Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:14.341] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:14.449Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:14.449] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:14.449Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:14.449] [오수양] ✅ Slot fetch completed (queued). Count: 24, elapsed: 108ms
-	2026-04-21T00:00:14.501Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:14.501] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:14.585Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:14.585] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:14.586Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:14.585] [오수양] ⚠️ No target slots available. Total slots: 24, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:14.586Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:14.586] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:14.675Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:14.675] [오대출] ✅ Slot fetch completed (queued). Count: 24, elapsed: 226ms
-	2026-04-21T00:00:14.811Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:14.811] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:14.811Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:14.811] [오대출] ⚠️ No target slots available. Total slots: 24, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:14.812Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:14.811] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:15.105Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:15.105] [권택현] ✅ Slot fetch completed (queued). Count: 23, elapsed: 604ms
-	2026-04-21T00:00:15.120Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:15.120] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:15.120Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:15.120] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:15.120Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:15.120] [권택현] ⚠️ No target slots available. Total slots: 23, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:15.186Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:15.186] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:15.286Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:15.286] [오수양] ✅ Slot fetch completed (queued). Count: 23, elapsed: 100ms
-	2026-04-21T00:00:15.413Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:15.412] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:15.420Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:15.420] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:15.420Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:15.420] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:15.420Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:15.420] [오수양] ⚠️ No target slots available. Total slots: 23, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:15.633Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:15.633] [오대출] ✅ Slot fetch completed (queued). Count: 23, elapsed: 221ms
-	2026-04-21T00:00:15.721Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:15.721] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:15.769Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:15.769] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:15.769Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:15.769] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:15.769Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:15.769] [오대출] ⚠️ No target slots available. Total slots: 23, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:16.020Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:16.020] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:16.119Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:16.119] [오수양] ✅ Slot fetch completed (queued). Count: 23, elapsed: 99ms
-	2026-04-21T00:00:16.254Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:16.254] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:16.254Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:16.254] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:16.254Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:16.254] [오수양] ⚠️ No target slots available. Total slots: 23, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:16.328Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:16.328] [권택현] ✅ Slot fetch completed (queued). Count: 23, elapsed: 607ms
-	2026-04-21T00:00:16.339Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:16.334] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:16.339Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:16.339] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:16.339Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:16.339] [권택현] ⚠️ No target slots available. Total slots: 23, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:16.370Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:16.370] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:16.597Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:16.597] [오대출] ✅ Slot fetch completed (queued). Count: 23, elapsed: 227ms
-	2026-04-21T00:00:16.733Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:16.733] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:16.734Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:16.734] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:16.734Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:16.734] [오대출] ⚠️ No target slots available. Total slots: 23, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:16.855Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:16.855] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:16.940Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:16.940] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:16.955Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:16.955] [오수양] ✅ Slot fetch completed (queued). Count: 22, elapsed: 100ms
-	2026-04-21T00:00:17.090Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:17.090] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:17.090Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:17.090] [오수양] ⚠️ No target slots available. Total slots: 22, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:17.091Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:17.091] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:17.335Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:17.335] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:17.529Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:17.528] [권택현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 588ms
-	2026-04-21T00:00:17.539Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:17.539] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:17.540Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:17.540] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:17.540Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:17.540] [권택현] ⚠️ No target slots available. Total slots: 22, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:17.557Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:17.557] [오대출] ✅ Slot fetch completed (queued). Count: 22, elapsed: 221ms
-	2026-04-21T00:00:17.692Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:17.692] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:17.692Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:17.692] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:17.693Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:17.693] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:17.693Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:17.693] [오대출] ⚠️ No target slots available. Total slots: 22, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:17.786Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:17.786] [오수양] ✅ Slot fetch completed (queued). Count: 22, elapsed: 94ms
-	2026-04-21T00:00:17.921Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:17.921] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:17.922Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:17.922] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:17.922Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:17.922] [오수양] ⚠️ No target slots available. Total slots: 22, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:18.141Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:18.141] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:18.294Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:18.294] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:18.523Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:18.523] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:18.525Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:18.525] [오대출] ✅ Slot fetch completed (queued). Count: 22, elapsed: 231ms
-	2026-04-21T00:00:18.631Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:18.631] [오수양] ✅ Slot fetch completed (queued). Count: 22, elapsed: 108ms
-	2026-04-21T00:00:18.662Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:18.662] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:18.662Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:18.662] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:18.662Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:18.662] [오대출] ⚠️ No target slots available. Total slots: 22, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:18.745Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:18.745] [권택현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 604ms
-	2026-04-21T00:00:18.752Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:18.752] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:18.752Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:18.752] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:18.752Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:18.752] [권택현] ⚠️ No target slots available. Total slots: 22, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:18.766Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:18.766] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:18.767Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:18.767] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:18.767Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:18.767] [오수양] ⚠️ No target slots available. Total slots: 22, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:19.264Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:19.264] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:19.353Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:19.353] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:19.367Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:19.367] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:19.421Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	WARN	[09:00:19.421] [오수양] Slot fetch failed with 429. Backing off for 1407ms: Request failed with status code 429
-	2026-04-21T00:00:19.495Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:19.495] [오대출] ✅ Slot fetch completed (queued). Count: 22, elapsed: 231ms
-	2026-04-21T00:00:19.631Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:19.631] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:19.632Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:19.632] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:19.632Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:19.632] [오대출] ⚠️ No target slots available. Total slots: 22, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:19.948Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:19.948] [권택현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 595ms
-	2026-04-21T00:00:19.959Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:19.959] [권택현] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:19.959Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:19.959] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:19.959Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:19.959] [권택현] ⚠️ No target slots available. Total slots: 22, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:20.233Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:20.233] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:20.457Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:20.457] [오대출] ✅ Slot fetch completed (queued). Count: 21, elapsed: 224ms
-	2026-04-21T00:00:20.560Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:20.560] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:20.593Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:20.593] [오대출] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:20.594Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:20.593] [오대출] ⚠️ No target slots available. Total slots: 21, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:20.594Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:20.594] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:20.830Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:20.830] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:20.931Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:20.931] [오수양] ✅ Slot fetch completed (queued). Count: 21, elapsed: 101ms
-	2026-04-21T00:00:21.066Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:21.066] [오수양] 📋 Already claimed by other Lambdas: 15 slots
-	2026-04-21T00:00:21.066Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:21.066] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:21.066Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:21.066] [오수양] ⚠️ No target slots available. Total slots: 21, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:21.150Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:21.150] [권택현] ✅ Slot fetch completed (queued). Count: 21, elapsed: 590ms
-	2026-04-21T00:00:21.159Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:21.159] [권택현] 📋 Already claimed by other Lambdas: 14 slots
-	2026-04-21T00:00:21.159Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:21.159] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:21.159Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:21.159] [권택현] ⚠️ No target slots available. Total slots: 21, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:21.195Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:21.195] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:21.434Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:21.434] [오대출] ✅ Slot fetch completed (queued). Count: 20, elapsed: 239ms
-	2026-04-21T00:00:21.570Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:21.570] [오대출] 📋 Already claimed by other Lambdas: 14 slots
-	2026-04-21T00:00:21.570Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:21.570] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:21.570Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:21.570] [오대출] ⚠️ No target slots available. Total slots: 20, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:21.667Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:21.667] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:21.759Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:21.759] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:21.777Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:21.777] [오수양] ✅ Slot fetch completed (queued). Count: 20, elapsed: 110ms
-	2026-04-21T00:00:21.939Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:21.939] [오수양] 📋 Already claimed by other Lambdas: 14 slots
-	2026-04-21T00:00:21.940Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:21.940] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:21.940Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:21.940] [오수양] ⚠️ No target slots available. Total slots: 20, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:22.171Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:22.171] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:22.358Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:22.358] [권택현] ✅ Slot fetch completed (queued). Count: 20, elapsed: 599ms
-	2026-04-21T00:00:22.365Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:22.365] [권택현] 📋 Already claimed by other Lambdas: 10 slots
-	2026-04-21T00:00:22.365Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:22.365] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:22.365Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:22.365] [권택현] ⚠️ No target slots available. Total slots: 20, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:22.394Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:22.394] [오대출] ✅ Slot fetch completed (queued). Count: 20, elapsed: 223ms
-	2026-04-21T00:00:22.530Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:22.530] [오대출] 📋 Already claimed by other Lambdas: 10 slots
-	2026-04-21T00:00:22.530Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:22.530] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:22.530Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:22.530] [오대출] ⚠️ No target slots available. Total slots: 20, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:22.541Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:22.541] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:22.637Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:22.637] [오수양] ✅ Slot fetch completed (queued). Count: 20, elapsed: 96ms
-	2026-04-21T00:00:22.781Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:22.781] [오수양] 📋 Already claimed by other Lambdas: 10 slots
-	2026-04-21T00:00:22.781Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:22.781] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:22.781Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:22.781] [오수양] ⚠️ No target slots available. Total slots: 20, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:22.966Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:22.966] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:23.131Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:23.131] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:23.356Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:23.356] [오대출] ✅ Slot fetch completed (queued). Count: 20, elapsed: 225ms
-	2026-04-21T00:00:23.382Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:23.382] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:23.480Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:23.480] [오수양] ✅ Slot fetch completed (queued). Count: 20, elapsed: 98ms
-	2026-04-21T00:00:23.492Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:23.492] [오대출] 📋 Already claimed by other Lambdas: 8 slots
-	2026-04-21T00:00:23.492Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:23.492] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:23.492Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:23.492] [오대출] ⚠️ No target slots available. Total slots: 20, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:23.562Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:23.562] [권택현] ✅ Slot fetch completed (queued). Count: 20, elapsed: 596ms
-	2026-04-21T00:00:23.585Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:23.585] [권택현] 📋 Already claimed by other Lambdas: 8 slots
-	2026-04-21T00:00:23.585Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:23.585] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:23.585Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:23.585] [권택현] ⚠️ No target slots available. Total slots: 20, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:23.615Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:23.615] [오수양] 📋 Already claimed by other Lambdas: 8 slots
-	2026-04-21T00:00:23.615Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:23.615] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:23.615Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:23.615] [오수양] ⚠️ No target slots available. Total slots: 20, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:24.093Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:24.093] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:24.186Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:24.186] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:24.216Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:24.216] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:24.319Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:24.319] [오대출] ✅ Slot fetch completed (queued). Count: 19, elapsed: 226ms
-	2026-04-21T00:00:24.319Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:24.319] [오수양] ✅ Slot fetch completed (queued). Count: 19, elapsed: 103ms
-	2026-04-21T00:00:24.454Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:24.454] [오수양] 📋 Already claimed by other Lambdas: 6 slots
-	2026-04-21T00:00:24.454Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:24.454] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:24.454Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:24.454] [오수양] ⚠️ No target slots available. Total slots: 19, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:24.456Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:24.455] [오대출] 📋 Already claimed by other Lambdas: 6 slots
-	2026-04-21T00:00:24.456Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:24.456] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:24.456Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:24.456] [오대출] ⚠️ No target slots available. Total slots: 19, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:24.789Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:24.789] [권택현] ✅ Slot fetch completed (queued). Count: 19, elapsed: 603ms
-	2026-04-21T00:00:24.804Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:24.804] [권택현] 📋 Already claimed by other Lambdas: 6 slots
-	2026-04-21T00:00:24.804Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:24.804] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:24.804Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:24.804] [권택현] ⚠️ No target slots available. Total slots: 19, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:25.055Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:25.055] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:25.057Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:25.057] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:25.154Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:25.154] [오수양] ✅ Slot fetch completed (queued). Count: 19, elapsed: 99ms
-	2026-04-21T00:00:25.283Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:25.282] [오대출] ✅ Slot fetch completed (queued). Count: 19, elapsed: 225ms
-	2026-04-21T00:00:25.290Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:25.289] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:25.290Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:25.290] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:25.290Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:25.290] [오수양] ⚠️ No target slots available. Total slots: 19, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:25.405Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:25.405] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:25.418Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:25.418] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:25.419Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:25.419] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:25.419Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:25.419] [오대출] ⚠️ No target slots available. Total slots: 19, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:25.891Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:25.891] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:25.993Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:25.992] [오수양] ✅ Slot fetch completed (queued). Count: 19, elapsed: 101ms
-	2026-04-21T00:00:26.006Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:26.006] [권택현] ✅ Slot fetch completed (queued). Count: 19, elapsed: 601ms
-	2026-04-21T00:00:26.019Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:26.019] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:26.019Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:26.019] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:26.019Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:26.019] [권택현] ⚠️ No target slots available. Total slots: 19, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:26.020Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:26.020] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:26.128Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:26.128] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:26.129Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:26.128] [오수양] ⚠️ No target slots available. Total slots: 19, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:26.129Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:26.129] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:26.241Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:26.240] [오대출] ✅ Slot fetch completed (queued). Count: 19, elapsed: 220ms
-	2026-04-21T00:00:26.377Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:26.377] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:26.377Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:26.377] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:26.377Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:26.377] [오대출] ⚠️ No target slots available. Total slots: 19, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:26.621Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:26.620] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:26.730Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:26.729] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:26.832Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:26.832] [오수양] ✅ Slot fetch completed (queued). Count: 19, elapsed: 103ms
-	2026-04-21T00:00:26.967Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:26.967] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:26.967Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:26.967] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:26.967Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:26.967] [오수양] ⚠️ No target slots available. Total slots: 19, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:26.978Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:26.978] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:27.208Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:27.208] [오대출] ✅ Slot fetch completed (queued). Count: 19, elapsed: 230ms
-	2026-04-21T00:00:27.226Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:27.226] [권택현] ✅ Slot fetch completed (queued). Count: 19, elapsed: 606ms
-	2026-04-21T00:00:27.239Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:27.239] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:27.240Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:27.240] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:27.240Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:27.240] [권택현] ⚠️ No target slots available. Total slots: 19, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:27.343Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:27.343] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:27.343Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:27.343] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:27.343Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:27.343] [오대출] ⚠️ No target slots available. Total slots: 19, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:27.568Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:27.568] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:27.671Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:27.671] [오수양] ✅ Slot fetch completed (queued). Count: 18, elapsed: 103ms
-	2026-04-21T00:00:27.806Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:27.806] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:27.806Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:27.806] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:27.806Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:27.806] [오수양] ⚠️ No target slots available. Total slots: 18, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:27.841Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:27.841] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:27.944Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:27.944] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:28.173Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:28.173] [오대출] ✅ Slot fetch completed (queued). Count: 17, elapsed: 229ms
-	2026-04-21T00:00:28.310Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:28.310] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:28.310Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:28.310] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:28.310Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:28.310] [오대출] ⚠️ No target slots available. Total slots: 17, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:28.407Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:28.407] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:28.440Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:28.440] [권택현] ✅ Slot fetch completed (queued). Count: 17, elapsed: 599ms
-	2026-04-21T00:00:28.459Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:28.459] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:28.460Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:28.460] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:28.460Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:28.460] [권택현] ⚠️ No target slots available. Total slots: 17, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:28.461Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	WARN	[09:00:28.461] [오수양] Slot fetch failed with 429. Backing off for 1530ms: Request failed with status code 429
-	2026-04-21T00:00:28.911Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:28.911] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:29.061Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:29.061] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:29.134Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:29.134] [오대출] ✅ Slot fetch completed (queued). Count: 17, elapsed: 223ms
-	2026-04-21T00:00:29.270Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:29.270] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:29.270Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:29.270] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:29.270Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:29.270] [오대출] ⚠️ No target slots available. Total slots: 17, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:29.659Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:29.659] [권택현] ✅ Slot fetch completed (queued). Count: 17, elapsed: 598ms
-	2026-04-21T00:00:29.700Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:29.700] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:29.719Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:29.700] [권택현] ⚠️ No target slots available. Total slots: 17, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:29.719Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:29.719] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:29.870Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:29.870] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:29.993Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:29.993] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:30.094Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:30.093] [오대출] ✅ Slot fetch completed (queued). Count: 17, elapsed: 223ms
-	2026-04-21T00:00:30.095Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:30.095] [오수양] ✅ Slot fetch completed (queued). Count: 17, elapsed: 102ms
-	2026-04-21T00:00:30.230Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:30.230] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:30.230Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:30.230] [오대출] ⚠️ No target slots available. Total slots: 17, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:30.230Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:30.229] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:30.230Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:30.230] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:30.230Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:30.230] [오수양] ⚠️ No target slots available. Total slots: 17, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:30.231Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:30.231] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:30.320Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:30.320] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:30.831Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:30.831] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:30.831Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:30.831] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:30.911Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:30.911] [권택현] ✅ Slot fetch completed (queued). Count: 17, elapsed: 591ms
-	2026-04-21T00:00:30.919Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:30.919] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:30.919Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:30.919] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:30.919Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:30.919] [권택현] ⚠️ No target slots available. Total slots: 17, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:30.928Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:30.928] [오수양] ✅ Slot fetch completed (queued). Count: 17, elapsed: 97ms
-	2026-04-21T00:00:31.049Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:31.048] [오대출] ✅ Slot fetch completed (queued). Count: 17, elapsed: 217ms
-	2026-04-21T00:00:31.063Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:31.063] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:31.064Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:31.064] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:31.064Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:31.064] [오수양] ⚠️ No target slots available. Total slots: 17, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:31.188Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:31.188] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:31.188Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:31.188] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:31.188Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:31.188] [오대출] ⚠️ No target slots available. Total slots: 17, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:31.520Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:31.520] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:31.665Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:31.665] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:31.767Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:31.767] [오수양] ✅ Slot fetch completed (queued). Count: 17, elapsed: 102ms
-	2026-04-21T00:00:31.790Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:31.790] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:31.902Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:31.902] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:31.902Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:31.902] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:31.902Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:31.902] [오수양] ⚠️ No target slots available. Total slots: 17, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:32.022Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:32.022] [오대출] ✅ Slot fetch completed (queued). Count: 17, elapsed: 232ms
-	2026-04-21T00:00:32.119Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:32.119] [권택현] ✅ Slot fetch completed (queued). Count: 17, elapsed: 599ms
-	2026-04-21T00:00:32.139Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:32.139] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:32.139Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:32.139] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:32.139Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:32.139] [권택현] ⚠️ No target slots available. Total slots: 17, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:32.158Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:32.158] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:32.158Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:32.158] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:32.158Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:32.158] [오대출] ⚠️ No target slots available. Total slots: 17, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:32.504Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:32.504] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:32.600Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:32.600] [오수양] ✅ Slot fetch completed (queued). Count: 17, elapsed: 96ms
-	2026-04-21T00:00:32.735Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:32.735] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:32.736Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:32.735] [오수양] ⚠️ No target slots available. Total slots: 17, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:32.736Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:32.736] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:32.740Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:32.740] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:32.759Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:32.759] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:32.980Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:32.980] [오대출] ✅ Slot fetch completed (queued). Count: 16, elapsed: 221ms
-	2026-04-21T00:00:33.116Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:33.115] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:33.116Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:33.116] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:33.116Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:33.116] [오대출] ⚠️ No target slots available. Total slots: 16, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:33.330Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:33.330] [권택현] ✅ Slot fetch completed (queued). Count: 16, elapsed: 590ms
-	2026-04-21T00:00:33.337Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:33.337] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:33.337Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:33.337] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:33.337Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:33.337] [권택현] ⚠️ No target slots available. Total slots: 16, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:33.337Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:33.337] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:33.446Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:33.446] [오수양] ✅ Slot fetch completed (queued). Count: 16, elapsed: 109ms
-	2026-04-21T00:00:33.581Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:33.581] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:33.582Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:33.582] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:33.582Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:33.582] [오수양] ⚠️ No target slots available. Total slots: 16, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:33.717Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:33.717] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:33.937Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:33.937] [오대출] ✅ Slot fetch completed (queued). Count: 16, elapsed: 220ms
-	2026-04-21T00:00:33.938Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:33.938] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:34.073Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:34.073] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:34.073Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:34.073] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:34.073Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:34.073] [오대출] ⚠️ No target slots available. Total slots: 16, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:34.183Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:34.183] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:34.283Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:34.283] [오수양] ✅ Slot fetch completed (queued). Count: 16, elapsed: 100ms
-	2026-04-21T00:00:34.418Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:34.418] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:34.418Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:34.418] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:34.418Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:34.418] [오수양] ⚠️ No target slots available. Total slots: 16, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:34.557Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:34.557] [권택현] ✅ Slot fetch completed (queued). Count: 16, elapsed: 619ms
-	2026-04-21T00:00:34.563Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:34.563] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:34.563Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:34.563] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:34.563Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:34.563] [권택현] ⚠️ No target slots available. Total slots: 16, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:34.674Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:34.674] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:34.895Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:34.895] [오대출] ✅ Slot fetch completed (queued). Count: 15, elapsed: 221ms
-	2026-04-21T00:00:35.018Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:35.018] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:35.031Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:35.031] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:35.031Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:35.031] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:35.031Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:35.031] [오대출] ⚠️ No target slots available. Total slots: 15, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:35.120Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:35.120] [오수양] ✅ Slot fetch completed (queued). Count: 14, elapsed: 102ms
-	2026-04-21T00:00:35.164Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:35.164] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:35.255Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:35.255] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:35.255Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:35.255] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:35.255Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:35.255] [오수양] ⚠️ No target slots available. Total slots: 14, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:35.632Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:35.632] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:35.754Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:35.754] [권택현] ✅ Slot fetch completed (queued). Count: 14, elapsed: 590ms
-	2026-04-21T00:00:35.761Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:35.761] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:35.761Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:35.761] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:35.761Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:35.761] [권택현] ⚠️ No target slots available. Total slots: 14, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:35.856Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:35.856] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:35.857Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:35.857] [오대출] ✅ Slot fetch completed (queued). Count: 14, elapsed: 225ms
-	2026-04-21T00:00:35.953Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:35.952] [오수양] ✅ Slot fetch completed (queued). Count: 14, elapsed: 96ms
-	2026-04-21T00:00:35.993Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:35.993] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:35.993Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:35.993] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:35.993Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:35.993] [오대출] ⚠️ No target slots available. Total slots: 14, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:36.087Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:36.087] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:36.087Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:36.087] [오수양] ⚠️ No target slots available. Total slots: 14, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:36.088Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:36.088] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:36.362Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:36.362] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:36.593Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:36.593] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:36.689Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:36.689] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:36.813Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:36.813] [오수양] ✅ Slot fetch completed (queued). Count: 14, elapsed: 124ms
-	2026-04-21T00:00:36.824Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:36.824] [오대출] ✅ Slot fetch completed (queued). Count: 14, elapsed: 231ms
-	2026-04-21T00:00:36.948Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:36.948] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:36.948Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:36.948] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:36.948Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:36.948] [오수양] ⚠️ No target slots available. Total slots: 14, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:36.950Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:36.950] [권택현] ✅ Slot fetch completed (queued). Count: 14, elapsed: 588ms
-	2026-04-21T00:00:36.959Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:36.959] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:36.959Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:36.959] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:36.959Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:36.959] [권택현] ⚠️ No target slots available. Total slots: 14, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:36.960Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:36.960] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:36.960Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:36.960] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:36.960Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:36.960] [오대출] ⚠️ No target slots available. Total slots: 14, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:37.549Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:37.549] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:37.560Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:37.560] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:37.561Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:37.561] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:37.645Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:37.645] [오수양] ✅ Slot fetch completed (queued). Count: 14, elapsed: 96ms
-	2026-04-21T00:00:37.780Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:37.780] [오수양] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:37.780Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:37.780] [오수양] 📋 Failed slot list: 0820_A, 0752_A
-	2026-04-21T00:00:37.780Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:37.780] [오수양] ⚠️ No target slots available. Total slots: 14, Range: 0750-1000, Failed slots: 2
-	2026-04-21T00:00:37.787Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:37.787] [오대출] ✅ Slot fetch completed (queued). Count: 14, elapsed: 226ms
-	2026-04-21T00:00:37.923Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:37.923] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:37.923Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:37.923] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:37.923Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:37.923] [오대출] ⚠️ No target slots available. Total slots: 14, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:38.154Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:38.154] [권택현] ✅ Slot fetch completed (queued). Count: 13, elapsed: 594ms
-	2026-04-21T00:00:38.160Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:38.160] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:38.161Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:38.161] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:38.161Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:38.161] [권택현] ⚠️ No target slots available. Total slots: 13, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:38.380Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	INFO	[09:00:38.380] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:38.432Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	WARN	[09:00:38.432] [오수양] Slot fetch failed with 429. Backing off for 1676ms: Request failed with status code 429
-	2026-04-21T00:00:38.524Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:38.524] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:38.751Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:38.751] [오대출] ✅ Slot fetch completed (queued). Count: 13, elapsed: 227ms
-	2026-04-21T00:00:38.762Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:38.762] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:38.887Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:38.887] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:38.888Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:38.888] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:38.888Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:38.888] [오대출] ⚠️ No target slots available. Total slots: 13, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:39.354Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:39.354] [권택현] ✅ Slot fetch completed (queued). Count: 13, elapsed: 592ms
-	2026-04-21T00:00:39.362Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:39.362] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:39.362Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:39.362] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:39.362Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:39.362] [권택현] ⚠️ No target slots available. Total slots: 13, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:39.489Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:39.489] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:39.714Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:39.714] [오대출] ✅ Slot fetch completed (queued). Count: 13, elapsed: 225ms
-	2026-04-21T00:00:39.850Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:39.850] [오대출] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:39.850Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:39.850] [오대출] 📋 Failed slot list: 1229_A, 1229_B, 1250_B, 1257_B, 1243_B
-	2026-04-21T00:00:39.850Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	INFO	[09:00:39.850] [오대출] ⚠️ No target slots available. Total slots: 13, Range: 1110-1300, Failed slots: 5
-	2026-04-21T00:00:39.963Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:39.963] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260505
-	2026-04-21T00:00:40.377Z	b819eb2f-e3c3-403f-aaef-e0e38fc3d566	WARN	[09:00:40.376] [오수양] Failed to save booking result to DynamoDB: Requested resource not found
-	2026-04-21T00:00:40.563Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:40.563] [권택현] ✅ Slot fetch completed (queued). Count: 13, elapsed: 600ms
-	2026-04-21T00:00:40.579Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:40.579] [권택현] 📋 Already claimed by other Lambdas: 5 slots
-	2026-04-21T00:00:40.580Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:40.580] [권택현] 📋 Failed slot list: 1215_B, 1147_A, 1215_A
-	2026-04-21T00:00:40.580Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	INFO	[09:00:40.580] [권택현] ⚠️ No target slots available. Total slots: 13, Range: 1000-1220, Failed slots: 3
-	2026-04-21T00:00:40.719Z	960b82e4-0e5d-4870-a50b-550f72c3b74b	WARN	[09:00:40.719] [오대출] Failed to save booking result to DynamoDB: Requested resource not found
-	2026-04-21T00:00:41.201Z	11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	WARN	[09:00:41.201] [권택현] Failed to save booking result to DynamoDB: Requested resource not found
-	END RequestId: 04a50611-405f-4095-843f-f1531c187772
-	END RequestId: 11b437c9-b4bb-4684-8fb1-7f11b3f7d34c
-	END RequestId: 531f0703-f7ab-4fc8-822f-5beef5b1248f
-	END RequestId: 65d89e92-ca1d-445c-9f06-8615f210f9d0
-	END RequestId: 960b82e4-0e5d-4870-a50b-550f72c3b74b
-	END RequestId: b819eb2f-e3c3-403f-aaef-e0e38fc3d566
-	END RequestId: bfaa1679-70fd-494c-a95d-f88c3be3bd51
-	END RequestId: c2ad0a86-ecc0-4157-806a-5c8e7122526f
-	END RequestId: dd50a5e3-2f63-4792-8f55-a4931e3c6e12
+	2026-04-22T01:00:00.058Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:00.058] [손덕일] ⏱️ Starting slot fetch (queued mode) for 20260502
+	2026-04-22T01:00:00.058Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:00.058] [손덕일] Precision wait finished. Corrected time: 10:00:00.055
+	2026-04-22T01:00:00.080Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:00.080] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:00.080Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:00.080] [김노현] Precision wait finished. Corrected time: 10:00:00.076
+	2026-04-22T01:00:00.129Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:00.129] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260502
+	2026-04-22T01:00:00.129Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:00.129] [권택현] Precision wait finished. Corrected time: 10:00:00.126
+	2026-04-22T01:00:00.209Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:00.209] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:00.209Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:00.209] [이형필] Precision wait finished. Corrected time: 10:00:00.205
+	2026-04-22T01:00:00.209Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:00.209] [정광호] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:00.209Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:00.209] [정광호] Precision wait finished. Corrected time: 10:00:00.205
+	2026-04-22T01:00:00.225Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:00.225] [박신일] Precision wait finished. Corrected time: 10:00:00.221
+	2026-04-22T01:00:00.226Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:00.225] [박신일] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:00.247Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:00.247] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260502
+	2026-04-22T01:00:00.247Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:00.247] [오수양] Precision wait finished. Corrected time: 10:00:00.244
+	2026-04-22T01:00:00.318Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:00.318] [이형필] ✅ Slot fetch completed (queued). Count: 0, elapsed: 109ms
+	2026-04-22T01:00:00.320Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:00.320] [오대출] Precision wait finished. Corrected time: 10:00:00.316
+	2026-04-22T01:00:00.321Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:00.320] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:00.322Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:00.322] [김노현] ✅ Slot fetch completed (queued). Count: 0, elapsed: 242ms
+	2026-04-22T01:00:00.366Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:00.366] [박신일] 📊 Initial tee stats - total: 45, firstHalf: 28, secondHalf: 17, inRange: 14
+	2026-04-22T01:00:00.366Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:00.366] [박신일] ✅ Slot fetch completed (queued). Count: 45, elapsed: 141ms
+	2026-04-22T01:00:00.373Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:00.373] [권택현] ✅ Slot fetch completed (queued). Count: 36, elapsed: 244ms
+	2026-04-22T01:00:00.374Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:00.374] [권택현] 📊 Initial tee stats - total: 36, firstHalf: 24, secondHalf: 12, inRange: 9
+	2026-04-22T01:00:00.377Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:00.377] [오수양] 📊 Initial tee stats - total: 36, firstHalf: 24, secondHalf: 12, inRange: 9
+	2026-04-22T01:00:00.377Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:00.377] [오수양] ✅ Slot fetch completed (queued). Count: 36, elapsed: 130ms
+	2026-04-22T01:00:00.412Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:00.411] [손덕일] ✅ Slot fetch completed (queued). Count: 36, elapsed: 353ms
+	2026-04-22T01:00:00.412Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:00.412] [손덕일] 📊 Initial tee stats - total: 36, firstHalf: 24, secondHalf: 12, inRange: 8
+	2026-04-22T01:00:00.588Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:00.588] [정광호] ✅ Slot fetch completed (queued). Count: 45, elapsed: 379ms
+	2026-04-22T01:00:00.601Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:00.589] [정광호] 📊 Initial tee stats - total: 45, firstHalf: 28, secondHalf: 17, inRange: 20
+	2026-04-22T01:00:00.819Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:00.819] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:00.823Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:00.823] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:00.853Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:00.853] [손덕일] 🎯 Primary target (queued loop): 1311 on course A (totalTargets=8)
+	2026-04-22T01:00:00.936Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:00.936] [손덕일] ✅ Claimed slot 1311 (A) in DynamoDB
+	2026-04-22T01:00:00.942Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:00.942] [이형필] 📊 Initial tee stats - total: 45, firstHalf: 28, secondHalf: 17, inRange: 15
+	2026-04-22T01:00:00.942Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:00.942] [이형필] ✅ Slot fetch completed (queued). Count: 45, elapsed: 123ms
+	2026-04-22T01:00:00.943Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:00.943] [오대출] 📊 Initial tee stats - total: 45, firstHalf: 28, secondHalf: 17, inRange: 15
+	2026-04-22T01:00:00.943Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:00.943] [오대출] ✅ Slot fetch completed (queued). Count: 45, elapsed: 623ms
+	2026-04-22T01:00:00.950Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:00.950] [박신일] 🎯 Primary target (queued loop): 0738 on course A (totalTargets=14)
+	2026-04-22T01:00:00.961Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:00.961] [권택현] 🎯 Primary target (queued loop): 1243 on course A (totalTargets=9)
+	2026-04-22T01:00:00.974Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:00.974] [손덕일] ➡️ Trying to book time: 1311 on course A (delay: 38ms)
+	2026-04-22T01:00:00.980Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:00.980] [오수양] 📋 Already claimed by other Lambdas: 1 slots
+	2026-04-22T01:00:00.981Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:00.981] [오수양] 🎯 Primary target (queued loop): 1215 on course A (totalTargets=8)
+	2026-04-22T01:00:00.988Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:00.988] [정광호] 🎯 Primary target (queued loop): 0820 on course B (totalTargets=20)
+	2026-04-22T01:00:01.063Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:01.063] [김노현] 📊 Initial tee stats - total: 45, firstHalf: 28, secondHalf: 17, inRange: 15
+	2026-04-22T01:00:01.063Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:01.063] [김노현] ✅ Slot fetch completed (queued). Count: 45, elapsed: 240ms
+	2026-04-22T01:00:01.070Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:01.070] [정광호] ✅ Claimed slot 0820 (B) in DynamoDB
+	2026-04-22T01:00:01.096Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:01.096] [정광호] ➡️ Trying to book time: 0820 on course B (delay: 25ms)
+	2026-04-22T01:00:01.118Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:01.118] [박신일] ✅ Claimed slot 0738 (A) in DynamoDB
+	2026-04-22T01:00:01.132Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:01.132] [권택현] ✅ Claimed slot 1243 (A) in DynamoDB
+	2026-04-22T01:00:01.145Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:01.144] [오수양] ✅ Claimed slot 1215 (A) in DynamoDB
+	2026-04-22T01:00:01.147Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:01.147] [박신일] ➡️ Trying to book time: 0738 on course A (delay: 29ms)
+	2026-04-22T01:00:01.159Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:01.159] [권택현] ➡️ Trying to book time: 1243 on course A (delay: 26ms)
+	2026-04-22T01:00:01.165Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:01.165] [오대출] 📋 Already claimed by other Lambdas: 2 slots
+	2026-04-22T01:00:01.166Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:01.166] [오대출] 🎯 Primary target (queued loop): 1154 on course B (totalTargets=15)
+	2026-04-22T01:00:01.172Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:01.172] [오수양] ➡️ Trying to book time: 1215 on course A (delay: 27ms)
+	2026-04-22T01:00:01.204Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:01.204] [오대출] ✅ Claimed slot 1154 (B) in DynamoDB
+	2026-04-22T01:00:01.228Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:01.227] [오대출] ➡️ Trying to book time: 1154 on course B (delay: 24ms)
+	2026-04-22T01:00:01.333Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:01.333] [오수양] ⏱️ create completed for 1215 in 117ms. Waiting 1107ms before final booking POST.
+	2026-04-22T01:00:01.367Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:01.367] [박신일] ⏱️ create completed for 0738 in 128ms. Waiting 1076ms before final booking POST.
+	2026-04-22T01:00:01.389Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	ERROR	[10:00:01.389] [권택현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260502&cours=A&time=1243&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:01.389Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:01.389] [권택현] ⚠️ Slot 1243 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:01.391Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:01.391] [손덕일] ⏱️ create completed for 1311 in 395ms. Waiting 884ms before final booking POST.
+	2026-04-22T01:00:01.514Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:01.514] [이형필] 📋 Already claimed by other Lambdas: 3 slots
+	2026-04-22T01:00:01.514Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:01.514] [이형필] 🎯 Primary target (queued loop): 1208 on course A (totalTargets=14)
+	2026-04-22T01:00:01.531Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:01.531] [권택현] 🚫 Marked slot 1243 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:01.531Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:01.531] [권택현] ⏱️ Starting slot fetch (queued mode) for 20260502
+	2026-04-22T01:00:01.643Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:01.643] [정광호] ⏱️ create completed for 0820 in 450ms. Waiting 1046ms before final booking POST.
+	2026-04-22T01:00:01.651Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:01.651] [김노현] 📋 Already claimed by other Lambdas: 3 slots
+	2026-04-22T01:00:01.651Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:01.651] [김노현] 🎯 Primary target (queued loop): 0731 on course A (totalTargets=14)
+	2026-04-22T01:00:01.681Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:01.681] [이형필] ✅ Claimed slot 1208 (A) in DynamoDB
+	2026-04-22T01:00:01.731Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:01.731] [이형필] ➡️ Trying to book time: 1208 on course A (delay: 50ms)
+	2026-04-22T01:00:01.779Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:01.779] [권택현] ✅ Slot fetch completed (queued). Count: 36, elapsed: 248ms
+	2026-04-22T01:00:01.794Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:01.794] [김노현] ✅ Claimed slot 0731 (A) in DynamoDB
+	2026-04-22T01:00:01.851Z	2617b019-d761-456b-aefd-0cf4a580c880	ERROR	[10:00:01.851] [이형필] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=1208&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:01.851Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:01.851] [이형필] ⚠️ Slot 1208 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:01.864Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	ERROR	[10:00:01.864] [오대출] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=1154&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:01.865Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:01.865] [김노현] ➡️ Trying to book time: 0731 on course A (delay: 70ms)
+	2026-04-22T01:00:01.865Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:01.864] [오대출] ⚠️ Slot 1154 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:01.887Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:01.887] [오대출] 🚫 Marked slot 1154 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:01.903Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:01.903] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:01.913Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:01.913] [권택현] 📋 Already claimed by other Lambdas: 3 slots
+	2026-04-22T01:00:01.913Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:01.913] [권택현] 🎯 Primary target (queued loop): 1325 on course A (totalTargets=6)
+	2026-04-22T01:00:01.984Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:01.984] [이형필] 🚫 Marked slot 1208 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:01.984Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:01.984] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:02.045Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:02.045] [권택현] ✅ Claimed slot 1325 (A) in DynamoDB
+	2026-04-22T01:00:02.069Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:02.069] [권택현] ➡️ Trying to book time: 1325 on course A (delay: 24ms)
+	2026-04-22T01:00:02.100Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.099] [이형필] ✅ Slot fetch completed (queued). Count: 45, elapsed: 115ms
+	2026-04-22T01:00:02.100Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:02.100] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0731&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:02.100Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:02.100] [김노현] ⚠️ Slot 0731 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:02.233Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:02.233] [김노현] 🚫 Marked slot 0731 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:02.234Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.234] [이형필] 📋 Already claimed by other Lambdas: 5 slots
+	2026-04-22T01:00:02.234Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.234] [이형필] 🎯 Primary target (queued loop): 1222 on course B (totalTargets=13)
+	2026-04-22T01:00:02.234Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:02.234] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:02.363Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:02.362] [권택현] ⏱️ create completed for 1325 in 238ms. Waiting 957ms before final booking POST.
+	2026-04-22T01:00:02.380Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.380] [이형필] ✅ Claimed slot 1222 (B) in DynamoDB
+	2026-04-22T01:00:02.425Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.425] [이형필] ➡️ Trying to book time: 1222 on course B (delay: 44ms)
+	2026-04-22T01:00:02.470Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:02.470] [김노현] ✅ Slot fetch completed (queued). Count: 45, elapsed: 236ms
+	2026-04-22T01:00:02.516Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:02.516] [오대출] ✅ Slot fetch completed (queued). Count: 45, elapsed: 614ms
+	2026-04-22T01:00:02.523Z	2617b019-d761-456b-aefd-0cf4a580c880	ERROR	[10:00:02.523] [이형필] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=1222&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:02.523Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.523] [이형필] ⚠️ Slot 1222 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:02.523Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:02.523] [오대출] 📋 Already claimed by other Lambdas: 6 slots
+	2026-04-22T01:00:02.523Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:02.523] [오대출] 🎯 Primary target (queued loop): 1201 on course B (totalTargets=12)
+	2026-04-22T01:00:02.564Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:02.564] [오대출] ✅ Claimed slot 1201 (B) in DynamoDB
+	2026-04-22T01:00:02.575Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:02.575] [오수양] ⏱️ final booking POST completed for 1215 in 133ms.
+	2026-04-22T01:00:02.575Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:02.575] [오수양] 🎉 Successfully booked time: 1215 (total booking sequence: 1403ms)
+	2026-04-22T01:00:02.575Z	da1d032b-2530-4298-bd95-d654a7da511c	INFO	[10:00:02.575] [오수양] Booking successful (queued mode).
+	2026-04-22T01:00:02.577Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:02.577] [박신일] ⏱️ final booking POST completed for 0738 in 133ms.
+	2026-04-22T01:00:02.577Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:02.577] [박신일] 🎉 Successfully booked time: 0738 (total booking sequence: 1430ms)
+	2026-04-22T01:00:02.577Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	INFO	[10:00:02.577] [박신일] Booking successful (queued mode).
+	2026-04-22T01:00:02.628Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:02.628] [오대출] ➡️ Trying to book time: 1201 on course B (delay: 64ms)
+	2026-04-22T01:00:02.642Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:02.642] [김노현] 📋 Already claimed by other Lambdas: 6 slots
+	2026-04-22T01:00:02.642Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:02.642] [김노현] 🎯 Primary target (queued loop): 0724 on course A (totalTargets=13)
+	2026-04-22T01:00:02.654Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:02.654] [손덕일] ⏱️ final booking POST completed for 1311 in 377ms.
+	2026-04-22T01:00:02.654Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:02.654] [손덕일] 🎉 Successfully booked time: 1311 (total booking sequence: 1679ms)
+	2026-04-22T01:00:02.654Z	47610dac-3268-41af-ac22-99663e5ec3ef	INFO	[10:00:02.654] [손덕일] Booking successful (queued mode).
+	2026-04-22T01:00:02.655Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.655] [이형필] 🚫 Marked slot 1222 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:02.655Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.655] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:02.723Z	f6771f57-4aed-44b1-b818-3bd3caf62bba	WARN	[10:00:02.723] [박신일] Failed to save booking result to DynamoDB: Requested resource not found
+	2026-04-22T01:00:02.730Z	da1d032b-2530-4298-bd95-d654a7da511c	WARN	[10:00:02.730] [오수양] Failed to save booking result to DynamoDB: Requested resource not found
+	2026-04-22T01:00:02.775Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:02.775] [김노현] ✅ Claimed slot 0724 (A) in DynamoDB
+	2026-04-22T01:00:02.779Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.779] [이형필] ✅ Slot fetch completed (queued). Count: 42, elapsed: 124ms
+	2026-04-22T01:00:02.798Z	47610dac-3268-41af-ac22-99663e5ec3ef	WARN	[10:00:02.798] [손덕일] Failed to save booking result to DynamoDB: Requested resource not found
+	2026-04-22T01:00:02.802Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:02.802] [김노현] ➡️ Trying to book time: 0724 on course A (delay: 27ms)
+	2026-04-22T01:00:02.921Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.921] [이형필] 📋 Already claimed by other Lambdas: 8 slots
+	2026-04-22T01:00:02.921Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:02.921] [이형필] 🎯 Primary target (queued loop): 1250 on course B (totalTargets=11)
+	2026-04-22T01:00:03.046Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:03.045] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0724&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:03.046Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.046] [김노현] ⚠️ Slot 0724 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:03.054Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.053] [이형필] ✅ Claimed slot 1250 (B) in DynamoDB
+	2026-04-22T01:00:03.078Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.078] [이형필] ➡️ Trying to book time: 1250 on course B (delay: 24ms)
+	2026-04-22T01:00:03.081Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:03.081] [정광호] ⏱️ final booking POST completed for 0820 in 391ms.
+	2026-04-22T01:00:03.081Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:03.081] [정광호] 🎉 Successfully booked time: 0820 (total booking sequence: 1985ms)
+	2026-04-22T01:00:03.081Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	INFO	[10:00:03.081] [정광호] Booking successful (queued mode).
+	2026-04-22T01:00:03.177Z	2617b019-d761-456b-aefd-0cf4a580c880	ERROR	[10:00:03.177] [이형필] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=1250&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:03.177Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.177] [이형필] ⚠️ Slot 1250 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:03.178Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.178] [김노현] 🚫 Marked slot 0724 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:03.178Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.178] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:03.181Z	d5eccfd7-ccfc-41ff-bf33-01226e806f5c	WARN	[10:00:03.181] [정광호] Failed to save booking result to DynamoDB: Requested resource not found
+	2026-04-22T01:00:03.218Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	ERROR	[10:00:03.218] [오대출] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=1201&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:03.218Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:03.218] [오대출] ⚠️ Slot 1201 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:03.224Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:03.224] [오대출] 🚫 Marked slot 1201 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:03.224Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:03.224] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:03.319Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.318] [이형필] 🚫 Marked slot 1250 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:03.319Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.319] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:03.408Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.408] [김노현] ✅ Slot fetch completed (queued). Count: 39, elapsed: 230ms
+	2026-04-22T01:00:03.430Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.430] [이형필] ✅ Slot fetch completed (queued). Count: 39, elapsed: 111ms
+	2026-04-22T01:00:03.545Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.544] [김노현] 📋 Already claimed by other Lambdas: 9 slots
+	2026-04-22T01:00:03.545Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.545] [김노현] 🎯 Primary target (queued loop): 0724 on course B (totalTargets=10)
+	2026-04-22T01:00:03.580Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:03.580] [권택현] ⏱️ final booking POST completed for 1325 in 260ms.
+	2026-04-22T01:00:03.580Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:03.580] [권택현] 🎉 Successfully booked time: 1325 (total booking sequence: 1511ms)
+	2026-04-22T01:00:03.580Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	INFO	[10:00:03.580] [권택현] Booking successful (queued mode).
+	2026-04-22T01:00:03.581Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.580] [이형필] 📋 Already claimed by other Lambdas: 9 slots
+	2026-04-22T01:00:03.581Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.581] [이형필] 🎯 Primary target (queued loop): 1304 on course A (totalTargets=10)
+	2026-04-22T01:00:03.678Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.678] [김노현] ✅ Claimed slot 0724 (B) in DynamoDB
+	2026-04-22T01:00:03.700Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.700] [김노현] ➡️ Trying to book time: 0724 on course B (delay: 21ms)
+	2026-04-22T01:00:03.713Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.713] [이형필] ✅ Claimed slot 1304 (A) in DynamoDB
+	2026-04-22T01:00:03.755Z	5071c5c7-0600-44f0-b261-0e22d3f6a951	WARN	[10:00:03.755] [권택현] Failed to save booking result to DynamoDB: Requested resource not found
+	2026-04-22T01:00:03.762Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.762] [이형필] ➡️ Trying to book time: 1304 on course A (delay: 48ms)
+	2026-04-22T01:00:03.830Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:03.829] [오대출] ✅ Slot fetch completed (queued). Count: 38, elapsed: 605ms
+	2026-04-22T01:00:03.850Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:03.849] [오대출] 📋 Already claimed by other Lambdas: 11 slots
+	2026-04-22T01:00:03.850Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:03.850] [오대출] 🎯 Primary target (queued loop): 1229 on course A (totalTargets=9)
+	2026-04-22T01:00:03.876Z	2617b019-d761-456b-aefd-0cf4a580c880	ERROR	[10:00:03.876] [이형필] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=1304&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:03.876Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:03.876] [이형필] ⚠️ Slot 1304 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:03.883Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:03.883] [오대출] ✅ Claimed slot 1229 (A) in DynamoDB
+	2026-04-22T01:00:03.913Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:03.913] [오대출] ➡️ Trying to book time: 1229 on course A (delay: 29ms)
+	2026-04-22T01:00:03.929Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:03.929] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0724&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:03.929Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:03.929] [김노현] ⚠️ Slot 0724 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:04.010Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:04.010] [이형필] 🚫 Marked slot 1304 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:04.010Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:04.010] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:04.072Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.072] [김노현] 🚫 Marked slot 0724 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:04.072Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.072] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:04.075Z	2617b019-d761-456b-aefd-0cf4a580c880	WARN	[10:00:04.075] [이형필] Slot fetch failed with 429. Backing off for 1646ms: Request failed with status code 429
+	2026-04-22T01:00:04.310Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.310] [김노현] ✅ Slot fetch completed (queued). Count: 35, elapsed: 238ms
+	2026-04-22T01:00:04.445Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.445] [김노현] 📋 Already claimed by other Lambdas: 12 slots
+	2026-04-22T01:00:04.446Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.446] [김노현] 🎯 Primary target (queued loop): 0717 on course A (totalTargets=9)
+	2026-04-22T01:00:04.509Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	ERROR	[10:00:04.509] [오대출] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=1229&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:04.510Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:04.509] [오대출] ⚠️ Slot 1229 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:04.523Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:04.523] [오대출] 🚫 Marked slot 1229 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:04.524Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:04.524] [오대출] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:04.579Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.579] [김노현] ✅ Claimed slot 0717 (A) in DynamoDB
+	2026-04-22T01:00:04.609Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.609] [김노현] ➡️ Trying to book time: 0717 on course A (delay: 29ms)
+	2026-04-22T01:00:04.833Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:04.833] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0717&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:04.834Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.834] [김노현] ⚠️ Slot 0717 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:04.966Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.966] [김노현] 🚫 Marked slot 0717 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:04.966Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:04.966] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:05.125Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:05.125] [오대출] ✅ Slot fetch completed (queued). Count: 35, elapsed: 601ms
+	2026-04-22T01:00:05.144Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:05.143] [오대출] 📋 Already claimed by other Lambdas: 13 slots
+	2026-04-22T01:00:05.144Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:05.144] [오대출] 🎯 Primary target (queued loop): 1304 on course B (totalTargets=7)
+	2026-04-22T01:00:05.163Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:05.163] [오대출] ✅ Claimed slot 1304 (B) in DynamoDB
+	2026-04-22T01:00:05.203Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:05.203] [김노현] ✅ Slot fetch completed (queued). Count: 35, elapsed: 237ms
+	2026-04-22T01:00:05.212Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:05.212] [오대출] ➡️ Trying to book time: 1304 on course B (delay: 48ms)
+	2026-04-22T01:00:05.338Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:05.338] [김노현] 📋 Already claimed by other Lambdas: 14 slots
+	2026-04-22T01:00:05.338Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:05.338] [김노현] 🎯 Primary target (queued loop): 0710 on course B (totalTargets=8)
+	2026-04-22T01:00:05.471Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:05.471] [김노현] ✅ Claimed slot 0710 (B) in DynamoDB
+	2026-04-22T01:00:05.526Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:05.526] [김노현] ➡️ Trying to book time: 0710 on course B (delay: 54ms)
+	2026-04-22T01:00:05.723Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:05.723] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:05.742Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:05.742] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0710&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:05.742Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:05.742] [김노현] ⚠️ Slot 0710 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:05.831Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:05.831] [이형필] ✅ Slot fetch completed (queued). Count: 34, elapsed: 108ms
+	2026-04-22T01:00:05.884Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:05.884] [오대출] ⏱️ create completed for 1304 in 613ms. Waiting 878ms before final booking POST.
+	2026-04-22T01:00:05.892Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:05.892] [김노현] 🚫 Marked slot 0710 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:05.892Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:05.892] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:05.965Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:05.965] [이형필] 📋 Already claimed by other Lambdas: 15 slots
+	2026-04-22T01:00:05.965Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:05.965] [이형필] 🎯 Primary target (queued loop): 1325 on course B (totalTargets=5)
+	2026-04-22T01:00:06.079Z	70d5e182-0b31-4223-93c0-2d6516dff57c	WARN	[10:00:06.079] [김노현] Slot fetch failed with 429. Backing off for 1631ms: Request failed with status code 429
+	2026-04-22T01:00:06.099Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.099] [이형필] ✅ Claimed slot 1325 (B) in DynamoDB
+	2026-04-22T01:00:06.146Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.146] [이형필] ➡️ Trying to book time: 1325 on course B (delay: 47ms)
+	2026-04-22T01:00:06.247Z	2617b019-d761-456b-aefd-0cf4a580c880	ERROR	[10:00:06.247] [이형필] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=1325&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:06.247Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.247] [이형필] ⚠️ Slot 1325 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:06.379Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.379] [이형필] 🚫 Marked slot 1325 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:06.379Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.379] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:06.483Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.483] [이형필] ✅ Slot fetch completed (queued). Count: 32, elapsed: 104ms
+	2026-04-22T01:00:06.617Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.617] [이형필] 📋 Already claimed by other Lambdas: 16 slots
+	2026-04-22T01:00:06.617Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.617] [이형필] 🎯 Primary target (queued loop): 1154 on course A (totalTargets=3)
+	2026-04-22T01:00:06.749Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.749] [이형필] ✅ Claimed slot 1154 (A) in DynamoDB
+	2026-04-22T01:00:06.800Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.800] [이형필] ➡️ Trying to book time: 1154 on course A (delay: 51ms)
+	2026-04-22T01:00:06.854Z	2617b019-d761-456b-aefd-0cf4a580c880	ERROR	[10:00:06.854] [이형필] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=1154&hole=18 (timeout: 3000ms): Request failed with status code 429
+	2026-04-22T01:00:06.854Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:06.854] [이형필] ⏳ 429 Too Many Requests. Retrying after 1573ms... (attempt 1/3)
+	2026-04-22T01:00:07.386Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:07.386] [오대출] ⏱️ final booking POST completed for 1304 in 622ms.
+	2026-04-22T01:00:07.387Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:07.387] [오대출] 🎉 Successfully booked time: 1304 (total booking sequence: 2175ms)
+	2026-04-22T01:00:07.387Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	INFO	[10:00:07.387] [오대출] Booking successful (queued mode).
+	2026-04-22T01:00:07.445Z	f3ac817c-bd91-4af5-99a3-a4b769d543b2	WARN	[10:00:07.445] [오대출] Failed to save booking result to DynamoDB: Requested resource not found
+	2026-04-22T01:00:07.713Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:07.713] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:07.948Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:07.948] [김노현] ✅ Slot fetch completed (queued). Count: 29, elapsed: 235ms
+	2026-04-22T01:00:08.083Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.083] [김노현] 📋 Already claimed by other Lambdas: 17 slots
+	2026-04-22T01:00:08.083Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.083] [김노현] 🎯 Primary target (queued loop): 0703 on course A (totalTargets=6)
+	2026-04-22T01:00:08.216Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.216] [김노현] ✅ Claimed slot 0703 (A) in DynamoDB
+	2026-04-22T01:00:08.239Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.239] [김노현] ➡️ Trying to book time: 0703 on course A (delay: 23ms)
+	2026-04-22T01:00:08.461Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:08.461] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0703&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:08.461Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.461] [김노현] ⚠️ Slot 0703 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:08.487Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.487] [이형필] ➡️ Trying to book time: 1154 on course A (delay: 57ms)
+	2026-04-22T01:00:08.593Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.593] [김노현] 🚫 Marked slot 0703 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:08.593Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.593] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:08.600Z	2617b019-d761-456b-aefd-0cf4a580c880	ERROR	[10:00:08.600] [이형필] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=1154&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:08.600Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.600] [이형필] ⚠️ Slot 1154 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:08.732Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.732] [이형필] 🚫 Marked slot 1154 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:08.732Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.732] [이형필] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:08.819Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.819] [김노현] ✅ Slot fetch completed (queued). Count: 28, elapsed: 226ms
+	2026-04-22T01:00:08.831Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.831] [이형필] ✅ Slot fetch completed (queued). Count: 28, elapsed: 99ms
+	2026-04-22T01:00:08.955Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.955] [김노현] 📋 Already claimed by other Lambdas: 18 slots
+	2026-04-22T01:00:08.955Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:08.955] [김노현] 🎯 Primary target (queued loop): 0656 on course A (totalTargets=5)
+	2026-04-22T01:00:08.965Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.965] [이형필] 📋 Already claimed by other Lambdas: 18 slots
+	2026-04-22T01:00:08.965Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.965] [이형필] 📋 Failed slot list: 1208_A, 1222_B, 1250_B, 1304_A, 1325_B, 1154_A
+	2026-04-22T01:00:08.965Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.965] [이형필] ⚠️ No target slots available. Total slots: 28, Range: 1000-1340, Failed slots: 6
+	2026-04-22T01:00:08.966Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:08.966] [이형필] 🔄 Fallback: trying 0642 (A) — 18 slots available outside preferred range
+	2026-04-22T01:00:09.088Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:09.088] [김노현] ✅ Claimed slot 0656 (A) in DynamoDB
+	2026-04-22T01:00:09.097Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:09.097] [이형필] ✅ Claimed slot 0642 (A) in DynamoDB
+	2026-04-22T01:00:09.119Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:09.119] [김노현] ➡️ Trying to book time: 0656 on course A (delay: 31ms)
+	2026-04-22T01:00:09.122Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:09.122] [이형필] ➡️ Trying to book time: 0642 on course A (delay: 25ms)
+	2026-04-22T01:00:09.181Z	2617b019-d761-456b-aefd-0cf4a580c880	ERROR	[10:00:09.181] [이형필] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0642&hole=18 (timeout: 3000ms): Request failed with status code 429
+	2026-04-22T01:00:09.181Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:09.181] [이형필] ⏳ 429 Too Many Requests. Retrying after 1613ms... (attempt 1/3)
+	2026-04-22T01:00:09.339Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:09.339] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0656&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:09.339Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:09.339] [김노현] ⚠️ Slot 0656 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:09.472Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:09.472] [김노현] 🚫 Marked slot 0656 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:09.472Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:09.472] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:09.655Z	70d5e182-0b31-4223-93c0-2d6516dff57c	WARN	[10:00:09.655] [김노현] Slot fetch failed with 429. Backing off for 1715ms: Request failed with status code 429
+	2026-04-22T01:00:10.815Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:10.815] [이형필] ➡️ Trying to book time: 0642 on course A (delay: 21ms)
+	2026-04-22T01:00:11.029Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:11.029] [이형필] ⏱️ create completed for 0642 in 116ms. Waiting 1189ms before final booking POST.
+	2026-04-22T01:00:11.371Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:11.371] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:11.598Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:11.598] [김노현] ✅ Slot fetch completed (queued). Count: 25, elapsed: 227ms
+	2026-04-22T01:00:11.734Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:11.734] [김노현] 📋 Already claimed by other Lambdas: 20 slots
+	2026-04-22T01:00:11.734Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:11.734] [김노현] 🎯 Primary target (queued loop): 0642 on course B (totalTargets=2)
+	2026-04-22T01:00:11.871Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:11.870] [김노현] ✅ Claimed slot 0642 (B) in DynamoDB
+	2026-04-22T01:00:11.935Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:11.935] [김노현] ➡️ Trying to book time: 0642 on course B (delay: 64ms)
+	2026-04-22T01:00:12.160Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:12.159] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0642&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:12.160Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:12.160] [김노현] ⚠️ Slot 0642 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:12.292Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:12.292] [김노현] 🚫 Marked slot 0642 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:12.292Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:12.292] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:12.346Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:12.346] [이형필] ⏱️ final booking POST completed for 0642 in 127ms.
+	2026-04-22T01:00:12.347Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:12.346] [이형필] 🎉 Successfully booked time: 0642 (total booking sequence: 1531ms)
+	2026-04-22T01:00:12.347Z	2617b019-d761-456b-aefd-0cf4a580c880	INFO	[10:00:12.347] [이형필] Booking successful (queued mode).
+	2026-04-22T01:00:12.515Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:12.515] [김노현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 223ms
+	2026-04-22T01:00:12.523Z	2617b019-d761-456b-aefd-0cf4a580c880	WARN	[10:00:12.523] [이형필] Failed to save booking result to DynamoDB: Requested resource not found
+	2026-04-22T01:00:12.650Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:12.649] [김노현] 📋 Already claimed by other Lambdas: 21 slots
+	2026-04-22T01:00:12.650Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:12.650] [김노현] 🎯 Primary target (queued loop): 0649 on course B (totalTargets=1)
+	2026-04-22T01:00:12.782Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:12.782] [김노현] ✅ Claimed slot 0649 (B) in DynamoDB
+	2026-04-22T01:00:12.819Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:12.819] [김노현] ➡️ Trying to book time: 0649 on course B (delay: 37ms)
+	2026-04-22T01:00:13.000Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:13.000] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0649&hole=18 (timeout: 3000ms): Request failed with status code 429
+	2026-04-22T01:00:13.000Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:13.000] [김노현] ⏳ 429 Too Many Requests. Retrying after 1889ms... (attempt 1/3)
+	2026-04-22T01:00:14.928Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:14.928] [김노현] ➡️ Trying to book time: 0649 on course B (delay: 37ms)
+	2026-04-22T01:00:15.150Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:15.150] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0649&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:15.150Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.150] [김노현] ⚠️ Slot 0649 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:15.283Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.283] [김노현] 🚫 Marked slot 0649 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:15.283Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.283] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:15.520Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.520] [김노현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 237ms
+	2026-04-22T01:00:15.655Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.655] [김노현] 📋 Already claimed by other Lambdas: 22 slots
+	2026-04-22T01:00:15.655Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.655] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B
+	2026-04-22T01:00:15.655Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.655] [김노현] ⚠️ No target slots available. Total slots: 22, Range: 0640-0750, Failed slots: 9
+	2026-04-22T01:00:15.656Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.656] [김노현] 🔄 Fallback: trying 0635 (B) — 11 slots available outside preferred range
+	2026-04-22T01:00:15.787Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.787] [김노현] ✅ Claimed slot 0635 (B) in DynamoDB
+	2026-04-22T01:00:15.843Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:15.843] [김노현] ➡️ Trying to book time: 0635 on course B (delay: 55ms)
+	2026-04-22T01:00:16.080Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:16.080] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0635&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:16.080Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.080] [김노현] ⚠️ Slot 0635 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:16.212Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.212] [김노현] 🚫 Marked slot 0635 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:16.213Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.213] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:16.433Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.433] [김노현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 220ms
+	2026-04-22T01:00:16.569Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.568] [김노현] 📋 Already claimed by other Lambdas: 23 slots
+	2026-04-22T01:00:16.569Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.569] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B
+	2026-04-22T01:00:16.569Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.569] [김노현] 🔄 Fallback: trying 0628 (A) — 10 slots available outside preferred range
+	2026-04-22T01:00:16.569Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.569] [김노현] ⚠️ No target slots available. Total slots: 22, Range: 0640-0750, Failed slots: 10
+	2026-04-22T01:00:16.702Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.702] [김노현] ✅ Claimed slot 0628 (A) in DynamoDB
+	2026-04-22T01:00:16.746Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.746] [김노현] ➡️ Trying to book time: 0628 on course A (delay: 44ms)
+	2026-04-22T01:00:16.925Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:16.925] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0628&hole=18 (timeout: 3000ms): Request failed with status code 429
+	2026-04-22T01:00:16.925Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:16.925] [김노현] ⏳ 429 Too Many Requests. Retrying after 1459ms... (attempt 1/3)
+	2026-04-22T01:00:18.438Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:18.438] [김노현] ➡️ Trying to book time: 0628 on course A (delay: 54ms)
+	2026-04-22T01:00:18.662Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:18.662] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0628&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:18.662Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:18.662] [김노현] ⚠️ Slot 0628 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:18.795Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:18.795] [김노현] 🚫 Marked slot 0628 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:18.795Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:18.795] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:19.014Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.014] [김노현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 219ms
+	2026-04-22T01:00:19.149Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.149] [김노현] 📋 Already claimed by other Lambdas: 24 slots
+	2026-04-22T01:00:19.149Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.149] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A
+	2026-04-22T01:00:19.149Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.149] [김노현] 🔄 Fallback: trying 0628 (B) — 9 slots available outside preferred range
+	2026-04-22T01:00:19.149Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.149] [김노현] ⚠️ No target slots available. Total slots: 22, Range: 0640-0750, Failed slots: 11
+	2026-04-22T01:00:19.282Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.282] [김노현] ✅ Claimed slot 0628 (B) in DynamoDB
+	2026-04-22T01:00:19.323Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.323] [김노현] ➡️ Trying to book time: 0628 on course B (delay: 41ms)
+	2026-04-22T01:00:19.531Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:19.531] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0628&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:19.531Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.531] [김노현] ⚠️ Slot 0628 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:19.663Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.663] [김노현] 🚫 Marked slot 0628 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:19.663Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:19.663] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:19.871Z	70d5e182-0b31-4223-93c0-2d6516dff57c	WARN	[10:00:19.871] [김노현] Slot fetch failed with 429. Backing off for 1807ms: Request failed with status code 429
+	2026-04-22T01:00:21.680Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:21.680] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:21.897Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:21.897] [김노현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 217ms
+	2026-04-22T01:00:22.031Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.031] [김노현] 📋 Already claimed by other Lambdas: 23 slots
+	2026-04-22T01:00:22.032Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.031] [김노현] ⚠️ No target slots available. Total slots: 22, Range: 0640-0750, Failed slots: 12
+	2026-04-22T01:00:22.032Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.032] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B
+	2026-04-22T01:00:22.032Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.032] [김노현] 🔄 Fallback: trying 0614 (A) — 8 slots available outside preferred range
+	2026-04-22T01:00:22.164Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.164] [김노현] ✅ Claimed slot 0614 (A) in DynamoDB
+	2026-04-22T01:00:22.218Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.218] [김노현] ➡️ Trying to book time: 0614 on course A (delay: 53ms)
+	2026-04-22T01:00:22.452Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:22.452] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0614&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:22.452Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.452] [김노현] ⚠️ Slot 0614 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:22.585Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.585] [김노현] 🚫 Marked slot 0614 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:22.585Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.585] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:22.819Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.819] [김노현] ✅ Slot fetch completed (queued). Count: 22, elapsed: 234ms
+	2026-04-22T01:00:22.954Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.954] [김노현] 📋 Already claimed by other Lambdas: 22 slots
+	2026-04-22T01:00:22.954Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.954] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A
+	2026-04-22T01:00:22.954Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.954] [김노현] 🔄 Fallback: trying 0614 (B) — 8 slots available outside preferred range
+	2026-04-22T01:00:22.954Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:22.954] [김노현] ⚠️ No target slots available. Total slots: 22, Range: 0640-0750, Failed slots: 13
+	2026-04-22T01:00:23.087Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:23.087] [김노현] ✅ Claimed slot 0614 (B) in DynamoDB
+	2026-04-22T01:00:23.146Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:23.146] [김노현] ➡️ Trying to book time: 0614 on course B (delay: 59ms)
+	2026-04-22T01:00:23.372Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:23.372] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0614&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:23.373Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:23.372] [김노현] ⚠️ Slot 0614 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:23.505Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:23.505] [김노현] 🚫 Marked slot 0614 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:23.506Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:23.506] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:23.684Z	70d5e182-0b31-4223-93c0-2d6516dff57c	WARN	[10:00:23.684] [김노현] Slot fetch failed with 429. Backing off for 1297ms: Request failed with status code 429
+	2026-04-22T01:00:24.982Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:24.982] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:25.208Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.208] [김노현] ✅ Slot fetch completed (queued). Count: 21, elapsed: 226ms
+	2026-04-22T01:00:25.344Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.344] [김노현] 📋 Already claimed by other Lambdas: 15 slots
+	2026-04-22T01:00:25.344Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.344] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B
+	2026-04-22T01:00:25.344Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.344] [김노현] 🔄 Fallback: trying 0607 (A) — 9 slots available outside preferred range
+	2026-04-22T01:00:25.344Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.344] [김노현] ⚠️ No target slots available. Total slots: 21, Range: 0640-0750, Failed slots: 14
+	2026-04-22T01:00:25.477Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.477] [김노현] ✅ Claimed slot 0607 (A) in DynamoDB
+	2026-04-22T01:00:25.544Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.544] [김노현] ➡️ Trying to book time: 0607 on course A (delay: 67ms)
+	2026-04-22T01:00:25.808Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:25.808] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0607&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:25.809Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.809] [김노현] ⚠️ Slot 0607 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:25.941Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.941] [김노현] 🚫 Marked slot 0607 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:25.941Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:25.941] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:26.142Z	70d5e182-0b31-4223-93c0-2d6516dff57c	WARN	[10:00:26.142] [김노현] Slot fetch failed with 429. Backing off for 1675ms: Request failed with status code 429
+	2026-04-22T01:00:27.819Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:27.819] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:28.043Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.042] [김노현] ✅ Slot fetch completed (queued). Count: 20, elapsed: 223ms
+	2026-04-22T01:00:28.177Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.177] [김노현] 📋 Already claimed by other Lambdas: 13 slots
+	2026-04-22T01:00:28.177Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.177] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B, 0607_A
+	2026-04-22T01:00:28.177Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.177] [김노현] 🔄 Fallback: trying 0607 (B) — 8 slots available outside preferred range
+	2026-04-22T01:00:28.177Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.177] [김노현] ⚠️ No target slots available. Total slots: 20, Range: 0640-0750, Failed slots: 15
+	2026-04-22T01:00:28.310Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.310] [김노현] ✅ Claimed slot 0607 (B) in DynamoDB
+	2026-04-22T01:00:28.351Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.351] [김노현] ➡️ Trying to book time: 0607 on course B (delay: 41ms)
+	2026-04-22T01:00:28.575Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:28.575] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0607&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:28.575Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.575] [김노현] ⚠️ Slot 0607 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:28.707Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.707] [김노현] 🚫 Marked slot 0607 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:28.707Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.707] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:28.941Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:28.941] [김노현] ✅ Slot fetch completed (queued). Count: 20, elapsed: 234ms
+	2026-04-22T01:00:29.075Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.075] [김노현] 📋 Already claimed by other Lambdas: 14 slots
+	2026-04-22T01:00:29.075Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.075] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B, 0607_A, 0607_B
+	2026-04-22T01:00:29.075Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.075] [김노현] 🔄 Fallback: trying 0600 (A) — 7 slots available outside preferred range
+	2026-04-22T01:00:29.075Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.075] [김노현] ⚠️ No target slots available. Total slots: 20, Range: 0640-0750, Failed slots: 16
+	2026-04-22T01:00:29.208Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.208] [김노현] ✅ Claimed slot 0600 (A) in DynamoDB
+	2026-04-22T01:00:29.274Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.274] [김노현] ➡️ Trying to book time: 0600 on course A (delay: 66ms)
+	2026-04-22T01:00:29.503Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:29.503] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=0600&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:29.503Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.503] [김노현] ⚠️ Slot 0600 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:29.636Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.636] [김노현] 🚫 Marked slot 0600 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:29.636Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:29.636] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:29.811Z	70d5e182-0b31-4223-93c0-2d6516dff57c	WARN	[10:00:29.811] [김노현] Slot fetch failed with 429. Backing off for 1523ms: Request failed with status code 429
+	2026-04-22T01:00:31.335Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:31.335] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:31.558Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:31.558] [김노현] ✅ Slot fetch completed (queued). Count: 19, elapsed: 223ms
+	2026-04-22T01:00:31.693Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:31.692] [김노현] 📋 Already claimed by other Lambdas: 14 slots
+	2026-04-22T01:00:31.693Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:31.693] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B, 0607_A, 0607_B, 0600_A
+	2026-04-22T01:00:31.693Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:31.693] [김노현] 🔄 Fallback: trying 0600 (B) — 5 slots available outside preferred range
+	2026-04-22T01:00:31.693Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:31.693] [김노현] ⚠️ No target slots available. Total slots: 19, Range: 0640-0750, Failed slots: 17
+	2026-04-22T01:00:31.826Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:31.826] [김노현] ✅ Claimed slot 0600 (B) in DynamoDB
+	2026-04-22T01:00:31.866Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:31.866] [김노현] ➡️ Trying to book time: 0600 on course B (delay: 39ms)
+	2026-04-22T01:00:32.103Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:32.103] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=0600&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:32.103Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.103] [김노현] ⚠️ Slot 0600 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:32.235Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.235] [김노현] 🚫 Marked slot 0600 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:32.236Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.236] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:32.461Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.461] [김노현] ✅ Slot fetch completed (queued). Count: 18, elapsed: 224ms
+	2026-04-22T01:00:32.596Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.596] [김노현] 📋 Already claimed by other Lambdas: 14 slots
+	2026-04-22T01:00:32.596Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.596] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B, 0607_A, 0607_B, 0600_A, 0600_B
+	2026-04-22T01:00:32.596Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.596] [김노현] 🔄 Fallback: trying 1250 (B) — 3 slots available outside preferred range
+	2026-04-22T01:00:32.596Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.596] [김노현] ⚠️ No target slots available. Total slots: 18, Range: 0640-0750, Failed slots: 18
+	2026-04-22T01:00:32.729Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.729] [김노현] ✅ Claimed slot 1250 (B) in DynamoDB
+	2026-04-22T01:00:32.777Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.777] [김노현] ➡️ Trying to book time: 1250 on course B (delay: 48ms)
+	2026-04-22T01:00:32.949Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:32.949] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=1250&hole=18 (timeout: 3000ms): Request failed with status code 429
+	2026-04-22T01:00:32.949Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:32.949] [김노현] ⏳ 429 Too Many Requests. Retrying after 1674ms... (attempt 1/3)
+	2026-04-22T01:00:34.679Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:34.679] [김노현] ➡️ Trying to book time: 1250 on course B (delay: 49ms)
+	2026-04-22T01:00:34.891Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:34.891] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=B&time=1250&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:34.891Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:34.891] [김노현] ⚠️ Slot 1250 (course B) was taken. Continuing to next slot.
+	2026-04-22T01:00:35.024Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.024] [김노현] 🚫 Marked slot 1250 (B) as server-taken (TTL +20s)
+	2026-04-22T01:00:35.024Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.024] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:35.259Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.259] [김노현] ✅ Slot fetch completed (queued). Count: 17, elapsed: 234ms
+	2026-04-22T01:00:35.394Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.394] [김노현] 📋 Already claimed by other Lambdas: 14 slots
+	2026-04-22T01:00:35.394Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.394] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B, 0607_A, 0607_B, 0600_A, 0600_B, 1250_B
+	2026-04-22T01:00:35.394Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.394] [김노현] 🔄 Fallback: trying 1400 (A) — 1 slots available outside preferred range
+	2026-04-22T01:00:35.394Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.394] [김노현] ⚠️ No target slots available. Total slots: 17, Range: 0640-0750, Failed slots: 19
+	2026-04-22T01:00:35.527Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.527] [김노현] ✅ Claimed slot 1400 (A) in DynamoDB
+	2026-04-22T01:00:35.580Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.580] [김노현] ➡️ Trying to book time: 1400 on course A (delay: 53ms)
+	2026-04-22T01:00:35.802Z	70d5e182-0b31-4223-93c0-2d6516dff57c	ERROR	[10:00:35.802] [김노현] ❌ HTTP error on https://www.debeach.co.kr/booking/create?date=20260503&cours=A&time=1400&hole=18 (timeout: 3000ms): Request failed with status code 422
+	2026-04-22T01:00:35.802Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.802] [김노현] ⚠️ Slot 1400 (course A) was taken. Continuing to next slot.
+	2026-04-22T01:00:35.934Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.934] [김노현] 🚫 Marked slot 1400 (A) as server-taken (TTL +20s)
+	2026-04-22T01:00:35.935Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:35.935] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:36.101Z	70d5e182-0b31-4223-93c0-2d6516dff57c	WARN	[10:00:36.101] [김노현] Slot fetch failed with 429. Backing off for 1524ms: Request failed with status code 429
+	2026-04-22T01:00:37.627Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:37.627] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:37.856Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:37.856] [김노현] ✅ Slot fetch completed (queued). Count: 17, elapsed: 229ms
+	2026-04-22T01:00:37.991Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:37.991] [김노현] 📋 Already claimed by other Lambdas: 14 slots
+	2026-04-22T01:00:37.991Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:37.991] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B, 0607_A, 0607_B, 0600_A, 0600_B, 1250_B, 1400_A
+	2026-04-22T01:00:37.991Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:37.991] [김노현] ⚠️ No target slots available. Total slots: 17, Range: 0640-0750, Failed slots: 20
+	2026-04-22T01:00:38.592Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:38.592] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:38.813Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:38.813] [김노현] ✅ Slot fetch completed (queued). Count: 16, elapsed: 221ms
+	2026-04-22T01:00:38.947Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:38.947] [김노현] 📋 Already claimed by other Lambdas: 13 slots
+	2026-04-22T01:00:38.947Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:38.947] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B, 0607_A, 0607_B, 0600_A, 0600_B, 1250_B, 1400_A
+	2026-04-22T01:00:38.947Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:38.947] [김노현] ⚠️ No target slots available. Total slots: 16, Range: 0640-0750, Failed slots: 20
+	2026-04-22T01:00:39.548Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:39.548] [김노현] ⏱️ Starting slot fetch (queued mode) for 20260503
+	2026-04-22T01:00:39.768Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:39.768] [김노현] ✅ Slot fetch completed (queued). Count: 15, elapsed: 220ms
+	2026-04-22T01:00:39.901Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:39.901] [김노현] 📋 Already claimed by other Lambdas: 12 slots
+	2026-04-22T01:00:39.902Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:39.902] [김노현] 📋 Failed slot list: 0731_A, 0724_A, 0724_B, 0717_A, 0710_B, 0703_A, 0656_A, 0642_B, 0649_B, 0635_B, 0628_A, 0628_B, 0614_A, 0614_B, 0607_A, 0607_B, 0600_A, 0600_B, 1250_B, 1400_A
+	2026-04-22T01:00:39.902Z	70d5e182-0b31-4223-93c0-2d6516dff57c	INFO	[10:00:39.902] [김노현] ⚠️ No target slots available. Total slots: 15, Range: 0640-0750, Failed slots: 20
+	2026-04-22T01:00:40.655Z	70d5e182-0b31-4223-93c0-2d6516dff57c	WARN	[10:00:40.655] [김노현] Failed to save booking result to DynamoDB: Requested resource not found
+	END RequestId: 0af31210-a492-4f16-8704-13d8de574e78
+	END RequestId: 2617b019-d761-456b-aefd-0cf4a580c880
+	END RequestId: 3e62ef2d-807d-4137-ab1c-ef9ffe31b8b4
+	END RequestId: 47610dac-3268-41af-ac22-99663e5ec3ef
+	END RequestId: 5071c5c7-0600-44f0-b261-0e22d3f6a951
+	END RequestId: 55d8015d-cb5a-4ac8-ab41-84423afa1a0d
+	END RequestId: 5b3f01fe-65ea-4efe-aebb-553a06e522f8
+	END RequestId: 70d5e182-0b31-4223-93c0-2d6516dff57c
+	END RequestId: cf6ae52f-f159-4952-853c-6ad46340a0e3
+	END RequestId: d0980005-2798-4cdf-9f93-94f94610ab58
+	END RequestId: d41f6d14-dd84-4418-8177-39ffde4a9803
+	END RequestId: d5eccfd7-ccfc-41ff-bf33-01226e806f5c
+	END RequestId: da1d032b-2530-4298-bd95-d654a7da511c
+	END RequestId: f3ac817c-bd91-4af5-99a3-a4b769d543b2
+	END RequestId: f6771f57-4aed-44b1-b818-3bd3caf62bba
 	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-northeast-1::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
+	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-northeast-1::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
+	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-northeast-1::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
+	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-northeast-2::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
+	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-northeast-2::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
 	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-northeast-2::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
 	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-northeast-2::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
 	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-south-1::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
 	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-southeast-1::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
-	REPORT RequestId: 04a50611-405f-4095-843f-f1531c187772	Duration: 81589.57 ms	Billed Duration: 82639 ms	Memory Size: 256 MB	Max Memory Used: 135 MB	Init Duration: 1048.93 ms	
-	REPORT RequestId: 11b437c9-b4bb-4684-8fb1-7f11b3f7d34c	Duration: 118015.78 ms	Billed Duration: 119086 ms	Memory Size: 256 MB	Max Memory Used: 137 MB	Init Duration: 1069.57 ms	
-	REPORT RequestId: 531f0703-f7ab-4fc8-822f-5beef5b1248f	Duration: 91596.88 ms	Billed Duration: 92656 ms	Memory Size: 256 MB	Max Memory Used: 132 MB	Init Duration: 1058.56 ms	
-	REPORT RequestId: 65d89e92-ca1d-445c-9f06-8615f210f9d0	Duration: 91877.77 ms	Billed Duration: 92911 ms	Memory Size: 256 MB	Max Memory Used: 130 MB	Init Duration: 1032.65 ms	
-	REPORT RequestId: 960b82e4-0e5d-4870-a50b-550f72c3b74b	Duration: 117134.07 ms	Billed Duration: 118205 ms	Memory Size: 256 MB	Max Memory Used: 130 MB	Init Duration: 1070.49 ms	
-	REPORT RequestId: b819eb2f-e3c3-403f-aaef-e0e38fc3d566	Duration: 127630.60 ms	Billed Duration: 128702 ms	Memory Size: 256 MB	Max Memory Used: 137 MB	Init Duration: 1070.67 ms	
-	REPORT RequestId: bfaa1679-70fd-494c-a95d-f88c3be3bd51	Duration: 70412.23 ms	Billed Duration: 71469 ms	Memory Size: 256 MB	Max Memory Used: 136 MB	Init Duration: 1056.45 ms	
-	REPORT RequestId: c2ad0a86-ecc0-4157-806a-5c8e7122526f	Duration: 91813.84 ms	Billed Duration: 92911 ms	Memory Size: 256 MB	Max Memory Used: 135 MB	Init Duration: 1096.62 ms	
-	REPORT RequestId: dd50a5e3-2f63-4792-8f55-a4931e3c6e12	Duration: 92450.56 ms	Billed Duration: 93450 ms	Memory Size: 256 MB	Max Memory Used: 132 MB	Init Duration: 998.92 ms	
-	START RequestId: 04a50611-405f-4095-843f-f1531c187772 Version: $LATEST
-	START RequestId: 11b437c9-b4bb-4684-8fb1-7f11b3f7d34c Version: $LATEST
-	START RequestId: 531f0703-f7ab-4fc8-822f-5beef5b1248f Version: $LATEST
-	START RequestId: 65d89e92-ca1d-445c-9f06-8615f210f9d0 Version: $LATEST
-	START RequestId: 960b82e4-0e5d-4870-a50b-550f72c3b74b Version: $LATEST
-	START RequestId: b819eb2f-e3c3-403f-aaef-e0e38fc3d566 Version: $LATEST
-	START RequestId: bfaa1679-70fd-494c-a95d-f88c3be3bd51 Version: $LATEST
-	START RequestId: c2ad0a86-ecc0-4157-806a-5c8e7122526f Version: $LATEST
-	START RequestId: dd50a5e3-2f63-4792-8f55-a4931e3c6e12 Version: $LATEST
-    END_TIME: '0650',
-    END_TIME: '0650',
+	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-southeast-1::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
+	INIT_START Runtime Version: nodejs:22.v72	Runtime Version ARN: arn:aws:lambda:ap-southeast-1::runtime:d16c83c0a8a33f01d0039330bdf4f8f429ff40686e670a93d7fbf2b2d77cb783
+	REPORT RequestId: 0af31210-a492-4f16-8704-13d8de574e78	Duration: 97416.69 ms	Billed Duration: 98473 ms	Memory Size: 256 MB	Max Memory Used: 130 MB	Init Duration: 1055.49 ms	
+	REPORT RequestId: 2617b019-d761-456b-aefd-0cf4a580c880	Duration: 93021.07 ms	Billed Duration: 94073 ms	Memory Size: 256 MB	Max Memory Used: 130 MB	Init Duration: 1051.39 ms	
+	REPORT RequestId: 3e62ef2d-807d-4137-ab1c-ef9ffe31b8b4	Duration: 93020.43 ms	Billed Duration: 94071 ms	Memory Size: 256 MB	Max Memory Used: 132 MB	Init Duration: 1049.92 ms	
+	REPORT RequestId: 47610dac-3268-41af-ac22-99663e5ec3ef	Duration: 90421.67 ms	Billed Duration: 91475 ms	Memory Size: 256 MB	Max Memory Used: 132 MB	Init Duration: 1052.48 ms	
+	REPORT RequestId: 5071c5c7-0600-44f0-b261-0e22d3f6a951	Duration: 92183.33 ms	Billed Duration: 93275 ms	Memory Size: 256 MB	Max Memory Used: 138 MB	Init Duration: 1090.91 ms	
+	REPORT RequestId: 55d8015d-cb5a-4ac8-ab41-84423afa1a0d	Duration: 81611.04 ms	Billed Duration: 82694 ms	Memory Size: 256 MB	Max Memory Used: 135 MB	Init Duration: 1082.05 ms	
+	REPORT RequestId: 5b3f01fe-65ea-4efe-aebb-553a06e522f8	Duration: 81547.91 ms	Billed Duration: 82626 ms	Memory Size: 256 MB	Max Memory Used: 136 MB	Init Duration: 1077.62 ms	
+	REPORT RequestId: 70d5e182-0b31-4223-93c0-2d6516dff57c	Duration: 130040.91 ms	Billed Duration: 131082 ms	Memory Size: 256 MB	Max Memory Used: 138 MB	Init Duration: 1040.35 ms	
+	REPORT RequestId: cf6ae52f-f159-4952-853c-6ad46340a0e3	Duration: 91351.37 ms	Billed Duration: 92404 ms	Memory Size: 256 MB	Max Memory Used: 139 MB	Init Duration: 1051.91 ms	
+	REPORT RequestId: d0980005-2798-4cdf-9f93-94f94610ab58	Duration: 93120.59 ms	Billed Duration: 94181 ms	Memory Size: 256 MB	Max Memory Used: 130 MB	Init Duration: 1059.49 ms	
+	REPORT RequestId: d41f6d14-dd84-4418-8177-39ffde4a9803	Duration: 82346.08 ms	Billed Duration: 83416 ms	Memory Size: 256 MB	Max Memory Used: 138 MB	Init Duration: 1069.07 ms	
+	REPORT RequestId: d5eccfd7-ccfc-41ff-bf33-01226e806f5c	Duration: 92663.61 ms	Billed Duration: 93773 ms	Memory Size: 256 MB	Max Memory Used: 131 MB	Init Duration: 1109.20 ms	
+	REPORT RequestId: da1d032b-2530-4298-bd95-d654a7da511c	Duration: 92041.54 ms	Billed Duration: 93110 ms	Memory Size: 256 MB	Max Memory Used: 134 MB	Init Duration: 1068.07 ms	
+	REPORT RequestId: f3ac817c-bd91-4af5-99a3-a4b769d543b2	Duration: 97176.08 ms	Billed Duration: 98214 ms	Memory Size: 256 MB	Max Memory Used: 134 MB	Init Duration: 1037.40 ms	
+	REPORT RequestId: f6771f57-4aed-44b1-b818-3bd3caf62bba	Duration: 92078.33 ms	Billed Duration: 93103 ms	Memory Size: 256 MB	Max Memory Used: 131 MB	Init Duration: 1024.18 ms	
+	START RequestId: 0af31210-a492-4f16-8704-13d8de574e78 Version: $LATEST
+	START RequestId: 2617b019-d761-456b-aefd-0cf4a580c880 Version: $LATEST
+	START RequestId: 3e62ef2d-807d-4137-ab1c-ef9ffe31b8b4 Version: $LATEST
+	START RequestId: 47610dac-3268-41af-ac22-99663e5ec3ef Version: $LATEST
+	START RequestId: 5071c5c7-0600-44f0-b261-0e22d3f6a951 Version: $LATEST
+	START RequestId: 55d8015d-cb5a-4ac8-ab41-84423afa1a0d Version: $LATEST
+	START RequestId: 5b3f01fe-65ea-4efe-aebb-553a06e522f8 Version: $LATEST
+	START RequestId: 70d5e182-0b31-4223-93c0-2d6516dff57c Version: $LATEST
+	START RequestId: cf6ae52f-f159-4952-853c-6ad46340a0e3 Version: $LATEST
+	START RequestId: d0980005-2798-4cdf-9f93-94f94610ab58 Version: $LATEST
+	START RequestId: d41f6d14-dd84-4418-8177-39ffde4a9803 Version: $LATEST
+	START RequestId: d5eccfd7-ccfc-41ff-bf33-01226e806f5c Version: $LATEST
+	START RequestId: da1d032b-2530-4298-bd95-d654a7da511c Version: $LATEST
+	START RequestId: f3ac817c-bd91-4af5-99a3-a4b769d543b2 Version: $LATEST
+	START RequestId: f6771f57-4aed-44b1-b818-3bd3caf62bba Version: $LATEST
+    END_TIME: '0640',
+    END_TIME: '0640',
     END_TIME: '0740',
-    END_TIME: '0750',
-    END_TIME: '0940',
-    END_TIME: '1000',
-    END_TIME: '1000',
-    END_TIME: '1300',
-    END_TIME: '1440',
+    END_TIME: '0740',
+    END_TIME: '0740',
+    END_TIME: '1240',
+    END_TIME: '1240',
+    END_TIME: '1240',
+    END_TIME: '1240',
+    END_TIME: '1330',
+    END_TIME: '1340',
+    END_TIME: '1400',
+    END_TIME: '1400',
+    END_TIME: '1400',
+    END_TIME: '1500',
+    LOGIN_ID: '11010751',
     LOGIN_ID: '11010751',
     LOGIN_ID: '11021291',
     LOGIN_ID: '11021511',
+    LOGIN_ID: '11021511',
     LOGIN_ID: '11021531',
+    LOGIN_ID: '11021531',
+    LOGIN_ID: '11021601',
     LOGIN_ID: '11021601',
     LOGIN_ID: '11021691',
     LOGIN_ID: '11021801',
     LOGIN_ID: '11021941',
+    LOGIN_ID: '11021941',
+    LOGIN_ID: '11053901',
     LOGIN_ID: '11053901',
     LOGIN_PASSWORD: '16011601',
+    LOGIN_PASSWORD: '16011601',
+    LOGIN_PASSWORD: '202214',
     LOGIN_PASSWORD: '202214',
     LOGIN_PASSWORD: 'dbch2016',
+    LOGIN_PASSWORD: 'dbch2016',
+    LOGIN_PASSWORD: 'de0624',
     LOGIN_PASSWORD: 'de0624',
     LOGIN_PASSWORD: 'j654321',
     LOGIN_PASSWORD: 'mq2803',
+    LOGIN_PASSWORD: 'mq2803',
     LOGIN_PASSWORD: 'mzmmzm1102',
+    LOGIN_PASSWORD: 'sdi12345',
     LOGIN_PASSWORD: 'sdi12345',
     LOGIN_PASSWORD: 'woori8275',
     NAME: '권택현',
+    NAME: '권택현',
+    NAME: '김노현',
     NAME: '김노현',
     NAME: '박신일',
+    NAME: '박신일',
+    NAME: '손덕일',
     NAME: '손덕일',
     NAME: '손앙현',
     NAME: '오대출',
     NAME: '오수양',
+    NAME: '오수양',
+    NAME: '이형필',
     NAME: '이형필',
     NAME: '정광호',
     PRIMARY_SLOT_OFFSET: 0
+    PRIMARY_SLOT_OFFSET: 0
+    PRIMARY_SLOT_OFFSET: 0
+    PRIMARY_SLOT_OFFSET: 1
+    PRIMARY_SLOT_OFFSET: 1
     PRIMARY_SLOT_OFFSET: 1
     PRIMARY_SLOT_OFFSET: 2
+    PRIMARY_SLOT_OFFSET: 2
+    PRIMARY_SLOT_OFFSET: 2
     PRIMARY_SLOT_OFFSET: 3
+    PRIMARY_SLOT_OFFSET: 3
+    PRIMARY_SLOT_OFFSET: 4
     PRIMARY_SLOT_OFFSET: 4
     PRIMARY_SLOT_OFFSET: 5
     PRIMARY_SLOT_OFFSET: 6
-    PRIMARY_SLOT_OFFSET: 7
-    PRIMARY_SLOT_OFFSET: 8
-    START_TIME: '0740',
     START_TIME: '0743',
     START_TIME: '0750',
-    START_TIME: '0920',
+    START_TIME: '0750',
+    START_TIME: '0846',
+    START_TIME: '0853',
+    START_TIME: '0900',
+    START_TIME: '0900',
+    START_TIME: '0907',
+    START_TIME: '0914',
+    START_TIME: '0921',
     START_TIME: '1000',
-    START_TIME: '1110',
+    START_TIME: '1000',
+    START_TIME: '1150',
     START_TIME: '1210',
-    START_TIME: '1220',
-    START_TIME: '1220',
-    TARGET_DATE: '20260505',
-    TARGET_DATE: '20260505',
-    TARGET_DATE: '20260505',
-    TARGET_DATE: '20260505',
-    TARGET_DATE: '20260505',
-    TARGET_DATE: '20260505',
-    TARGET_DATE: '20260505',
-    TARGET_DATE: '20260505',
-    TARGET_DATE: '20260505',
+    START_TIME: '1217',
+    TARGET_DATE: '20260502',
+    TARGET_DATE: '20260502',
+    TARGET_DATE: '20260502',
+    TARGET_DATE: '20260503',
+    TARGET_DATE: '20260503',
+    TARGET_DATE: '20260503',
+    TARGET_DATE: '20260503',
+    TARGET_DATE: '20260503',
+    TARGET_DATE: '20260506',
+    TARGET_DATE: '20260506',
+    TARGET_DATE: '20260506',
+    TARGET_DATE: '20260506',
+    TARGET_DATE: '20260506',
+    TARGET_DATE: '20260506',
+    TARGET_DATE: '20260506',
+  },
+  },
+  },
+  },
+  },
+  },
   },
   },
   },
@@ -877,6 +618,12 @@
   config: {
   config: {
   config: {
+  config: {
+  config: {
+  config: {
+  config: {
+  config: {
+  config: {
   immediate: false,
   immediate: false,
   immediate: false,
@@ -886,15 +633,33 @@
   immediate: false,
   immediate: false,
   immediate: false,
-  offsetMs: -86
-  offsetMs: -86
-  offsetMs: -86
-  offsetMs: -86
-  offsetMs: -86
-  offsetMs: -86
-  offsetMs: -86
-  offsetMs: -86
-  offsetMs: -86
+  immediate: false,
+  immediate: false,
+  immediate: false,
+  immediate: false,
+  immediate: false,
+  immediate: false,
+  offsetMs: -1
+  offsetMs: -1
+  offsetMs: -1
+  offsetMs: -1
+  offsetMs: -1
+  offsetMs: -1
+  offsetMs: -1
+  offsetMs: -3
+  offsetMs: -3
+  offsetMs: -3
+  offsetMs: -4
+  offsetMs: -4
+  offsetMs: -4
+  offsetMs: -4
+  offsetMs: -4
+}
+}
+}
+}
+}
+}
 }
 }
 }

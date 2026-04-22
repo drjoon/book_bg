@@ -139,7 +139,15 @@ aws logs filter-log-events \
   --output text > /Users/joonholee/Joon/1-Project/dev/book/lambda/doc/lambda_today.log && less /Users/joonholee/Joon/1-Project/dev/book/lambda/doc/lambda_today.log
 
 * CLI 타임아웃 세팅하기
-aws configure set cli_read_timeout 180
+for REGION in ap-northeast-2 ap-northeast-1 ap-southeast-1 ap-south-1; do
+  aws lambda update-function-configuration \
+    --function-name book-debeach \
+    --timeout 240 \
+    --region $REGION \
+    --query 'Timeout' \
+    --output text
+  echo "  ✅ $REGION done"
+done
 
 * 노드 버전 업
 aws lambda update-function-configuration \

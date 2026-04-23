@@ -66,14 +66,16 @@ const getNtpTime = async () => {
 };
 
 // Lambda 클라이언트 초기화 — 계정 인덱스별 리전 순환으로 IP 분리
-// i%5=0: 서울, i%5=1: 도쿄, i%5=2: 오사카, i%5=3: 싱가포르, i%5=4: 시드니 (6번째부터 서울로 재순환)
+// i%7=0: 서울, i%7=1: 도쿄, i%7=2: 오사카, i%7=3: 싱가포르, i%7=4: 홍콩, i%7=5: 타이페이, i%7=6: 방콕 (8번째부터 서울로 재순환)
 const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME || "book-debeach";
 const LAMBDA_REGIONS = [
   "ap-northeast-2", // 서울    (i=0, PRIMARY)
   "ap-northeast-1", // 도쿄    (i=1)
   "ap-northeast-3", // 오사카   (i=2)
   "ap-southeast-1", // 싱가포르 (i=3)
-  "ap-southeast-2", // 시드니   (i=4)
+  "ap-east-1", // 홍콩    (i=4)
+  "ap-east-2", // 타이페이  (i=5)
+  "ap-southeast-7", // 방콕    (i=6)
 ];
 const lambdaClients = LAMBDA_REGIONS.map(
   (r) => new LambdaClient({ region: r }),

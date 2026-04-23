@@ -17,7 +17,7 @@ const PRELOGIN_DEADLINE_BEFORE_OPEN_MS = 5000;
 
 // DynamoDB 클라이언트 초기화
 const dynamoClient = DynamoDBDocumentClient.from(
-  new DynamoDBClient({ region: "ap-south-1" }),
+  new DynamoDBClient({ region: "ap-northeast-2" }),
 );
 const SLOT_CLAIMS_TABLE = "book-debeach-slot-claims";
 const BOOKING_RESULTS_TABLE = "book-debeach-results";

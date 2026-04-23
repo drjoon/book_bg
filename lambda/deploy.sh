@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Lambda 빌드 & 4개 리전 동시 배포
+# Lambda 빌드 & 5개 리전 동시 배포
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LAMBDA_DIR="$SCRIPT_DIR/book-debeach"
 ZIP="$LAMBDA_DIR/deployment_package.zip"
 FUNCTION_NAME="book-debeach"
-REGIONS=("ap-northeast-2" "ap-northeast-1" "ap-southeast-1" "ap-south-1")
-REGION_LABELS=("서울" "도쿄" "싱가포르" "뭄바이")
+REGIONS=("ap-northeast-2" "ap-northeast-1" "ap-northeast-3" "ap-southeast-1" "ap-southeast-2")
+REGION_LABELS=("서울" "도쿄" "오사카" "싱가포르" "시드니")
 
 echo "=== [1/2] Building ==="
 (cd "$LAMBDA_DIR" && npm run build)

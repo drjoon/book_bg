@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# 4개 리전 Lambda 로그를 동시에 가져와 단일 파일로 병합 (시각 순 정렬)
+# 5개 리전 Lambda 로그를 동시에 가져와 단일 파일로 병합 (시각 순 정렬)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/doc"
 OUTPUT="$LOG_DIR/lambda_today.log"
 FUNCTION_NAME="book-debeach"
-REGIONS=("ap-northeast-2" "ap-northeast-1" "ap-southeast-1" "ap-south-1")
-REGION_LABELS=("서울" "도쿄" "싱가포르" "뭄바이")
+REGIONS=("ap-northeast-2" "ap-northeast-1" "ap-northeast-3" "ap-southeast-1" "ap-southeast-2")
+REGION_LABELS=("서울" "도쿄" "오사카" "싱가포르" "시드니")
 
 # 기본값: 오늘 08:30 KST 이후
 DEFAULT_HOUR=8

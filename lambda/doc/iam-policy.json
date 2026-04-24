@@ -7,9 +7,13 @@
         "dynamodb:PutItem",
         "dynamodb:Query",
         "dynamodb:GetItem",
-        "dynamodb:Scan"
+        "dynamodb:Scan",
+        "dynamodb:DeleteItem"
       ],
-      "Resource": "arn:aws:dynamodb:ap-northeast-2:106055905364:table/book-debeach-slot-claims"
+      "Resource": [
+        "arn:aws:dynamodb:ap-northeast-2:106055905364:table/book-debeach-slot-claims",
+        "arn:aws:dynamodb:ap-northeast-2:106055905364:table/book-debeach-results"
+      ]
     }
   ]
 }

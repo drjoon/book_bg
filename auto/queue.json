@@ -33,5 +33,12 @@
     "startTime": "1230",
     "endTime": "1400",
     "force": true
+  },
+  {
+    "account": "손덕일",
+    "date": "20260508",
+    "startTime": "0840",
+    "endTime": "0700",
+    "force": false
   }
 ]

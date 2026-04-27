@@ -1,8 +1,5 @@
 import { runAutoBooking, getBookingOpenTime } from "./debeach_auto.js";
-import fs from "fs/promises";
-import path from "path";
 import moment from "moment-timezone";
-import { fileURLToPath } from "url";
 import { Booking } from "../web/backend/models.js";
 import connectDB from "../web/backend/db.js";
 import mongoose from "mongoose";
@@ -29,12 +26,7 @@ console.warn = (...args) => {
 };
 // --- End of Monkey-Patch ---
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const queuePath = path.resolve(__dirname, "./queue.json");
 let processing = false;
-let lastEmptyRebuildAtMs = 0;
-const EMPTY_REBUILD_BACKOFF_MS = 30_000; // 큐 비었을 때 rebuild 간격 (30초)
 
 function isTerminalStatus(status) {
   if (!status) return false;
@@ -46,55 +38,6 @@ function isTerminalStatus(status) {
     status === "canceled" ||
     status === "cancelled"
   );
-}
-
-async function rebuildQueueFromDb() {
-  try {
-    // Ensure MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      console.warn("[WORKER] MongoDB not connected, skipping DB rebuild");
-      return null;
-    }
-
-    const todayDigits = moment().tz("Asia/Seoul").format("YYYYMMDD");
-
-    const normalizeDateDigits = (value) => {
-      if (!value) return "";
-      const digits = String(value).replace(/\D/g, "");
-      return digits.length >= 8 ? digits.slice(0, 8) : digits;
-    };
-
-    const bookings = await Booking.find({
-      status: {
-        $nin: ["성공", "실패", "취소", "cancel", "canceled", "cancelled"],
-      },
-    })
-      .select("account date startTime endTime status")
-      .lean();
-
-    const jobs = bookings
-      .map((b) => ({
-        account: b.account,
-        date: b.date,
-        startTime: b.startTime,
-        endTime: b.endTime,
-      }))
-      .filter((j) => {
-        if (!j.account || !j.date || !j.startTime || !j.endTime) return false;
-        const d = normalizeDateDigits(j.date);
-        if (d.length !== 8) return false;
-        return d >= todayDigits;
-      });
-
-    if (jobs.length > 0) {
-      await saveQueue(jobs);
-      console.log(`[WORKER] Rebuilt queue from DB. jobs=${jobs.length}`);
-    }
-    return jobs;
-  } catch (e) {
-    console.error("[WORKER] Failed to rebuild queue from DB:", e.message);
-    return null;
-  }
 }
 
 async function pruneQueueByDb(queue) {
@@ -148,18 +91,6 @@ async function pruneQueueByDb(queue) {
   });
 }
 
-async function loadQueue() {
-  try {
-    return JSON.parse(await fs.readFile(queuePath, "utf-8"));
-  } catch (e) {
-    return [];
-  }
-}
-
-async function saveQueue(queue) {
-  await fs.writeFile(queuePath, JSON.stringify(queue, null, 2));
-}
-
 function isBookingTimeNear(job) {
   // 예약 오픈 2분 전 ~ 2분 후까지 실행 허용 (기존 90초에서 2분으로 확대)
   const now = moment().tz("Asia/Seoul");
@@ -171,12 +102,46 @@ function isBookingTimeNear(job) {
   );
 }
 
+// 현재 시간이 예약 오픈 2분 전~후인지 확인 (부킹 시각: 평일 9시, 수요일 10시)
+function isInBookingWindow() {
+  const now = moment().tz("Asia/Seoul");
+  const dayOfWeek = now.day(); // 0=일, 1=월, ..., 3=수, ..., 6=토
+  const hour = now.hour();
+  const minute = now.minute();
+  const totalMinutes = hour * 60 + minute;
+
+  // 평일(월~금): 9:00 오픈 => 8:58 ~ 9:02
+  if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+    const openMinutes = 9 * 60; // 540
+    // 2분 전 ~ 2분 후
+    if (totalMinutes >= openMinutes - 2 && totalMinutes <= openMinutes + 2) {
+      return true;
+    }
+  }
+
+  // 수요일: 10:00 추가 오픈 => 9:58 ~ 10:02
+  if (dayOfWeek === 3) {
+    const openMinutes = 10 * 60; // 600
+    if (totalMinutes >= openMinutes - 2 && totalMinutes <= openMinutes + 2) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 async function processQueue() {
   if (processing) return;
+
+  // 예약 오픈 2분 전~후가 아니면 스킵
+  if (!isInBookingWindow()) {
+    return;
+  }
+
   processing = true;
   try {
-    // 1. Always load pending bookings from MongoDB (source of truth)
-    let dbQueue = [];
+    // 예약 오픈 시간대에만 DB에서 읽기
+    let queue = [];
     if (mongoose.connection.readyState === 1) {
       const todayDigits = moment().tz("Asia/Seoul").format("YYYYMMDD");
       const normalizeDateDigits = (value) => {
@@ -191,7 +156,7 @@ async function processQueue() {
       })
         .select("account date startTime endTime status")
         .lean();
-      dbQueue = bookings
+      queue = bookings
         .map((b) => ({
           account: b.account,
           date: b.date,
@@ -204,31 +169,14 @@ async function processQueue() {
           if (d.length !== 8) return false;
           return d >= todayDigits;
         });
-    }
-
-    // 2. Load file queue as fallback/cache
-    const fileQueue = await loadQueue();
-
-    // 3. Merge: DB entries take priority (source of truth), file entries as backup
-    const queueMap = new Map();
-    for (const job of fileQueue) {
-      const key = `${job.account ?? job.NAME}::${job.date ?? job.TARGET_DATE}`;
-      queueMap.set(key, job);
-    }
-    for (const job of dbQueue) {
-      const key = `${job.account}::${job.date}`;
-      queueMap.set(key, job); // DB entries override file entries
-    }
-    let queue = Array.from(queueMap.values());
-
-    if (queue.length > 0) {
-      await saveQueue(queue);
+      if (queue.length > 0) {
+        console.log(
+          `[WORKER] Booking window detected: ${queue.length} job(s) from DB`,
+        );
+      }
     }
 
     const pruned = await pruneQueueByDb(queue);
-    if (pruned.length !== queue.length) {
-      await saveQueue(pruned);
-    }
     const now = moment().tz("Asia/Seoul");
     const runnable = pruned.filter(isBookingTimeNear);
 
@@ -275,8 +223,7 @@ async function processQueue() {
           );
         }
       }
-      const remaining = pruned.filter((j) => !expired.includes(j));
-      await saveQueue(remaining);
+      // Expired jobs are marked as failed in DB above
     }
 
     if (runnable.length > 0) {
@@ -291,17 +238,7 @@ async function processQueue() {
         }));
         const hasForce = normalized.some((j) => j.force === true);
         await runAutoBooking(normalized, { force: hasForce });
-        // 실행된 작업은 큐에서 제거
-        const currentQueue = await loadQueue();
-        const remainingAfterRun = currentQueue.filter(
-          (job) =>
-            !runnable.some(
-              (r) =>
-                (r.account ?? r.NAME) === (job.account ?? job.NAME) &&
-                (r.date ?? r.TARGET_DATE) === (job.date ?? job.TARGET_DATE),
-            ),
-        );
-        await saveQueue(remainingAfterRun);
+        // Completed - status is saved to DB by runAutoBooking
       } catch (err) {
         console.error("[WORKER] runAutoBooking failed:", err);
         // 실패 시 큐는 수정하지 않음 (다음 사이클에 재시도)
@@ -315,9 +252,9 @@ async function processQueue() {
 async function startWorker() {
   try {
     await connectDB();
-    setInterval(processQueue, 2000); // 2초마다 체크 (기존 5초에서 단축)
+    setInterval(processQueue, 2000); // 2초마다 체크
     console.log(
-      "Worker started. Reading bookings from MongoDB (queue.json as cache)...",
+      "Worker started. Will read from DB only during booking windows (weekdays 9AM, Wed 10AM)...",
     );
   } catch (e) {
     console.error("[WORKER] Failed to initialize worker:", e.message);

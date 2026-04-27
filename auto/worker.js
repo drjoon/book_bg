@@ -175,17 +175,56 @@ async function processQueue() {
   if (processing) return;
   processing = true;
   try {
-    let queue = await loadQueue();
-    if (!Array.isArray(queue) || queue.length === 0) {
-      const nowMs = Date.now();
-      if (nowMs - lastEmptyRebuildAtMs >= EMPTY_REBUILD_BACKOFF_MS) {
-        lastEmptyRebuildAtMs = nowMs;
-        const rebuilt = await rebuildQueueFromDb();
-        if (Array.isArray(rebuilt) && rebuilt.length > 0) {
-          queue = rebuilt;
-        }
-      }
+    // 1. Always load pending bookings from MongoDB (source of truth)
+    let dbQueue = [];
+    if (mongoose.connection.readyState === 1) {
+      const todayDigits = moment().tz("Asia/Seoul").format("YYYYMMDD");
+      const normalizeDateDigits = (value) => {
+        if (!value) return "";
+        const digits = String(value).replace(/\D/g, "");
+        return digits.length >= 8 ? digits.slice(0, 8) : digits;
+      };
+      const bookings = await Booking.find({
+        status: {
+          $nin: ["성공", "실패", "취소", "cancel", "canceled", "cancelled"],
+        },
+      })
+        .select("account date startTime endTime status")
+        .lean();
+      dbQueue = bookings
+        .map((b) => ({
+          account: b.account,
+          date: b.date,
+          startTime: b.startTime,
+          endTime: b.endTime,
+        }))
+        .filter((j) => {
+          if (!j.account || !j.date || !j.startTime || !j.endTime) return false;
+          const d = normalizeDateDigits(j.date);
+          if (d.length !== 8) return false;
+          return d >= todayDigits;
+        });
     }
+
+    // 2. Load file queue as fallback/cache
+    const fileQueue = await loadQueue();
+
+    // 3. Merge: DB entries take priority (source of truth), file entries as backup
+    const queueMap = new Map();
+    for (const job of fileQueue) {
+      const key = `${job.account ?? job.NAME}::${job.date ?? job.TARGET_DATE}`;
+      queueMap.set(key, job);
+    }
+    for (const job of dbQueue) {
+      const key = `${job.account}::${job.date}`;
+      queueMap.set(key, job); // DB entries override file entries
+    }
+    let queue = Array.from(queueMap.values());
+
+    if (queue.length > 0) {
+      await saveQueue(queue);
+    }
+
     const pruned = await pruneQueueByDb(queue);
     if (pruned.length !== queue.length) {
       await saveQueue(pruned);
@@ -277,7 +316,9 @@ async function startWorker() {
   try {
     await connectDB();
     setInterval(processQueue, 2000); // 2초마다 체크 (기존 5초에서 단축)
-    console.log("Worker started. Watching queue.json...");
+    console.log(
+      "Worker started. Reading bookings from MongoDB (queue.json as cache)...",
+    );
   } catch (e) {
     console.error("[WORKER] Failed to initialize worker:", e.message);
   }

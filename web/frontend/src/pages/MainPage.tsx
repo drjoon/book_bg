@@ -407,7 +407,7 @@ const AccountManager = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-5xl rounded-[2rem] border border-stone-200 bg-stone-50/95 p-8 shadow-[0_24px_80px_rgba(28,25,23,0.14)] backdrop-blur-sm"
+        className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-[2rem] border border-stone-200 bg-stone-50/95 p-8 shadow-[0_24px_80px_rgba(28,25,23,0.14)] backdrop-blur-sm"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
@@ -433,9 +433,9 @@ const AccountManager = ({
             승인 완료 {users.filter((item) => item.granted).length}명
           </span>
         </div>
-        <div className="overflow-x-auto rounded-[1.5rem] border border-stone-200 bg-white/80">
+        <div className="min-h-0 flex-1 overflow-auto rounded-[1.5rem] border border-stone-200 bg-white/80">
           <table className="min-w-full divide-y divide-stone-200">
-            <thead className="bg-stone-100/80">
+            <thead className="sticky top-0 z-10 bg-stone-100/80">
               <tr>
                 <th className="px-5 py-3 text-left text-sm font-semibold text-stone-500">
                   이름

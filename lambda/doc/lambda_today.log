@@ -1,78 +1,78 @@
 
 
 
-	2026-04-26T23:58:31.736Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[08:58:31.735] Lambda invoked with event: {
-	2026-04-26T23:58:31.747Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[08:58:31.747] Lambda invoked with event: {
-	2026-04-26T23:58:31.776Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[08:58:31.776] [박신일] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-26T23:58:31.787Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[08:58:31.787] [오수양] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-26T23:58:31.787Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[08:58:31.787] [오수양] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-26T23:58:31.793Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[08:58:31.793] [박신일] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-26T23:58:33.447Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[08:58:33.446] [오수양] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:33.436
-	2026-04-26T23:58:33.560Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[08:58:33.559] Lambda invoked with event: {
-	2026-04-26T23:58:33.603Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[08:58:33.603] [손덕일] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
-	2026-04-26T23:58:33.604Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[08:58:33.604] [손덕일] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
-	2026-04-26T23:58:33.676Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[08:58:33.676] [오수양] 🌐 Outbound IP: 3.35.223.153, invoke received at: 08:58:31.724
-	2026-04-26T23:58:33.677Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[08:58:33.677] [오수양] Starting precision wait. Target time (window start or open): 2026-04-27T09:00:00+09:00
-	2026-04-26T23:58:33.677Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[08:58:33.677] [오수양] Using precomputed NTP offset from payload: -6ms
-	2026-04-26T23:58:33.834Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[08:58:33.834] [박신일] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:33.828
-	2026-04-26T23:58:34.063Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[08:58:34.063] [박신일] 🌐 Outbound IP: 54.199.137.36, invoke received at: 08:58:31.733
-	2026-04-26T23:58:34.064Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[08:58:34.064] [박신일] Starting precision wait. Target time (window start or open): 2026-04-27T09:00:00+09:00
-	2026-04-26T23:58:34.064Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[08:58:34.064] [박신일] Using precomputed NTP offset from payload: -6ms
-	2026-04-26T23:58:36.061Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[08:58:36.061] [손덕일] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:36.055
-	2026-04-26T23:58:36.122Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[08:58:36.122] [손덕일] 🌐 Outbound IP: 13.214.131.204, invoke received at: 08:58:33.557
-	2026-04-26T23:58:36.123Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[08:58:36.123] [손덕일] Starting precision wait. Target time (window start or open): 2026-04-27T09:00:00+09:00
-	2026-04-26T23:58:36.123Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[08:58:36.123] [손덕일] Using precomputed NTP offset from payload: -6ms
-	2026-04-27T00:00:00.130Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:00.130] [손덕일] ⏱️ Starting slot fetch (queued mode) for 20260511
-	2026-04-27T00:00:00.130Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:00.130] [손덕일] Precision wait finished. Corrected time: 09:00:00.124
-	2026-04-27T00:00:00.212Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:00.212] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260511
-	2026-04-27T00:00:00.212Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:00.212] [오수양] Precision wait finished. Corrected time: 09:00:00.206
-	2026-04-27T00:00:00.304Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:00.303] [박신일] Precision wait finished. Corrected time: 09:00:00.297
-	2026-04-27T00:00:00.304Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:00.304] [박신일] ⏱️ Starting slot fetch (queued mode) for 20260511
-	2026-04-27T00:00:00.331Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:00.331] [오수양] ✅ Slot fetch completed (queued). Count: 0, elapsed: 119ms
-	2026-04-27T00:00:00.516Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:00.516] [손덕일] ✅ Slot fetch completed (queued). Count: 66, elapsed: 386ms
-	2026-04-27T00:00:00.521Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:00.521] [손덕일] 📊 Initial tee stats - total: 66, firstHalf: 32, secondHalf: 34, inRange: 14
-	2026-04-27T00:00:00.566Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:00.566] [박신일] ✅ Slot fetch completed (queued). Count: 66, elapsed: 262ms
-	2026-04-27T00:00:00.567Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:00.566] [박신일] 📊 Initial tee stats - total: 66, firstHalf: 32, secondHalf: 34, inRange: 12
-	2026-04-27T00:00:00.832Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:00.832] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260511
-	2026-04-27T00:00:00.872Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:00.864] [박신일] 🎯 Primary target (queued loop): 0820 on course A (totalTargets=12)
-	2026-04-27T00:00:00.906Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:00.905] [손덕일] 🎯 Primary target (queued loop): 1208 on course B (totalTargets=14)
-	2026-04-27T00:00:00.934Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:00.934] [박신일] ✅ Claimed slot 0820 (A) in DynamoDB
-	2026-04-27T00:00:00.957Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:00.957] [박신일] ➡️ Trying to book time: 0820 on course A (delay: 23ms)
-	2026-04-27T00:00:00.966Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:00.966] [오수양] 📊 Initial tee stats - total: 66, firstHalf: 32, secondHalf: 34, inRange: 9
-	2026-04-27T00:00:00.966Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:00.966] [오수양] ✅ Slot fetch completed (queued). Count: 66, elapsed: 134ms
-	2026-04-27T00:00:01.007Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:01.007] [손덕일] ✅ Claimed slot 1208 (B) in DynamoDB
-	2026-04-27T00:00:01.043Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:01.043] [손덕일] ➡️ Trying to book time: 1208 on course B (delay: 35ms)
-	2026-04-27T00:00:01.172Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:01.172] [오수양] 📋 Already claimed by other Lambdas: 2 slots
-	2026-04-27T00:00:01.173Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:01.173] [오수양] 🎯 Primary target (queued loop): 1201 on course A (totalTargets=8)
-	2026-04-27T00:00:01.208Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:01.208] [오수양] ✅ Claimed slot 1201 (A) in DynamoDB
-	2026-04-27T00:00:01.240Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:01.240] [오수양] ➡️ Trying to book time: 1201 on course A (delay: 31ms)
-	2026-04-27T00:00:01.256Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:01.255] [박신일] ⏱️ create completed for 0820 in 249ms. Waiting 963ms before final booking POST.
-	2026-04-27T00:00:01.447Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:01.447] [오수양] ⏱️ create completed for 1201 in 132ms. Waiting 1152ms before final booking POST.
-	2026-04-27T00:00:01.482Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:01.482] [손덕일] ⏱️ create completed for 1208 in 385ms. Waiting 1137ms before final booking POST.
-	2026-04-27T00:00:02.485Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:02.485] [박신일] ⏱️ final booking POST completed for 0820 in 265ms.
-	2026-04-27T00:00:02.485Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:02.485] [박신일] 🎉 Successfully booked time: 0820 (total booking sequence: 1527ms)
-	2026-04-27T00:00:02.485Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:02.485] [박신일] Booking successful (queued mode).
-	2026-04-27T00:00:02.596Z	b6d45c1c-9674-4543-84b3-138f72a76e15	INFO	[09:00:02.596] [박신일] 📝 Booking result saved to DynamoDB (success=true)
-	2026-04-27T00:00:02.739Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:02.739] [오수양] ⏱️ final booking POST completed for 1201 in 138ms.
-	2026-04-27T00:00:02.739Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:02.739] [오수양] 🎉 Successfully booked time: 1201 (total booking sequence: 1499ms)
-	2026-04-27T00:00:02.739Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:02.739] [오수양] Booking successful (queued mode).
-	2026-04-27T00:00:02.788Z	02f6d2d2-ef56-4e0b-ac67-718eb658eba3	INFO	[09:00:02.788] [오수양] 📝 Booking result saved to DynamoDB (success=true)
-	2026-04-27T00:00:03.026Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:03.026] [손덕일] ⏱️ final booking POST completed for 1208 in 405ms.
-	2026-04-27T00:00:03.026Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:03.026] [손덕일] 🎉 Successfully booked time: 1208 (total booking sequence: 1983ms)
-	2026-04-27T00:00:03.026Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:03.026] [손덕일] Booking successful (queued mode).
-	2026-04-27T00:00:03.207Z	db73a839-d922-4597-b19e-8c7575096835	INFO	[09:00:03.207] [손덕일] 📝 Booking result saved to DynamoDB (success=true)
-	END RequestId: 02f6d2d2-ef56-4e0b-ac67-718eb658eba3
-	END RequestId: b6d45c1c-9674-4543-84b3-138f72a76e15
-	END RequestId: db73a839-d922-4597-b19e-8c7575096835
-	REPORT RequestId: 02f6d2d2-ef56-4e0b-ac67-718eb658eba3	Duration: 91126.22 ms	Billed Duration: 92192 ms	Memory Size: 256 MB	Max Memory Used: 131 MB	Init Duration: 1064.94 ms	
-	REPORT RequestId: b6d45c1c-9674-4543-84b3-138f72a76e15	Duration: 90882.46 ms	Billed Duration: 91953 ms	Memory Size: 256 MB	Max Memory Used: 133 MB	Init Duration: 1069.61 ms	
-	REPORT RequestId: db73a839-d922-4597-b19e-8c7575096835	Duration: 89654.76 ms	Billed Duration: 90768 ms	Memory Size: 256 MB	Max Memory Used: 135 MB	Init Duration: 1112.97 ms	
-	START RequestId: 02f6d2d2-ef56-4e0b-ac67-718eb658eba3 Version: $LATEST
-	START RequestId: b6d45c1c-9674-4543-84b3-138f72a76e15 Version: $LATEST
-	START RequestId: db73a839-d922-4597-b19e-8c7575096835 Version: $LATEST
-    END_TIME: '0740',
-    END_TIME: '1240',
-    END_TIME: '1300',
+	2026-04-27T23:58:30.776Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[08:58:30.775] Lambda invoked with event: {
+	2026-04-27T23:58:30.816Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[08:58:30.816] [오수양] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
+	2026-04-27T23:58:30.817Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[08:58:30.817] [오수양] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
+	2026-04-27T23:58:32.396Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[08:58:32.396] [오수양] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:32.390
+	2026-04-27T23:58:32.502Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[08:58:32.502] Lambda invoked with event: {
+	2026-04-27T23:58:32.543Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[08:58:32.543] [손덕일] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
+	2026-04-27T23:58:32.543Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[08:58:32.543] [손덕일] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
+	2026-04-27T23:58:32.623Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[08:58:32.623] [오수양] 🌐 Outbound IP: 3.38.142.50, invoke received at: 08:58:30.756
+	2026-04-27T23:58:32.623Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[08:58:32.623] [오수양] Starting precision wait. Target time (window start or open): 2026-04-28T09:00:00+09:00
+	2026-04-27T23:58:32.624Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[08:58:32.623] [오수양] Using precomputed NTP offset from payload: -6ms
+	2026-04-27T23:58:32.675Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[08:58:32.675] Lambda invoked with event: {
+	2026-04-27T23:58:32.744Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[08:58:32.744] [박신일] 🔐 Pre-login start: 08:58:30.000, deadline: 08:59:55.000. Starting login immediately.
+	2026-04-27T23:58:32.745Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[08:58:32.745] [박신일] 🔐 Pre-login attempt 1 starting with budget 10000ms. Deadline: 08:59:55.000
+	2026-04-27T23:58:34.765Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[08:58:34.765] [박신일] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:34.759
+	2026-04-27T23:58:34.996Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[08:58:34.996] [박신일] 🌐 Outbound IP: 43.207.133.1, invoke received at: 08:58:32.672
+	2026-04-27T23:58:34.997Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[08:58:34.997] [박신일] Starting precision wait. Target time (window start or open): 2026-04-28T09:00:00+09:00
+	2026-04-27T23:58:34.997Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[08:58:34.997] [박신일] Using precomputed NTP offset from payload: -6ms
+	2026-04-27T23:58:35.002Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[08:58:35.002] [손덕일] 🔐 Pre-login succeeded on attempt 1. Completed at 08:58:34.996
+	2026-04-27T23:58:35.062Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[08:58:35.062] [손덕일] 🌐 Outbound IP: 13.229.117.138, invoke received at: 08:58:32.483
+	2026-04-27T23:58:35.062Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[08:58:35.062] [손덕일] Starting precision wait. Target time (window start or open): 2026-04-28T09:00:00+09:00
+	2026-04-27T23:58:35.063Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[08:58:35.063] [손덕일] Using precomputed NTP offset from payload: -6ms
+	2026-04-28T00:00:00.060Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:00.060] [손덕일] ⏱️ Starting slot fetch (queued mode) for 20260512
+	2026-04-28T00:00:00.060Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:00.060] [손덕일] Precision wait finished. Corrected time: 09:00:00.053
+	2026-04-28T00:00:00.131Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:00.131] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260512
+	2026-04-28T00:00:00.131Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:00.131] [오수양] Precision wait finished. Corrected time: 09:00:00.125
+	2026-04-28T00:00:00.242Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:00.241] [오수양] ✅ Slot fetch completed (queued). Count: 0, elapsed: 110ms
+	2026-04-28T00:00:00.276Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:00.276] [박신일] ⏱️ Starting slot fetch (queued mode) for 20260512
+	2026-04-28T00:00:00.276Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:00.276] [박신일] Precision wait finished. Corrected time: 09:00:00.269
+	2026-04-28T00:00:00.425Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:00.425] [손덕일] ✅ Slot fetch completed (queued). Count: 47, elapsed: 365ms
+	2026-04-28T00:00:00.441Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:00.441] [손덕일] 📊 Initial tee stats - total: 47, firstHalf: 31, secondHalf: 16, inRange: 7
+	2026-04-28T00:00:00.516Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:00.516] [박신일] ✅ Slot fetch completed (queued). Count: 47, elapsed: 240ms
+	2026-04-28T00:00:00.517Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:00.517] [박신일] 📊 Initial tee stats - total: 47, firstHalf: 31, secondHalf: 16, inRange: 11
+	2026-04-28T00:00:00.743Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:00.743] [오수양] ⏱️ Starting slot fetch (queued mode) for 20260512
+	2026-04-28T00:00:00.842Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:00.841] [손덕일] 🎯 Primary target (queued loop): 0813 on course A (totalTargets=7)
+	2026-04-28T00:00:00.847Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:00.846] [박신일] 🎯 Primary target (queued loop): 0752 on course B (totalTargets=11)
+	2026-04-28T00:00:00.884Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:00.884] [오수양] 📊 Initial tee stats - total: 47, firstHalf: 31, secondHalf: 16, inRange: 7
+	2026-04-28T00:00:00.884Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:00.884] [오수양] ✅ Slot fetch completed (queued). Count: 47, elapsed: 141ms
+	2026-04-28T00:00:00.925Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:00.925] [박신일] ✅ Claimed slot 0752 (B) in DynamoDB
+	2026-04-28T00:00:00.948Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:00.948] [손덕일] ✅ Claimed slot 0813 (A) in DynamoDB
+	2026-04-28T00:00:00.968Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:00.968] [박신일] ➡️ Trying to book time: 0752 on course B (delay: 42ms)
+	2026-04-28T00:00:00.982Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:00.982] [손덕일] ➡️ Trying to book time: 0813 on course A (delay: 34ms)
+	2026-04-28T00:00:01.122Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:01.122] [오수양] 📋 Already claimed by other Lambdas: 2 slots
+	2026-04-28T00:00:01.122Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:01.122] [오수양] 🎯 Primary target (queued loop): 0827 on course B (totalTargets=6)
+	2026-04-28T00:00:01.156Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:01.156] [오수양] ✅ Claimed slot 0827 (B) in DynamoDB
+	2026-04-28T00:00:01.223Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:01.223] [오수양] ➡️ Trying to book time: 0827 on course B (delay: 66ms)
+	2026-04-28T00:00:01.284Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:01.284] [박신일] ⏱️ create completed for 0752 in 248ms. Waiting 1141ms before final booking POST.
+	2026-04-28T00:00:01.437Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:01.437] [오수양] ⏱️ create completed for 0827 in 154ms. Waiting 1143ms before final booking POST.
+	2026-04-28T00:00:01.443Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:01.443] [손덕일] ⏱️ create completed for 0813 in 407ms. Waiting 931ms before final booking POST.
+	2026-04-28T00:00:02.716Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:02.715] [오수양] ⏱️ final booking POST completed for 0827 in 133ms.
+	2026-04-28T00:00:02.716Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:02.716] [오수양] 🎉 Successfully booked time: 0827 (total booking sequence: 1493ms)
+	2026-04-28T00:00:02.716Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:02.716] [오수양] Booking successful (queued mode).
+	2026-04-28T00:00:02.756Z	48d7d2fa-6548-4b78-996f-f1f86f5680ed	INFO	[09:00:02.756] [오수양] 📝 Booking result saved to DynamoDB (success=true)
+	2026-04-28T00:00:02.758Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:02.758] [손덕일] ⏱️ final booking POST completed for 0813 in 382ms.
+	2026-04-28T00:00:02.758Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:02.758] [손덕일] 🎉 Successfully booked time: 0813 (total booking sequence: 1775ms)
+	2026-04-28T00:00:02.758Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:02.758] [손덕일] Booking successful (queued mode).
+	2026-04-28T00:00:02.842Z	bafa9805-3396-4a91-ba63-f4a9fc8674f8	INFO	[09:00:02.842] [손덕일] 📝 Booking result saved to DynamoDB (success=true)
+	2026-04-28T00:00:02.884Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:02.884] [박신일] ⏱️ final booking POST completed for 0752 in 457ms.
+	2026-04-28T00:00:02.904Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:02.904] [박신일] 🎉 Successfully booked time: 0752 (total booking sequence: 1936ms)
+	2026-04-28T00:00:02.904Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:02.904] [박신일] Booking successful (queued mode).
+	2026-04-28T00:00:03.075Z	67291577-43cd-49c5-ac31-fc7a7def7f04	INFO	[09:00:03.075] [박신일] 📝 Booking result saved to DynamoDB (success=true)
+	END RequestId: 48d7d2fa-6548-4b78-996f-f1f86f5680ed
+	END RequestId: 67291577-43cd-49c5-ac31-fc7a7def7f04
+	END RequestId: bafa9805-3396-4a91-ba63-f4a9fc8674f8
+	REPORT RequestId: 48d7d2fa-6548-4b78-996f-f1f86f5680ed	Duration: 92043.01 ms	Billed Duration: 93100 ms	Memory Size: 256 MB	Max Memory Used: 131 MB	Init Duration: 1056.89 ms	
+	REPORT RequestId: 67291577-43cd-49c5-ac31-fc7a7def7f04	Duration: 90435.04 ms	Billed Duration: 91507 ms	Memory Size: 256 MB	Max Memory Used: 130 MB	Init Duration: 1071.93 ms	
+	REPORT RequestId: bafa9805-3396-4a91-ba63-f4a9fc8674f8	Duration: 90382.63 ms	Billed Duration: 91427 ms	Memory Size: 256 MB	Max Memory Used: 132 MB	Init Duration: 1043.91 ms	
+	START RequestId: 48d7d2fa-6548-4b78-996f-f1f86f5680ed Version: $LATEST
+	START RequestId: 67291577-43cd-49c5-ac31-fc7a7def7f04 Version: $LATEST
+	START RequestId: bafa9805-3396-4a91-ba63-f4a9fc8674f8 Version: $LATEST
+    END_TIME: '0800',
+    END_TIME: '0800',
+    END_TIME: '0830',
     LOGIN_ID: '11010751',
     LOGIN_ID: '11021511',
     LOGIN_ID: '11021601',
@@ -85,12 +85,12 @@
     PRIMARY_SLOT_OFFSET: 0
     PRIMARY_SLOT_OFFSET: 1
     PRIMARY_SLOT_OFFSET: 3
-    START_TIME: '0913',
-    START_TIME: '1200',
-    START_TIME: '1200',
-    TARGET_DATE: '20260511',
-    TARGET_DATE: '20260511',
-    TARGET_DATE: '20260511',
+    START_TIME: '0750',
+    START_TIME: '0853',
+    START_TIME: '0900',
+    TARGET_DATE: '20260512',
+    TARGET_DATE: '20260512',
+    TARGET_DATE: '20260512',
   },
   },
   },

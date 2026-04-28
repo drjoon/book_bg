@@ -27,6 +27,8 @@ console.warn = (...args) => {
 // --- End of Monkey-Patch ---
 
 let processing = false;
+let skipProcessingUntil = null;
+let lastProcessedOpenKey = null;
 
 function isTerminalStatus(status) {
   if (!status) return false;
@@ -103,44 +105,72 @@ function isBookingTimeNear(job) {
 }
 
 // 현재 시간이 예약 오픈 2분 전~후인지 확인 (부킹 시각: 평일 9시, 수요일 10시)
-function isInBookingWindow() {
-  const now = moment().tz("Asia/Seoul");
+// - 평일(월~금) 09:00: 14일 후 평일 라운드 예약 오픈
+// - 수요일 10:00: 11일 후 일요일 / 10일 후 토요일 라운드 예약 오픈
+//   (수요일에는 09:00, 10:00 두 시각이 모두 후보로 등록되어 동일한 prelaunch 흐름을 탄다)
+function getActiveBookingOpenTime(now) {
   const dayOfWeek = now.day(); // 0=일, 1=월, ..., 3=수, ..., 6=토
-  const hour = now.hour();
-  const minute = now.minute();
-  const totalMinutes = hour * 60 + minute;
 
-  // 평일(월~금): 9:00 오픈 => 8:58 ~ 9:02
+  const openCandidates = [];
   if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-    const openMinutes = 9 * 60; // 540
-    // 2분 전 ~ 2분 후
-    if (totalMinutes >= openMinutes - 2 && totalMinutes <= openMinutes + 2) {
-      return true;
-    }
+    openCandidates.push(
+      now.clone().set({ hour: 9, minute: 0, second: 0, millisecond: 0 }),
+    );
   }
-
-  // 수요일: 10:00 추가 오픈 => 9:58 ~ 10:02
   if (dayOfWeek === 3) {
-    const openMinutes = 10 * 60; // 600
-    if (totalMinutes >= openMinutes - 2 && totalMinutes <= openMinutes + 2) {
-      return true;
+    openCandidates.push(
+      now.clone().set({ hour: 10, minute: 0, second: 0, millisecond: 0 }),
+    );
+  }
+
+  for (const openTime of openCandidates) {
+    if (
+      now.isSameOrAfter(openTime.clone().subtract(2, "minute")) &&
+      now.isSameOrBefore(openTime.clone().add(2, "minute"))
+    ) {
+      return openTime;
     }
   }
 
-  return false;
+  return null;
+}
+
+function shouldRunPrelaunch(now, openTime) {
+  // [DB 재확인 1단계] Lambda 런치 직전(T-95s ~ T-80s)에만 DB를 읽어 큐를 재구성한다.
+  // 이 윈도우 밖에서는 processQueue가 즉시 반환되어 평상시 DB 부하 0.
+  // 9시(평일)/10시(수요일) 두 시각 모두 동일한 윈도우 로직을 거친다.
+  const start = openTime.clone().subtract(95, "seconds");
+  const end = openTime.clone().subtract(80, "seconds");
+  return now.isSameOrAfter(start) && now.isSameOrBefore(end);
 }
 
 async function processQueue() {
   if (processing) return;
 
-  // 예약 오픈 2분 전~후가 아니면 스킵
-  if (!isInBookingWindow()) {
+  const now = moment().tz("Asia/Seoul");
+  if (skipProcessingUntil && now.isBefore(skipProcessingUntil)) {
+    return;
+  }
+
+  const activeOpenTime = getActiveBookingOpenTime(now);
+  if (!activeOpenTime) {
+    skipProcessingUntil = null;
+    lastProcessedOpenKey = null;
+    return;
+  }
+
+  const openKey = activeOpenTime.format("YYYY-MM-DDTHH:mm");
+  if (lastProcessedOpenKey === openKey) {
+    return;
+  }
+
+  if (!shouldRunPrelaunch(now, activeOpenTime)) {
     return;
   }
 
   processing = true;
   try {
-    // 예약 오픈 시간대에만 DB에서 읽기
+    // 예약 오픈 직전(런치 구간)에만 DB에서 읽기
     let queue = [];
     if (mongoose.connection.readyState === 1) {
       const todayDigits = moment().tz("Asia/Seoul").format("YYYYMMDD");
@@ -169,6 +199,13 @@ async function processQueue() {
           if (d.length !== 8) return false;
           return d >= todayDigits;
         });
+      // 활성 오픈 시각과 같은 오픈을 갖는 작업만 대상으로 제한
+      queue = queue.filter((job) => {
+        const date = job.date ?? job.TARGET_DATE;
+        const openTime = getBookingOpenTime(date);
+        return Math.abs(openTime.diff(activeOpenTime, "milliseconds")) <= 30000;
+      });
+
       if (queue.length > 0) {
         console.log(
           `[WORKER] Booking window detected: ${queue.length} job(s) from DB`,
@@ -177,7 +214,6 @@ async function processQueue() {
     }
 
     const pruned = await pruneQueueByDb(queue);
-    const now = moment().tz("Asia/Seoul");
     const runnable = pruned.filter(isBookingTimeNear);
 
     // 만료 잡 정리: 오픈+2분 경과 항목 제거 및 DB 상태 실패 반영
@@ -239,6 +275,15 @@ async function processQueue() {
         const hasForce = normalized.some((j) => j.force === true);
         await runAutoBooking(normalized, { force: hasForce });
         // Completed - status is saved to DB by runAutoBooking
+
+        lastProcessedOpenKey = openKey;
+
+        // After a booking run during the window, skip further polling until the
+        // window is over to avoid redundant DB checks/log spam.
+        const maxOpen = runnable
+          .map((job) => getBookingOpenTime(job.date ?? job.TARGET_DATE))
+          .reduce((a, b) => (a.isAfter(b) ? a : b));
+        skipProcessingUntil = maxOpen.clone().add(2, "minute");
       } catch (err) {
         console.error("[WORKER] runAutoBooking failed:", err);
         // 실패 시 큐는 수정하지 않음 (다음 사이클에 재시도)

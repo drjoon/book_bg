@@ -86,6 +86,17 @@ console.log(
   `[LAMBDA] Multi-region mode: ${LAMBDA_REGIONS.join(", ")}, function=${LAMBDA_FUNCTION_NAME}`,
 );
 
+function isLambdaInvokePermissionError(error) {
+  const msg = String(error?.message || "");
+  const name = String(error?.name || "");
+  return (
+    name === "AccessDeniedException" ||
+    msg.includes("AccessDeniedException") ||
+    msg.includes("is not authorized to perform") ||
+    msg.includes("no identity-based policy")
+  );
+}
+
 const isTerminalStatus = (status) => {
   if (!status) return false;
   return (
@@ -177,7 +188,8 @@ async function runBookingGroup(group, options) {
       offsetMs = null;
     }
 
-    // 오픈 91초 전: MongoDB에서 최신 예약 정보를 다시 읽어와 실행 대상 계정을 재계산
+    // [DB 재확인 2단계] 오픈 91초 전: MongoDB에서 최신 예약 정보를 다시 읽어와 실행 대상 계정을 재계산.
+    // 9시/10시 발사 모두 이 경로를 공유하며, worker의 1단계 큐 재구성 이후 곧바로 수행된다.
     const activeUsers = await User.find({ granted: true }).select(
       "name debeachLoginId debeachLoginPassword",
     );
@@ -378,7 +390,8 @@ async function runBookingGroup(group, options) {
       }
     }
 
-    // 실행 직전 DB 상태 재확인
+    // [DB 재확인 3단계] 각 Lambda invoke 직전(T-90s±stagger): 계정별로 Booking을 한 번 더 조회.
+    // 삭제됐거나 terminal 상태(성공/실패/취소)면 호출 자체를 스킵해 불필요한 Lambda 발사를 방지.
     if (!force) {
       try {
         const existing = await Booking.findOne({ account: config.NAME, date });
@@ -399,11 +412,6 @@ async function runBookingGroup(group, options) {
       }
     }
 
-    const lambdaRegion = getLambdaRegion(i);
-    console.log(
-      `[${logName}] 🚀 Invoking Lambda (region=${lambdaRegion}, START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME})`,
-    );
-
     const payload = {
       config,
       immediate: options.immediate || false,
@@ -417,7 +425,38 @@ async function runBookingGroup(group, options) {
     });
 
     try {
-      const response = await getLambdaClient(i).send(command);
+      let response;
+      let invokedRegion = getLambdaRegion(i);
+      let lastError;
+
+      for (let attempt = 0; attempt < lambdaClients.length; attempt += 1) {
+        const idx = i + attempt;
+        invokedRegion = getLambdaRegion(idx);
+        console.log(
+          `[${logName}] 🚀 Invoking Lambda (region=${invokedRegion}, START_TIME: ${config.START_TIME}, END_TIME: ${config.END_TIME})`,
+        );
+
+        try {
+          response = await getLambdaClient(idx).send(command);
+          break;
+        } catch (e) {
+          lastError = e;
+          if (!isLambdaInvokePermissionError(e)) {
+            throw e;
+          }
+          if (attempt < lambdaClients.length - 1) {
+            console.warn(
+              `[${logName}] ⚠️ Lambda invoke permission error in region=${invokedRegion}. Retrying in next region...`,
+            );
+            continue;
+          }
+        }
+      }
+
+      if (!response) {
+        throw lastError || new Error("Lambda invoke failed");
+      }
+
       const result = JSON.parse(new TextDecoder().decode(response.Payload));
       console.log(
         `[${logName}] ✅ Lambda returned: success=${result.success}, resultKey=${result.resultKey || "-"}`,

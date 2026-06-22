@@ -1,11 +1,10 @@
 .git
-node_modules
 web/frontend/node_modules
+web/frontend/src
+web/frontend/public
 *.zip
 .DS_Store
-node_modules
 *.env
-# Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml

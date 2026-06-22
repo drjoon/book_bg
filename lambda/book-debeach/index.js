@@ -6,6 +6,7 @@ import * as cheerio from "cheerio";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
+  DeleteCommand,
   PutCommand,
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
@@ -403,6 +404,26 @@ async function markSlotTaken(dateStr, slot, accountName) {
   }
 }
 
+// 네트워크/일시 장애로 booking 시퀀스가 끊겼을 때 claim을 즉시 해제해 다른 Lambda가 재시도 가능하게 함
+async function releaseSlotClaim(dateStr, slot, accountName, reason) {
+  const slotKey = `${dateStr}#${slot.bk_time}#${slot.bk_cours}`;
+  try {
+    await dynamoClient.send(
+      new DeleteCommand({
+        TableName: SLOT_CLAIMS_TABLE,
+        Key: { PK: slotKey },
+      }),
+    );
+    console.log(
+      `[${accountName}] ♻️ Released slot claim ${slot.bk_time} (${slot.bk_cours}) due to ${reason}`,
+    );
+  } catch (e) {
+    console.warn(
+      `[${accountName}] Failed to release slot claim ${slot.bk_time} (${slot.bk_cours}): ${e.message}`,
+    );
+  }
+}
+
 // 이미 예약된 슬롯 조회 (TTL 미만료 항목만)
 async function getClaimedSlots(dateStr) {
   try {
@@ -514,7 +535,7 @@ async function attemptBooking(
   const logPrefix = `[${config.NAME}]`;
 
   try {
-    const jitterDelayMs = Math.floor(Math.random() * 51) + 20; // 20~70ms (수동 스크립트는 지터 없음)
+    const jitterDelayMs = Math.floor(Math.random() * 16); // 0~15ms
     await sleep(jitterDelayMs);
 
     console.log(
@@ -552,8 +573,23 @@ async function attemptBooking(
       await markSlotTaken(config.TARGET_DATE, targetSlot, config.NAME);
       return { success: false, slot: targetSlot, wasTaken: true };
     } else if (!error.response) {
-      // axios error가 아닌 경우 (파싱 실패 등) → failedSlots에 추가해 동일 Lambda가 재시도하지 않도록
-      if (failedSlots && typeof failedSlots.add === "function") {
+      const isTimeoutError =
+        error.code === "ECONNABORTED" || /timeout/i.test(error.message || "");
+
+      // 네트워크 타임아웃/일시 오류는 claim을 해제해 다른 Lambda가 바로 재시도 가능하게 함
+      await releaseSlotClaim(
+        config.TARGET_DATE,
+        targetSlot,
+        config.NAME,
+        isTimeoutError ? "network timeout" : "transient network error",
+      );
+
+      // 파싱 실패 등 비네트워크 오류는 동일 Lambda 내 무한 재시도를 막기 위해 failedSlots에 추가
+      if (
+        !isTimeoutError &&
+        failedSlots &&
+        typeof failedSlots.add === "function"
+      ) {
         failedSlots.add(`${targetSlot.bk_time}_${targetSlot.bk_cours}`);
       }
       return { success: false, slot: targetSlot };
@@ -728,12 +764,17 @@ export const handler = async (event) => {
 
     // 2. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
     const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
-    // 오픈 시각 + 50~350ms에 fetch 시작 → fetch 완료(~250ms) 후 바로 booking 시도 → booking 시작 ≈ open + 300~600ms
-    const firstFetchOffsetMs = 50 + Math.floor(Math.random() * 301); // 50~350ms
+    // rules.md 기준: 오픈 시각 +0.2s 전후에 첫 fetch 시작
+    const firstFetchOffsetMs = 190 + Math.floor(Math.random() * 31); // 190~220ms
     const windowStart = bookingOpenTime
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
     let windowEnd = bookingOpenTime.clone().add(60, "seconds");
+    // 첫 booking 시도가 오픈 +0.7s 전후가 되도록 claim floor를 당김
+    const queuedClaimFloorMs = 500 + Math.floor(Math.random() * 61); // 500~560ms
+    const queuedClaimFloorTime = bookingOpenTime
+      .clone()
+      .add(queuedClaimFloorMs, "milliseconds");
 
     let token;
     if (!immediate) {
@@ -948,6 +989,7 @@ export const handler = async (event) => {
       const correctedNow = createCorrectedNow(offsetMs);
       const failedSlotTimes = new Set();
       let lastStats = null;
+      let queuedClaimFloorWaited = false;
 
       while (correctedNow().valueOf() < windowEndTs) {
         let availableTimes = [];
@@ -1016,6 +1058,19 @@ export const handler = async (event) => {
           );
         }
         lastStats = stats;
+
+        if (!queuedClaimFloorWaited) {
+          const now = correctedNow();
+          if (now.isBefore(queuedClaimFloorTime)) {
+            await waitUntil(
+              queuedClaimFloorTime,
+              `[${logName}]`,
+              offsetMs,
+              "queued claim floor",
+            );
+          }
+          queuedClaimFloorWaited = true;
+        }
 
         // DynamoDB에서 이미 다른 Lambda가 예약한 슬롯 조회
         const claimedSlots = await getClaimedSlots(config.TARGET_DATE);

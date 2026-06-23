@@ -29,6 +29,7 @@ console.warn = (...args) => {
 let processing = false;
 let skipProcessingUntil = null;
 let lastProcessedOpenKey = null;
+let lastCatchupNoticeOpenKey = null;
 
 function isTerminalStatus(status) {
   if (!status) return false;
@@ -136,11 +137,17 @@ function getActiveBookingOpenTime(now) {
 }
 
 function shouldRunPrelaunch(now, openTime) {
-  // [DB 재확인 1단계] Lambda 런치 직전(T-95s ~ T-80s)에만 DB를 읽어 큐를 재구성한다.
-  // 이 윈도우 밖에서는 processQueue가 즉시 반환되어 평상시 DB 부하 0.
-  // 9시(평일)/10시(수요일) 두 시각 모두 동일한 윈도우 로직을 거친다.
+  // [DB 재확인 1단계] Lambda 런치 직전(T-95s ~ T-80s) 프리런치 윈도우
   const start = openTime.clone().subtract(95, "seconds");
   const end = openTime.clone().subtract(80, "seconds");
+  return now.isSameOrAfter(start) && now.isSameOrBefore(end);
+}
+
+function shouldRunCatchup(now, openTime) {
+  // 프리런치 타이밍을 놓친 경우를 대비한 보정 윈도우:
+  // T-80s ~ T+2m 구간에서도 한 번 더 DB를 읽어 Lambda 실행 기회를 보장한다.
+  const start = openTime.clone().subtract(80, "seconds");
+  const end = openTime.clone().add(2, "minute");
   return now.isSameOrAfter(start) && now.isSameOrBefore(end);
 }
 
@@ -156,6 +163,7 @@ async function processQueue() {
   if (!activeOpenTime) {
     skipProcessingUntil = null;
     lastProcessedOpenKey = null;
+    lastCatchupNoticeOpenKey = null;
     return;
   }
 
@@ -164,8 +172,20 @@ async function processQueue() {
     return;
   }
 
-  if (!shouldRunPrelaunch(now, activeOpenTime)) {
+  const inPrelaunchWindow = shouldRunPrelaunch(now, activeOpenTime);
+  const inCatchupWindow = shouldRunCatchup(now, activeOpenTime);
+  if (!inPrelaunchWindow && !inCatchupWindow) {
     return;
+  }
+  if (
+    !inPrelaunchWindow &&
+    inCatchupWindow &&
+    lastCatchupNoticeOpenKey !== openKey
+  ) {
+    console.warn(
+      `[WORKER] Prelaunch window missed for ${openKey}. Running catch-up scan (T-80s~T+2m).`,
+    );
+    lastCatchupNoticeOpenKey = openKey;
   }
 
   processing = true;

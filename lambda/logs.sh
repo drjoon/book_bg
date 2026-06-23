@@ -9,18 +9,38 @@ FUNCTION_NAME="book-debeach"
 REGIONS=("ap-northeast-2" "ap-northeast-1" "ap-northeast-3" "ap-southeast-1" "ap-east-1" "ap-east-2" "ap-southeast-7")
 REGION_LABELS=("서울" "도쿄" "오사카" "싱가포르" "홍콩" "타이페이" "방콕")
 
-# 기본값: 오늘 08:30 KST 이후
+# 기본값: 오늘 08:30 KST
 DEFAULT_HOUR=8
 DEFAULT_MIN=30
 HOUR="${1:-$DEFAULT_HOUR}"
 MIN="${2:-$DEFAULT_MIN}"
 
-START_MS=$(python3 -c "
-import datetime, pytz
-t = pytz.timezone('Asia/Seoul')
-d = datetime.datetime.now(t).replace(hour=$HOUR, minute=$MIN, second=0, microsecond=0)
-print(int(d.timestamp() * 1000))
-")
+# 입력값 검증
+if ! [[ "$HOUR" =~ ^[0-9]{1,2}$ ]] || ! [[ "$MIN" =~ ^[0-9]{1,2}$ ]]; then
+  echo "❌ Usage: ./logs.sh [HOUR(0-23)] [MIN(0-59)]"
+  exit 1
+fi
+if (( HOUR < 0 || HOUR > 23 || MIN < 0 || MIN > 59 )); then
+  echo "❌ Invalid time: $(printf '%02d:%02d' "$HOUR" "$MIN")"
+  exit 1
+fi
+
+# 오늘 KST 기준 시작 시각(epoch ms) 계산
+TODAY_KST="$(TZ=Asia/Seoul date +%Y-%m-%d)"
+TIME_KST="$(printf '%02d:%02d:00' "$HOUR" "$MIN")"
+
+# macOS(BSD date) 우선
+if START_S=$(TZ=Asia/Seoul date -j -f "%Y-%m-%d %H:%M:%S" "$TODAY_KST $TIME_KST" +%s 2>/dev/null); then
+  :
+# Linux(GNU date) fallback
+elif START_S=$(TZ=Asia/Seoul date -d "$TODAY_KST $TIME_KST" +%s 2>/dev/null); then
+  :
+else
+  echo "❌ Failed to calculate start timestamp. Unsupported 'date' command on this system."
+  exit 1
+fi
+
+START_MS=$((START_S * 1000))
 
 echo "=== Fetching logs from ${#REGIONS[@]} regions since $(printf '%02d:%02d' $HOUR $MIN) KST ==="
 

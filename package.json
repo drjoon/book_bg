@@ -21,7 +21,6 @@
     "@aws-sdk/client-lambda": "^3.454.0",
     "@aws-sdk/client-s3": "^3.937.0",
     "axios": "^1.13.1",
-    "axios-cookiejar-support": "^6.0.4",
     "bcrypt": "^6.0.0",
     "cheerio": "^1.1.2",
     "cors": "^2.8.5",
@@ -32,7 +31,6 @@
     "mongoose": "^8.19.3",
     "ntp-client": "^0.5.3",
     "pm2": "^5.4.2",
-    "tough-cookie": "^6.0.0",
     "ws": "^8.18.0"
   }
 }

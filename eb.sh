@@ -25,6 +25,8 @@ find "$ROOT_DIR" -maxdepth 1 -name 'deploy-*.zip' -type f -mtime +3 -delete || t
 info "zip 패키지 생성"
 cat <<'EOF' > "$ROOT_DIR/.ebignore"
 .git
+node_modules
+web/backend/node_modules
 web/frontend/node_modules
 web/frontend/src
 web/frontend/public
@@ -37,7 +39,12 @@ web/frontend/public
 EOF
 
 rm -f "$ZIP_PATH"
-(cd "$ROOT_DIR" && zip -r "$ZIP_NAME" . -x "*.git*" -x "*deploy-*.zip")
+(cd "$ROOT_DIR" && zip -r "$ZIP_NAME" . \
+  -x "*.git*" \
+  -x "*node_modules/*" \
+  -x "*deploy-*.zip" \
+  -x ".elasticbeanstalk/logs/*" \
+  -x ".elasticbeanstalk/logs/**")
 
 info "zip에 dist 포함"
 (cd "$FRONTEND_DIR" && zip -ur "$ZIP_PATH" dist)

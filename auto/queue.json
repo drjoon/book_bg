@@ -40,5 +40,19 @@
     "startTime": "0840",
     "endTime": "0700",
     "force": false
+  },
+  {
+    "account": "오수양",
+    "date": "20260707",
+    "startTime": "0840",
+    "endTime": "0700",
+    "force": false
+  },
+  {
+    "account": "손덕일",
+    "date": "20260707",
+    "startTime": "0840",
+    "endTime": "0700",
+    "force": false
   }
 ]

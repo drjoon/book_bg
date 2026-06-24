@@ -1313,6 +1313,12 @@ app.post("/api/submit-booking", authMiddleware, async (req, res) => {
     } catch (e) {
       console.warn("[API] Pre-check existing booking failed:", e.message);
     }
+    if (!job.startTime || !job.endTime) {
+      return res
+        .status(400)
+        .json({ message: "시작 및 종료 시간이 필요합니다." });
+    }
+
     const openTime = getBookingOpenTime(job.date);
     const now = moment().tz("Asia/Seoul");
 
@@ -1333,7 +1339,42 @@ app.post("/api/submit-booking", authMiddleware, async (req, res) => {
       await runAutoBooking([job], { immediate: true, force: job.force });
       res.json({ message: "즉시 예약을 시작합니다!" });
     } else {
-      // 큐에 추가
+      // 예약 실행 대상은 worker가 DB에서만 읽기 때문에, 예약 등록 시 DB를 기준으로 upsert한다.
+      // (queue.json은 호환성/가시성 목적으로 보조 저장)
+      const existingBooking = await Booking.findOne({
+        account: job.account,
+        date: job.date,
+      });
+
+      if (existingBooking) {
+        const isSuccess = existingBooking.status === "성공";
+        existingBooking.startTime = job.startTime;
+        existingBooking.endTime = job.endTime;
+        if (typeof body.memo === "string") {
+          existingBooking.memo = body.memo;
+        }
+        if (!isSuccess || job.force) {
+          existingBooking.status = "접수";
+          existingBooking.successTime = null;
+          existingBooking.bookedSlot = null;
+        }
+        await existingBooking.save();
+      } else {
+        const newBooking = new Booking({
+          account: job.account,
+          date: job.date,
+          status: "접수",
+          startTime: job.startTime,
+          endTime: job.endTime,
+          successTime: null,
+          bookedSlot: null,
+          memo: typeof body.memo === "string" ? body.memo : undefined,
+          createdByName: currentUser.name,
+          createdByRole: currentUser.role,
+        });
+        await newBooking.save();
+      }
+
       console.log(`[API] Queuing booking for ${job.account} on ${job.date}`);
       await enqueueOrUpdate(job);
       res.json({ message: "예약이 큐에 추가되었습니다." });

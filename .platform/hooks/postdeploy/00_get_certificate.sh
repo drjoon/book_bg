@@ -13,10 +13,11 @@ elif command -v yum >/dev/null 2>&1; then
   sudo yum install -y certbot python3-certbot-nginx || true
 fi
 
-# 배포마다 certbot --nginx를 강제 실행하면 nginx reload/restart로
-# PM2 프로세스(예약 워커 포함)에 영향을 줄 수 있어 최초 1회만 발급.
+# 인증서 재발급은 최초 1회만 수행하되,
+# 배포로 nginx 설정이 초기화될 수 있으므로 인증서가 이미 있어도 install 단계는 매번 수행한다.
 if [ -d "/etc/letsencrypt/live/${DOMAIN}" ]; then
-  echo "[INFO] Existing certificate found for ${DOMAIN}; skipping issue step."
+  echo "[INFO] Existing certificate found for ${DOMAIN}; reinstalling nginx TLS config."
+  sudo certbot install --nginx -n --cert-name "${DOMAIN}" || true
 else
   sudo certbot --nginx \
     -n \

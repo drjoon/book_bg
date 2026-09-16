@@ -557,7 +557,18 @@ async function runBookingGroup(group, options) {
   console.log(`${logPrefix} --- All Lambda invocations completed ---`);
 }
 
+// 휴장일 등으로 정규 오픈일이 밀린 예외 (라운드일 YYYYMMDD → 오픈 시각)
+const BOOKING_OPEN_TIME_OVERRIDES = {
+  // 2026-10-09(금) 한글날: 정규 오픈 9/25(금·추석) 휴장 → 9/23(수) 09:00
+  "20261009": "2026-09-23 09:00",
+};
+
 function getBookingOpenTime(targetDateStr) {
+  const override = BOOKING_OPEN_TIME_OVERRIDES[targetDateStr];
+  if (override) {
+    return moment.tz(override, "YYYY-MM-DD HH:mm", "Asia/Seoul");
+  }
+
   const targetDate = moment.tz(targetDateStr, "YYYYMMDD", "Asia/Seoul");
   const dayOfWeek = targetDate.day();
   let openTime = targetDate.clone().set({ hour: 0, minute: 0, second: 0 });

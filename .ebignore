@@ -1,12 +1,13 @@
 .git
-node_modules
 web/backend/node_modules
 web/frontend/node_modules
 web/frontend/src
 web/frontend/public
+lambda
 *.zip
 .DS_Store
 *.env
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+.elasticbeanstalk/logs

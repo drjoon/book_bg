@@ -579,6 +579,15 @@ const AccountManager = ({
   );
 };
 
+const toMonthStart = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), 1);
+
+const shiftMonth = (date: Date, offset: number) =>
+  new Date(date.getFullYear(), date.getMonth() + offset, 1);
+
+const isSameMonth = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+
 export default function MainPage() {
   // 상태 토글/전설 UI 제거
   const user = useAuthStore((state) => state.user);
@@ -586,7 +595,7 @@ export default function MainPage() {
   const [bookings, setBookings] = useState<BookingsByDate>({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [activeMonth, setActiveMonth] = useState(new Date());
+  const [activeMonth, setActiveMonth] = useState(() => toMonthStart(new Date()));
   const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -996,6 +1005,21 @@ export default function MainPage() {
     }
   };
 
+  const nextMonth = shiftMonth(activeMonth, 1);
+
+  const handleVisibleMonthChange = (
+    nextVisibleMonth: Date | null,
+    view: string,
+    displayedMonth: Date,
+  ) => {
+    if (view !== "month" || !nextVisibleMonth) return;
+    const next = toMonthStart(nextVisibleMonth);
+    if (isSameMonth(next, displayedMonth)) return;
+    setActiveMonth(
+      isSameMonth(displayedMonth, nextMonth) ? shiftMonth(next, -1) : next,
+    );
+  };
+
   const handleDayClick = (date: Date) => {
     setSelectedDate(date);
     setIsNewBookingModalOpen(true);
@@ -1221,33 +1245,35 @@ export default function MainPage() {
             <div className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-xl border border-blue-100">
               <Calendar
                 onClickDay={handleDayClick}
-                value={activeMonth}
-                tileContent={createTileContent(activeMonth)}
-                onActiveStartDateChange={({ activeStartDate }) =>
-                  setActiveMonth(activeStartDate || new Date())
+                value={
+                  isSameMonth(selectedDate, activeMonth) ? selectedDate : null
                 }
+                activeStartDate={activeMonth}
+                tileContent={createTileContent(activeMonth)}
+                onActiveStartDateChange={({ activeStartDate, view }) =>
+                  handleVisibleMonthChange(
+                    activeStartDate,
+                    view,
+                    activeMonth,
+                  )
+                }
+                goToRangeStartOnSelect={false}
+                minDetail="month"
                 locale="en-US"
               />
             </div>
             <div className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-xl border border-blue-100">
               <Calendar
                 onClickDay={handleDayClick}
-                tileContent={createTileContent(
-                  new Date(
-                    activeMonth.getFullYear(),
-                    activeMonth.getMonth() + 1,
-                    1,
-                  ),
-                )}
+                value={isSameMonth(selectedDate, nextMonth) ? selectedDate : null}
+                tileContent={createTileContent(nextMonth)}
                 locale="en-US"
-                activeStartDate={
-                  new Date(
-                    activeMonth.getFullYear(),
-                    activeMonth.getMonth() + 1,
-                    1,
-                  )
+                activeStartDate={nextMonth}
+                onActiveStartDateChange={({ activeStartDate, view }) =>
+                  handleVisibleMonthChange(activeStartDate, view, nextMonth)
                 }
-                onActiveStartDateChange={() => {}} // Prevent navigation on the second calendar
+                goToRangeStartOnSelect={false}
+                minDetail="month"
               />
             </div>
           </div>

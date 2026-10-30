@@ -13,15 +13,19 @@ body {
 }
 
 /* Navigation */
+.react-calendar__navigation {
+  @apply mb-3;
+}
 .react-calendar__navigation button {
-  @apply text-gray-300 font-bold text-lg;
+  @apply text-gray-800 font-bold text-lg;
+  min-width: 2.75rem;
 }
 .react-calendar__navigation button:disabled {
-  @apply text-gray-600;
+  @apply text-gray-300;
 }
 .react-calendar__navigation button:enabled:hover,
 .react-calendar__navigation button:enabled:focus {
-  @apply bg-gray-700/50;
+  @apply bg-blue-50 text-blue-700;
 }
 
 /* Weekdays */

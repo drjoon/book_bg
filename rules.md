@@ -10,7 +10,7 @@ T-90s~T-70s : EBS — 각 Lambda를 랜덤 시각에 개별 invoke (Promise.all)
               [DB 재확인 3단계] invoke 직전 계정별 Booking.findOne
               각 Lambda는 발사 즉시 로그인 시도 시작
 T-5s   : Lambda 로그인 deadline (preloginDeadline = 오픈시각 - 5s)
-T+0.2s : Lambda — 슬롯 fetch 시작 (windowStart = 오픈시각 + 200ms)
+T+0.25s : Lambda — 슬롯 fetch 시작 (windowStart = 오픈시각 + 250ms). 목록이 보이면 즉시 create
 T+0s ~ T+60s : Lambda — 예약 윈도우 (60초)
 Lambda → EBS : 즉시 결과 반환 (DynamoDB key + 성공여부)
 EBS    : MongoDB 상태 업데이트 + S3 영구 저장 + WebSocket broadcast
@@ -130,10 +130,10 @@ EBS    : MongoDB 상태 업데이트 + S3 영구 저장 + WebSocket broadcast
 
 ### 예약 윈도우 (queued 모드)
 
-- `windowStart = 오픈시각 + 200ms` (정밀 대기 후 첫 fetch)
-- `windowEnd = 오픈시각 + 40초`
-- 루프: fetch → claimedSlots 조회 → filter → claimSlot → attemptBooking
-- 슬롯 없음: 600ms 대기 후 재시도
+- `windowStart = 오픈시각 + 250ms` (정밀 대기 후 첫 fetch). 정각 조회는 목록이 비는 경우가 많다
+- `windowEnd = 오픈시각 + 60초`
+- 루프: fetch → 목록이 있으면 즉시 claimedSlots 조회 → filter → claimSlot → attemptBooking (claim floor 없음)
+- 목록이 비면 150~200ms 후 재조회. 범위 내 슬롯 없음: 600ms 대기 후 재시도
 - 429: 1200~2000ms backoff 후 재시도 (`hasRetried401` 플래그 유지)
 - 401: re-login 1회 후 재시도 (2회째 401은 해당 슬롯 포기)
 

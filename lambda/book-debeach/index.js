@@ -164,31 +164,6 @@ function createCorrectedNow(offsetMs) {
     : () => baseNow();
 }
 
-async function waitUntil(targetTime, logPrefix, offsetMs, label) {
-  const correctedNow = createCorrectedNow(offsetMs);
-  let waitTime = targetTime.diff(correctedNow());
-  if (waitTime <= 5) {
-    console.log(
-      `${logPrefix} ${label} has already passed. Proceeding immediately.`,
-    );
-    return;
-  }
-
-  console.log(
-    `${logPrefix} Waiting until ${label}: ${targetTime.format("YYYY-MM-DD HH:mm:ss.SSS")}`,
-  );
-
-  while (waitTime > 5) {
-    const sleepTime =
-      waitTime > 1000
-        ? Math.min(waitTime - 5, 500)
-        : Math.min(waitTime - 5, 100);
-    if (sleepTime <= 0) break;
-    await sleep(sleepTime);
-    waitTime = targetTime.diff(correctedNow());
-  }
-}
-
 async function runLoginAttempt(
   client,
   config,
@@ -776,17 +751,13 @@ export const handler = async (event) => {
 
     // 2. 예약 오픈 시간 계산 및 정밀 대기 (즉시 실행이 아닐 경우에만)
     const bookingOpenTime = getBookingOpenTime(config.TARGET_DATE);
-    // rules.md 기준: 오픈 시각 +0.2s 전후에 첫 fetch 시작
-    const firstFetchOffsetMs = 190 + Math.floor(Math.random() * 31); // 190~220ms
+    // 정각 조회는 목록이 비어 실패하는 경우가 많다. 첫 fetch는 오픈 +250ms.
+    // 목록이 보이면 claim floor 없이 바로 create를 보낸다.
+    const firstFetchOffsetMs = 250;
     const windowStart = bookingOpenTime
       .clone()
       .add(firstFetchOffsetMs, "milliseconds");
     let windowEnd = bookingOpenTime.clone().add(60, "seconds");
-    // 첫 booking 시도가 오픈 +0.7s 전후가 되도록 claim floor를 당김
-    const queuedClaimFloorMs = 500 + Math.floor(Math.random() * 61); // 500~560ms
-    const queuedClaimFloorTime = bookingOpenTime
-      .clone()
-      .add(queuedClaimFloorMs, "milliseconds");
 
     let token;
     if (!immediate) {
@@ -1001,7 +972,6 @@ export const handler = async (event) => {
       const correctedNow = createCorrectedNow(offsetMs);
       const failedSlotTimes = new Set();
       let lastStats = null;
-      let queuedClaimFloorWaited = false;
 
       while (correctedNow().valueOf() < windowEndTs) {
         let availableTimes = [];
@@ -1057,7 +1027,8 @@ export const handler = async (event) => {
         }
 
         if (availableTimes.length === 0) {
-          await sleep(500);
+          const emptyRetryMs = 150 + Math.floor(Math.random() * 51); // 150~200ms
+          await sleep(emptyRetryMs);
           continue;
         }
 
@@ -1070,19 +1041,6 @@ export const handler = async (event) => {
           );
         }
         lastStats = stats;
-
-        if (!queuedClaimFloorWaited) {
-          const now = correctedNow();
-          if (now.isBefore(queuedClaimFloorTime)) {
-            await waitUntil(
-              queuedClaimFloorTime,
-              `[${logName}]`,
-              offsetMs,
-              "queued claim floor",
-            );
-          }
-          queuedClaimFloorWaited = true;
-        }
 
         // DynamoDB에서 이미 다른 Lambda가 예약한 슬롯 조회
         const claimedSlots = await getClaimedSlots(config.TARGET_DATE);
